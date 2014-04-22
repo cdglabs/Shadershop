@@ -1,0 +1,14 @@
+{
+  "name": "Sine",
+  "version": "0.0.1",
+  "engines": {
+    "node": "0.8.x"
+  },
+  "devDependencies": {
+    "node-watch": "~0.3.4",
+    "coffee-script": ">=1.6.2",
+    "stitch": ">=0.3.3",
+    "stylus": ">=0.29.0",
+    "nib": ">=1.0.1"
+  }
+}

@@ -1,0 +1,62 @@
+highlightColor = #09c
+pointControlSize = 12px
+
+
+
+
+
+
+
+html, body
+  margin 0
+
+body
+  font-family "Lucida Sans Unicode", "Lucida Grande", sans-serif
+  font-size 12px
+
+canvas
+  position absolute
+  top 0
+  left 0
+  width 100%
+  height 100%
+
+
+
+.Sidebar
+  position absolute
+  top 0
+  left 100vh
+  height 100vh
+
+
+.MainPlot
+  position absolute
+  top 0
+  left 0
+  width 100vh
+  height 100vh
+
+
+.PlotContainer
+  position absolute
+  top 0
+  left 0
+  width 100%
+  height 100%
+
+
+
+
+
+.PointControl
+  position absolute
+  width pointControlSize
+  height pointControlSize
+  margin-left -0.5 * pointControlSize
+  margin-top -0.5 * pointControlSize
+  border-radius 0.5 * pointControlSize
+  background-color highlightColor
+  opacity 0.25
+  &:hover
+    opacity 1

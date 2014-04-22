@@ -1,0 +1,48 @@
+html,
+body {
+  margin: 0;
+}
+body {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 12px;
+}
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.Sidebar {
+  position: absolute;
+  top: 0;
+  left: 100vh;
+  height: 100vh;
+}
+.MainPlot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vh;
+  height: 100vh;
+}
+.PlotContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.PointControl {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: 6px;
+  background-color: #09c;
+  opacity: 0.25;
+}
+.PointControl:hover {
+  opacity: 1;
+}
