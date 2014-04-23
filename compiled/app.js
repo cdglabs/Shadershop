@@ -60,6 +60,7 @@
       this.autofocus = null;
       this.hoverData = null;
       this.hoverIsActive = false;
+      this.selectedData = null;
       this.activeTransclusionDropView = null;
       this.registerEvents();
     }
@@ -193,13 +194,28 @@
   window.config = config = {
     storageName: "sinewaves",
     resolution: 0.5,
-    mainPlotWidth: 400,
-    mainPlotHeight: 400,
     mainLineWidth: 1.25,
     minGridSpacing: 70,
     hitTolerance: 10,
-    snapTolerance: 5,
-    gridColor: "204,194,163"
+    snapTolerance: 8,
+    gridColor: "204,194,163",
+    style: {
+      "default": {
+        strokeStyle: "#ccc",
+        lineWidth: 1.25
+      },
+      selected: {
+        strokeStyle: "#09c",
+        lineWidth: 1.25
+      }
+    },
+    cursor: {
+      text: "text",
+      grab: "-webkit-grab",
+      grabbing: "-webkit-grabbing",
+      verticalScrub: "ns-resize",
+      horizontalScrub: "ew-resize"
+    }
   };
 
 }).call(this);
@@ -415,18 +431,42 @@
 
 }).call(this);
 }, "model/model": function(exports, require, module) {(function() {
+  C.Variable = (function() {
+    function Variable(valueString) {
+      this.valueString = valueString != null ? valueString : "0";
+      this.getValue();
+    }
+
+    Variable.prototype.getValue = function() {
+      var value;
+      value = this._lastWorkingValue;
+      try {
+        value = util.evaluate(this.valueString);
+      } catch (_error) {}
+      this._lastWorkingValue = value;
+      return value;
+    };
+
+    return Variable;
+
+  })();
+
   C.Sine = (function() {
     function Sine() {
-      this.domainTranslate = 0;
-      this.domainScale = 1;
-      this.rangeTranslate = 0;
-      this.rangeScale = 1;
+      this.domainTranslate = new C.Variable("0");
+      this.domainScale = new C.Variable("1");
+      this.rangeTranslate = new C.Variable("0");
+      this.rangeScale = new C.Variable("1");
     }
 
     Sine.prototype.exprString = function() {
-      var fn;
+      var domainScale, domainTranslate, fn, rangeScale, rangeTranslate;
       fn = "sin";
-      return "(" + fn + "((x - (" + this.domainTranslate + ")) / (" + this.domainScale + ")) * (" + this.rangeScale + ") + (" + this.rangeTranslate + "))";
+      domainTranslate = this.domainTranslate.getValue();
+      domainScale = this.domainScale.getValue();
+      rangeTranslate = this.rangeTranslate.getValue();
+      rangeScale = this.rangeScale.getValue();
+      return "(" + fn + "((x - (" + domainTranslate + ")) / (" + domainScale + ")) * (" + rangeScale + ") + (" + rangeTranslate + "))";
     };
 
     Sine.prototype.fnString = function() {
@@ -1059,14 +1099,205 @@
     propTypes: {
       appRoot: C.AppRoot
     },
+    add: function() {
+      var sine;
+      sine = new C.Sine();
+      this.appRoot.sines.push(sine);
+      return UI.selectedData = {
+        sine: sine
+      };
+    },
     render: function() {
-      return R.div({}, R.div({
-        className: "MainPlot"
+      return R.div({}, R.MainPlotView({
+        appRoot: this.appRoot
+      }), R.div({
+        className: "Sidebar"
+      }, this.appRoot.sines.map((function(_this) {
+        return function(sine, index) {
+          return R.SineView({
+            sine: sine,
+            array: _this.appRoot.sines,
+            index: index
+          });
+        };
+      })(this)), R.div({
+        className: "TextButton",
+        onClick: this.add
+      }, "add")));
+    }
+  });
+
+  R.create("SineView", {
+    propTypes: {
+      sine: C.Sine,
+      array: Array,
+      index: Number
+    },
+    handleMouseDown: function() {
+      return UI.selectedData = {
+        sine: this.sine
+      };
+    },
+    remove: function() {
+      return this.array.splice(this.index, 1);
+    },
+    render: function() {
+      var className, _ref;
+      className = R.cx({
+        Curve: true,
+        Selected: this.sine === ((_ref = UI.selectedData) != null ? _ref.sine : void 0)
+      });
+      return R.div({
+        className: className,
+        onMouseDown: this.handleMouseDown
+      }, R.div({
+        className: "FnName"
+      }, "Sine"), R.div({}, R.span({
+        className: "TransformLabel"
+      }, "+"), R.VariableView({
+        variable: this.sine.domainTranslate
+      }), R.VariableView({
+        variable: this.sine.rangeTranslate
+      })), R.div({}, R.span({
+        className: "TransformLabel"
+      }, "*"), R.VariableView({
+        variable: this.sine.domainScale
+      }), R.VariableView({
+        variable: this.sine.rangeScale
+      })), R.div({
+        className: "Extras"
+      }, R.div({
+        className: "TextButton",
+        onClick: this.remove
+      }, "remove")));
+    }
+  });
+
+  R.create("VariableView", {
+    propTypes: {
+      variable: C.Variable
+    },
+    handleInput: function(newValue) {
+      return this.variable.valueString = newValue;
+    },
+    render: function() {
+      return R.TextFieldView({
+        className: "Variable",
+        value: this.variable.valueString,
+        onInput: this.handleInput
+      });
+    }
+  });
+
+  R.create("MainPlotView", {
+    propTypes: {
+      appRoot: C.AppRoot
+    },
+    getLocalMouseCoords: function() {
+      var bounds, rect, x, y;
+      bounds = this.appRoot.bounds;
+      rect = this.getDOMNode().getBoundingClientRect();
+      x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
+      y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
+      return {
+        x: x,
+        y: y
+      };
+    },
+    changeSelection: function() {
+      var bounds, distance, fn, fnString, found, pixelWidth, rect, sine, x, y, _i, _len, _ref, _ref1;
+      _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      rect = this.getDOMNode().getBoundingClientRect();
+      bounds = this.appRoot.bounds;
+      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
+      found = null;
+      _ref1 = this.appRoot.sines;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        sine = _ref1[_i];
+        fnString = sine.fnString();
+        fn = util.evaluate(fnString);
+        distance = Math.abs(y - fn(x));
+        if (distance < config.hitTolerance * pixelWidth) {
+          found = {
+            sine: sine
+          };
+        }
+      }
+      return UI.selectedData = found;
+    },
+    startPan: function(e) {
+      var originalBounds, originalX, originalY, rect, xScale, yScale;
+      originalX = e.clientX;
+      originalY = e.clientY;
+      originalBounds = {
+        xMin: this.appRoot.bounds.xMin,
+        xMax: this.appRoot.bounds.xMax,
+        yMin: this.appRoot.bounds.yMin,
+        yMax: this.appRoot.bounds.yMax
+      };
+      rect = this.getDOMNode().getBoundingClientRect();
+      xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width;
+      yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height;
+      UI.dragging = {
+        cursor: config.cursor.grabbing,
+        onMove: (function(_this) {
+          return function(e) {
+            var dx, dy;
+            dx = e.clientX - originalX;
+            dy = e.clientY - originalY;
+            return _this.appRoot.bounds = {
+              xMin: originalBounds.xMin - dx * xScale,
+              xMax: originalBounds.xMax - dx * xScale,
+              yMin: originalBounds.yMin + dy * yScale,
+              yMax: originalBounds.yMax + dy * yScale
+            };
+          };
+        })(this)
+      };
+      return util.onceDragConsummated(e, null, (function(_this) {
+        return function() {
+          return _this.changeSelection();
+        };
+      })(this));
+    },
+    handleMouseDown: function(e) {
+      if (e.target.closest(".PointControl")) {
+        return;
+      }
+      UI.preventDefault(e);
+      return this.startPan(e);
+    },
+    handleWheel: function(e) {
+      var bounds, scale, scaleFactor, x, y, _ref;
+      e.preventDefault();
+      _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      bounds = this.appRoot.bounds;
+      scaleFactor = 1.2;
+      scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
+      return this.appRoot.bounds = {
+        xMin: (bounds.xMin - x) * scale + x,
+        xMax: (bounds.xMax - x) * scale + x,
+        yMin: (bounds.yMin - y) * scale + y,
+        yMax: (bounds.yMax - y) * scale + y
+      };
+    },
+    render: function() {
+      var _ref;
+      return R.div({
+        className: "MainPlot",
+        onMouseDown: this.handleMouseDown,
+        onWheel: this.handleWheel
       }, R.div({
         className: "PlotContainer"
       }, R.GridView({
         bounds: this.appRoot.bounds
-      }), R.PlotCartesianView({
+      }), this.appRoot.sines.map((function(_this) {
+        return function(sine) {
+          return R.PlotSineView({
+            sine: sine
+          });
+        };
+      })(this)), R.PlotCartesianView({
         bounds: this.appRoot.bounds,
         fnString: (function(_this) {
           return function() {
@@ -1082,38 +1313,9 @@
           lineWidth: 1.5,
           strokeStyle: "#666"
         }
-      }), this.appRoot.sines.map((function(_this) {
-        return function(sine) {
-          return R.PlotSineView({
-            sine: sine
-          });
-        };
-      })(this)), this.appRoot.sines.map((function(_this) {
-        return function(sine) {
-          return R.PlotSineControlsView({
-            sine: sine
-          });
-        };
-      })(this)))), R.div({
-        className: "Sidebar"
-      }, this.appRoot.sines.map((function(_this) {
-        return function(sine) {
-          return R.SineView({
-            sine: sine
-          });
-        };
-      })(this))));
-    }
-  });
-
-  R.create("SineView", {
-    propTypes: {
-      sine: C.Sine
-    },
-    render: function() {
-      return R.div({
-        className: "Sine"
-      }, "Sine", R.div({}, "Domain: + " + this.sine.domainTranslate + ", * " + this.sine.domainScale), R.div({}, "Range: + " + this.sine.rangeTranslate + ", * " + this.sine.rangeScale));
+      }), ((_ref = UI.selectedData) != null ? _ref.sine : void 0) ? R.PlotSineControlsView({
+        sine: UI.selectedData.sine
+      }) : void 0));
     }
   });
 
@@ -1122,15 +1324,17 @@
       sine: C.Sine
     },
     render: function() {
-      var bounds;
+      var bounds, style, _ref;
       bounds = this.lookup("appRoot").bounds;
+      if (this.sine === ((_ref = UI.selectedData) != null ? _ref.sine : void 0)) {
+        style = config.style.selected;
+      } else {
+        style = config.style["default"];
+      }
       return R.PlotCartesianView({
         bounds: bounds,
         fnString: this.sine.fnString(),
-        style: {
-          lineWidth: 1.5,
-          strokeStyle: "#00f"
-        }
+        style: style
       });
     }
   });
@@ -1139,25 +1343,49 @@
     propTypes: {
       sine: C.Sine
     },
+    snap: function(value) {
+      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelWidth, precision, rect, smallSpacing, snapTolerance, _ref;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      bounds = this.lookup("appRoot").bounds;
+      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
+      _ref = util.canvas.getSpacing({
+        xMin: bounds.xMin,
+        xMax: bounds.xMax,
+        yMin: bounds.yMin,
+        yMax: bounds.yMax,
+        width: rect.width,
+        height: rect.height
+      }), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
+      snapTolerance = pixelWidth * config.snapTolerance;
+      nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
+      if (Math.abs(value - nearestSnap) < snapTolerance) {
+        value = nearestSnap;
+        digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10));
+        precision = Math.pow(10, digitPrecision);
+        return util.floatToString(value, precision);
+      }
+      digitPrecision = Math.floor(Math.log(pixelWidth) / Math.log(10));
+      precision = Math.pow(10, digitPrecision);
+      return util.floatToString(value, precision);
+    },
+    handleTranslateChange: function(x, y) {
+      this.sine.domainTranslate.valueString = this.snap(x);
+      return this.sine.rangeTranslate.valueString = this.snap(y);
+    },
+    handleScaleChange: function(x, y) {
+      this.sine.domainScale.valueString = this.snap(x - this.sine.domainTranslate.getValue());
+      return this.sine.rangeScale.valueString = this.snap(y - this.sine.rangeTranslate.getValue());
+    },
     render: function() {
       return R.span({}, R.PointControlView({
-        x: this.sine.domainTranslate,
-        y: this.sine.rangeTranslate,
-        onChange: (function(_this) {
-          return function(x, y) {
-            _this.sine.domainTranslate = x;
-            return _this.sine.rangeTranslate = y;
-          };
-        })(this)
+        x: this.sine.domainTranslate.getValue(),
+        y: this.sine.rangeTranslate.getValue(),
+        onChange: this.handleTranslateChange
       }), R.PointControlView({
-        x: this.sine.domainTranslate + this.sine.domainScale,
-        y: this.sine.rangeTranslate + this.sine.rangeScale,
-        onChange: (function(_this) {
-          return function(x, y) {
-            _this.sine.domainScale = x - _this.sine.domainTranslate;
-            return _this.sine.rangeScale = y - _this.sine.rangeTranslate;
-          };
-        })(this)
+        x: this.sine.domainTranslate.getValue() + this.sine.domainScale.getValue(),
+        y: this.sine.rangeTranslate.getValue() + this.sine.rangeScale.getValue(),
+        onChange: this.handleScaleChange
       }));
     }
   });
@@ -1181,15 +1409,12 @@
       return UI.dragging = {
         onMove: (function(_this) {
           return function(e) {
-            var bounds, digitPrecision, pixelWidth, precision, x, y;
+            var bounds, x, y;
             bounds = _this.lookup("appRoot").bounds;
             x = (e.clientX - rect.left) / rect.width;
             y = (e.clientY - rect.top) / rect.height;
             x = util.lerp(x, 0, 1, bounds.xMin, bounds.xMax);
             y = util.lerp(y, 1, 0, bounds.yMin, bounds.yMax);
-            pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
-            digitPrecision = Math.floor(Math.log(pixelWidth) / Math.log(10));
-            precision = Math.pow(10, digitPrecision);
             return _this.onChange(x, y);
           };
         })(this)
@@ -1342,6 +1567,8 @@
     return R[name] = React.createClass(opts);
   };
 
+  require("./ui/TextFieldView");
+
   require("./AppRootView");
 
   require("./plot/CanvasView");
@@ -1455,6 +1682,125 @@
       });
     }
   });
+
+}).call(this);
+}, "view/ui/TextFieldView": function(exports, require, module) {(function() {
+  var findAdjacentHost;
+
+  R.create("TextFieldView", {
+    propTypes: {
+      value: String,
+      className: String,
+      onInput: Function,
+      onBackSpace: Function,
+      onFocus: Function,
+      onBlur: Function,
+      allowEnter: Boolean
+    },
+    getDefaultProps: function() {
+      return {
+        value: "",
+        className: "",
+        onInput: function(newValue) {},
+        onBackSpace: function() {},
+        onEnter: function() {},
+        onFocus: function() {},
+        onBlur: function() {},
+        allowEnter: false
+      };
+    },
+    shouldComponentUpdate: function(nextProps) {
+      return this._isDirty || nextProps.value !== this.props.value;
+    },
+    refresh: function() {
+      var el;
+      el = this.getDOMNode();
+      if (el.textContent !== this.value) {
+        el.textContent = this.value;
+      }
+      this._isDirty = false;
+      return UI.attemptAutoFocus(this);
+    },
+    componentDidMount: function() {
+      return this.refresh();
+    },
+    componentDidUpdate: function() {
+      return this.refresh();
+    },
+    handleInput: function() {
+      var el, newValue;
+      this._isDirty = true;
+      el = this.getDOMNode();
+      newValue = el.textContent;
+      return this.onInput(newValue);
+    },
+    handleKeyDown: function(e) {
+      var host, nextHost, previousHost;
+      host = util.selection.getHost();
+      if (e.keyCode === 37) {
+        if (util.selection.isAtStart()) {
+          previousHost = findAdjacentHost(host, -1);
+          if (previousHost) {
+            e.preventDefault();
+            return util.selection.setAtEnd(previousHost);
+          }
+        }
+      } else if (e.keyCode === 39) {
+        if (util.selection.isAtEnd()) {
+          nextHost = findAdjacentHost(host, 1);
+          if (nextHost) {
+            e.preventDefault();
+            return util.selection.setAtStart(nextHost);
+          }
+        }
+      } else if (e.keyCode === 8) {
+        if (util.selection.isAtStart()) {
+          e.preventDefault();
+          return this.onBackSpace();
+        }
+      } else if (e.keyCode === 13) {
+        if (!this.allowEnter) {
+          e.preventDefault();
+          return this.onEnter();
+        }
+      }
+    },
+    handleFocus: function() {
+      return this.onFocus();
+    },
+    handleBlur: function() {
+      return this.onBlur();
+    },
+    selectAll: function() {
+      var el;
+      el = this.getDOMNode();
+      return util.selection.setAll(el);
+    },
+    isFocused: function() {
+      var el, host;
+      el = this.getDOMNode();
+      host = util.selection.getHost();
+      return el === host;
+    },
+    render: function() {
+      return R.div({
+        className: this.className,
+        contentEditable: true,
+        onInput: this.handleInput,
+        onKeyDown: this.handleKeyDown,
+        onFocus: this.handleFocus,
+        onBlur: this.handleBlur
+      });
+    }
+  });
+
+  findAdjacentHost = function(el, direction) {
+    var hosts, index;
+    hosts = document.querySelectorAll("[contenteditable]");
+    hosts = _.toArray(hosts);
+    index = hosts.indexOf(el);
+    return hosts[index + direction];
+  };
 
 }).call(this);
 }});

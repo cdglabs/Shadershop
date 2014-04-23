@@ -115,6 +115,8 @@ R.create = (name, opts) ->
 # Include all the view code
 # =============================================================================
 
+require("./ui/TextFieldView")
+
 require("./AppRootView")
 
 require("./plot/CanvasView")

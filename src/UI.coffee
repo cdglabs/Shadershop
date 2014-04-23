@@ -6,6 +6,8 @@ window.UI = UI = new class
     @hoverData = null
     @hoverIsActive = false
 
+    @selectedData = null
+
     @activeTransclusionDropView = null
 
     @registerEvents()

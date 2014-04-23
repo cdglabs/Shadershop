@@ -30,6 +30,38 @@ canvas
   height 100vh
 
 
+.TextButton
+  cursor pointer
+  font-size 10px
+  &:hover
+    color highlightColor
+
+.Curve
+  padding 6px 0px
+  .Extras
+    opacity 0
+  &:hover .Extras
+    opacity 1
+
+  &.Selected
+    background-color tint(highlightColor, 90%)
+
+.TransformLabel
+  display inline-block
+  min-width 18px
+  text-align center
+
+.Variable
+  display inline-block
+  min-width 48px
+  margin-right 6px
+
+
+
+
+
+
+
 .MainPlot
   position absolute
   top 0

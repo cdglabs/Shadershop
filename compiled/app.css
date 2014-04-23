@@ -19,6 +19,35 @@ canvas {
   left: 100vh;
   height: 100vh;
 }
+.TextButton {
+  cursor: pointer;
+  font-size: 10px;
+}
+.TextButton:hover {
+  color: #09c;
+}
+.Curve {
+  padding: 6px 0px;
+}
+.Curve .Extras {
+  opacity: 0;
+}
+.Curve:hover .Extras {
+  opacity: 1;
+}
+.Curve.Selected {
+  background-color: #e5f4f9;
+}
+.TransformLabel {
+  display: inline-block;
+  min-width: 18px;
+  text-align: center;
+}
+.Variable {
+  display: inline-block;
+  min-width: 48px;
+  margin-right: 6px;
+}
 .MainPlot {
   position: absolute;
   top: 0;
