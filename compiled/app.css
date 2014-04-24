@@ -13,47 +13,30 @@ canvas {
   width: 100%;
   height: 100%;
 }
-.Sidebar {
-  position: absolute;
-  top: 0;
-  left: 100vh;
+.Definitions {
+  display: inline-block;
+  vertical-align: top;
   height: 100vh;
-}
-.TextButton {
-  cursor: pointer;
-  font-size: 10px;
-}
-.TextButton:hover {
-  color: #09c;
-}
-.Curve {
-  padding: 6px 0px;
-}
-.Curve .Extras {
-  opacity: 0;
-}
-.Curve:hover .Extras {
-  opacity: 1;
-}
-.Curve.Selected {
-  background-color: #e5f4f9;
-}
-.TransformLabel {
-  display: inline-block;
-  min-width: 18px;
-  text-align: center;
-}
-.Variable {
-  display: inline-block;
-  min-width: 48px;
-  margin-right: 6px;
 }
 .MainPlot {
-  position: absolute;
-  top: 0;
-  left: 0;
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
   width: 100vh;
   height: 100vh;
+}
+.Outline {
+  display: inline-block;
+  vertical-align: top;
+  height: 100vh;
+}
+.Definition {
+  position: relative;
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #ccc;
+  margin: 12px;
 }
 .PlotContainer {
   position: absolute;
@@ -61,6 +44,7 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
+  background-color: #faf8f2;
 }
 .PointControl {
   position: absolute;
@@ -74,4 +58,39 @@ canvas {
 }
 .PointControl:hover {
   opacity: 1;
+}
+.Sidebar {
+  position: absolute;
+  top: 0;
+  left: 100vh;
+  height: 100vh;
+}
+.TextButton {
+  cursor: pointer;
+  font-size: 10px;
+}
+.TextButton:hover {
+  color: #09c;
+}
+.Reference {
+  padding: 6px 0px;
+}
+.Reference .Extras {
+  opacity: 0;
+}
+.Reference:hover .Extras {
+  opacity: 1;
+}
+.Reference.Selected {
+  background-color: #e5f4f9;
+}
+.TransformLabel {
+  display: inline-block;
+  min-width: 18px;
+  text-align: center;
+}
+.Variable {
+  display: inline-block;
+  min-width: 48px;
+  margin-right: 6px;
 }

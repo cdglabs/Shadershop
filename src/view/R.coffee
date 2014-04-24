@@ -119,6 +119,10 @@ require("./ui/TextFieldView")
 
 require("./AppRootView")
 
+require("./DefinitionsView")
+require("./MainPlotView")
+require("./OutlineView")
+
 require("./plot/CanvasView")
 require("./plot/GridView")
 require("./plot/PlotCartesianView")

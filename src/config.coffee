@@ -9,14 +9,18 @@ window.config = config = {
   mainLineWidth: 1.25
 
   # In pixels:
-  minGridSpacing: 70
+  minGridSpacing: 90
   hitTolerance: 10
-  snapTolerance: 8
+  snapTolerance: 7
 
   gridColor: "204,194,163"
 
 
   style: {
+    main: {
+      strokeStyle: "#333"
+      lineWidth: 1.25
+    }
     default: {
       strokeStyle: "#ccc"
       lineWidth: 1.25

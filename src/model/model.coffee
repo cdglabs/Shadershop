@@ -11,31 +11,104 @@ class C.Variable
     return value
 
 
-class C.Sine
+
+
+class C.Definition
   constructor: ->
+
+
+class C.BuiltInDefinition extends C.Definition
+  constructor: (@fnName) ->
+
+  getExprString: (parameter) ->
+    "#{@fnName}(#{parameter})"
+
+
+class C.CompoundDefinition extends C.Definition
+  constructor: ->
+    @combiner = "sum"
+    @childReferences = []
+    @bounds = {
+      xMin: -6
+      xMax: 6
+      yMin: -6
+      yMax: 6
+    }
+
+  getExprString: (parameter) ->
+    childExprStrings = @childReferences.map (childReference) =>
+      childReference.getExprString(parameter)
+    childExprStrings.unshift("0")
+    return childExprStrings.join(" + ")
+
+
+
+class C.Reference
+  constructor: ->
+    @definition = null
     @domainTranslate = new C.Variable("0")
     @domainScale = new C.Variable("1")
     @rangeTranslate = new C.Variable("0")
     @rangeScale = new C.Variable("1")
 
-  exprString: ->
-    fn = "sin"
+  getExprString: (parameter) ->
     domainTranslate = @domainTranslate.getValue()
     domainScale = @domainScale.getValue()
     rangeTranslate = @rangeTranslate.getValue()
     rangeScale = @rangeScale.getValue()
-    return "(#{fn}((x - (#{domainTranslate})) / (#{domainScale})) * (#{rangeScale}) + (#{rangeTranslate}))"
 
-  fnString: ->
-    return "(function (x) { return #{@exprString()}; })"
+    exprString = "((#{parameter} - #{domainTranslate}) / #{domainScale})"
+    exprString = @definition.getExprString(exprString)
+    exprString = "(#{exprString} * #{rangeScale} + #{rangeTranslate})"
+    return exprString
+
+
+
 
 
 class C.AppRoot
   constructor: ->
-    @sines = []
-    @bounds = {
-      xMin: -10
-      xMax: 10
-      yMin: -10
-      yMax: 10
-    }
+    @definitions = [
+      new C.BuiltInDefinition("identity")
+      new C.BuiltInDefinition("abs")
+      new C.BuiltInDefinition("fract")
+      new C.BuiltInDefinition("floor")
+      new C.BuiltInDefinition("sin")
+      new C.CompoundDefinition()
+    ]
+
+
+
+
+
+
+
+
+# class C.Sine
+#   constructor: ->
+#     @domainTranslate = new C.Variable("0")
+#     @domainScale = new C.Variable("1")
+#     @rangeTranslate = new C.Variable("0")
+#     @rangeScale = new C.Variable("1")
+
+#   exprString: ->
+#     fn = "sin"
+#     domainTranslate = @domainTranslate.getValue()
+#     domainScale = @domainScale.getValue()
+#     rangeTranslate = @rangeTranslate.getValue()
+#     rangeScale = @rangeScale.getValue()
+#     return "(#{fn}((x - (#{domainTranslate})) / (#{domainScale})) * (#{rangeScale}) + (#{rangeTranslate}))"
+
+#   fnString: ->
+#     return "(function (x) { return #{@exprString()}; })"
+
+
+# class C.AppRoot
+#   constructor: ->
+#     @sines = []
+#     @bounds = {
+#       xMin: -10
+#       xMax: 10
+#       yMin: -10
+#       yMax: 10
+#     }

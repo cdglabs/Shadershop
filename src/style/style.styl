@@ -1,9 +1,13 @@
 highlightColor = #09c
+plotBackgroundColor = #FAF8F2
+
 pointControlSize = 12px
 
 
 
-
+inline(va)
+  display inline-block
+  vertical-align va
 
 
 
@@ -23,6 +27,69 @@ canvas
 
 
 
+
+// ============================================================================
+// Main Layout
+// ============================================================================
+
+.Definitions
+  inline top
+  height 100vh
+
+.MainPlot
+  inline top
+  position relative
+  width 100vh
+  height 100vh
+
+.Outline
+  inline top
+  height 100vh
+
+
+// ============================================================================
+// Definitions
+// ============================================================================
+
+.Definition
+  position relative
+  box-sizing border-box
+  width 48px
+  height 48px
+  border 1px solid #ccc
+  margin 12px
+
+
+// ============================================================================
+// Main Plot
+// ============================================================================
+
+.PlotContainer
+  position absolute
+  top 0
+  left 0
+  width 100%
+  height 100%
+  background-color plotBackgroundColor
+
+.PointControl
+  position absolute
+  width pointControlSize
+  height pointControlSize
+  margin-left -0.5 * pointControlSize
+  margin-top -0.5 * pointControlSize
+  border-radius 0.5 * pointControlSize
+  background-color highlightColor
+  opacity 0.25
+  &:hover
+    opacity 1
+
+
+// ============================================================================
+// Outline
+// ============================================================================
+
+
 .Sidebar
   position absolute
   top 0
@@ -36,7 +103,7 @@ canvas
   &:hover
     color highlightColor
 
-.Curve
+.Reference
   padding 6px 0px
   .Extras
     opacity 0
@@ -60,35 +127,3 @@ canvas
 
 
 
-
-
-.MainPlot
-  position absolute
-  top 0
-  left 0
-  width 100vh
-  height 100vh
-
-
-.PlotContainer
-  position absolute
-  top 0
-  left 0
-  width 100%
-  height 100%
-
-
-
-
-
-.PointControl
-  position absolute
-  width pointControlSize
-  height pointControlSize
-  margin-left -0.5 * pointControlSize
-  margin-top -0.5 * pointControlSize
-  border-radius 0.5 * pointControlSize
-  background-color highlightColor
-  opacity 0.25
-  &:hover
-    opacity 1

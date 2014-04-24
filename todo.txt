@@ -1,0 +1,8 @@
+Outline View
+  Display references better
+  Show combiner method
+    Add new combiner methods
+
+Definitions
+  Drag (rather than click) to add
+  Click to select definition

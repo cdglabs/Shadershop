@@ -6,7 +6,7 @@ require("./config")
 require("./util/util")
 require("./model/C")
 require("./view/R")
-require("./UI")
+
 
 
 
@@ -41,7 +41,7 @@ window.restore = (jsonString) ->
 
 
 
-
+require("./UI")
 
 
 

@@ -3,6 +3,15 @@ window.UI = UI = new class
     @dragging = null
     @autofocus = null
 
+    @selectedDefinition = _.last(appRoot.definitions)
+
+    @selectedChildReference = null
+
+
+
+
+
+
     @hoverData = null
     @hoverIsActive = false
 
