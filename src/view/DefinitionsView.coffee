@@ -4,6 +4,9 @@ R.create "DefinitionsView",
 
   render: ->
     R.div {className: "Definitions"},
+      builtIn.definitions.map (definition) =>
+        R.DefinitionView {definition}
+      R.div {className: "Divider"}
       @appRoot.definitions.map (definition) =>
         R.DefinitionView {definition}
 

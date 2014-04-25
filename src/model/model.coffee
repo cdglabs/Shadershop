@@ -82,15 +82,18 @@ class C.Reference
 class C.AppRoot
   constructor: ->
     @definitions = [
-      new C.BuiltInDefinition("identity", "Line")
-      new C.BuiltInDefinition("abs", "Abs")
-      new C.BuiltInDefinition("fract", "Fract")
-      new C.BuiltInDefinition("floor", "Floor")
-      new C.BuiltInDefinition("sin", "Sine")
       new C.CompoundDefinition()
     ]
 
 
 
+window.builtIn = builtIn = {}
 
+builtIn.definitions = [
+  new C.BuiltInDefinition("identity", "Line")
+  new C.BuiltInDefinition("abs", "Abs")
+  new C.BuiltInDefinition("fract", "Fract")
+  new C.BuiltInDefinition("floor", "Floor")
+  new C.BuiltInDefinition("sin", "Sine")
+]
 

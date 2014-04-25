@@ -7,5 +7,9 @@ Definitions
   Drag (rather than click) to add
   Click to select definition
 
+Plot
+  Tune mousewheel scrolling
+
 Architecture
-  Move built in definitions out of AppRoot.definitions
+  Move "builtIn" into its own file.
+  Move "combiners" into their own thing. Think of better name.

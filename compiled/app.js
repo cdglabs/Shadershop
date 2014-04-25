@@ -437,7 +437,8 @@
 
 }).call(this);
 }, "model/model": function(exports, require, module) {(function() {
-  var __hasProp = {}.hasOwnProperty,
+  var builtIn,
+    __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   C.Variable = (function() {
@@ -555,12 +556,16 @@
 
   C.AppRoot = (function() {
     function AppRoot() {
-      this.definitions = [new C.BuiltInDefinition("identity", "Line"), new C.BuiltInDefinition("abs", "Abs"), new C.BuiltInDefinition("fract", "Fract"), new C.BuiltInDefinition("floor", "Floor"), new C.BuiltInDefinition("sin", "Sine"), new C.CompoundDefinition()];
+      this.definitions = [new C.CompoundDefinition()];
     }
 
     return AppRoot;
 
   })();
+
+  window.builtIn = builtIn = {};
+
+  builtIn.definitions = [new C.BuiltInDefinition("identity", "Line"), new C.BuiltInDefinition("abs", "Abs"), new C.BuiltInDefinition("fract", "Fract"), new C.BuiltInDefinition("floor", "Floor"), new C.BuiltInDefinition("sin", "Sine")];
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
@@ -1241,7 +1246,15 @@
     render: function() {
       return R.div({
         className: "Definitions"
-      }, this.appRoot.definitions.map((function(_this) {
+      }, builtIn.definitions.map((function(_this) {
+        return function(definition) {
+          return R.DefinitionView({
+            definition: definition
+          });
+        };
+      })(this)), R.div({
+        className: "Divider"
+      }), this.appRoot.definitions.map((function(_this) {
         return function(definition) {
           return R.DefinitionView({
             definition: definition
@@ -1380,7 +1393,7 @@
       e.preventDefault();
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       bounds = this.definition.bounds;
-      scaleFactor = 1.2;
+      scaleFactor = 1.1;
       scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
       return this.definition.bounds = {
         xMin: (bounds.xMin - x) * scale + x,
@@ -1576,7 +1589,10 @@
       return UI.selectedChildReference = this.reference;
     },
     remove: function() {
-      return this.definition.childReferences.splice(this.index, 1);
+      this.definition.childReferences.splice(this.index, 1);
+      if (UI.selectedChildReference === this.reference) {
+        return UI.selectedChildReference = null;
+      }
     },
     render: function() {
       var className;
@@ -1589,7 +1605,7 @@
         onMouseDown: this.handleMouseDown
       }, R.div({
         className: "FnName"
-      }, "Sine"), R.div({}, R.span({
+      }, this.reference.definition.label), R.div({}, R.span({
         className: "TransformLabel"
       }, "+"), R.VariableView({
         variable: this.reference.domainTranslate

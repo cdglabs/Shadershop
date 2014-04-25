@@ -43,6 +43,8 @@ R.create "ReferenceView",
 
   remove: ->
     @definition.childReferences.splice(@index, 1)
+    if UI.selectedChildReference == @reference
+      UI.selectedChildReference = null
 
   render: ->
     className = R.cx {
@@ -50,7 +52,7 @@ R.create "ReferenceView",
       Selected: @reference == UI.selectedChildReference
     }
     R.div {className, onMouseDown: @handleMouseDown},
-      R.div {className: "FnName"}, "Sine"
+      R.div {className: "FnName"}, @reference.definition.label
       R.div {},
         R.span {className: "TransformLabel"}, "+"
         R.VariableView {variable: @reference.domainTranslate}

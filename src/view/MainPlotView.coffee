@@ -71,7 +71,7 @@ R.create "MainPlotView",
 
     bounds = @definition.bounds
 
-    scaleFactor = 1.2
+    scaleFactor = 1.1
     scale = if e.deltaY > 0 then scaleFactor else 1/scaleFactor
 
     @definition.bounds = {
