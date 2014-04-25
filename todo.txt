@@ -6,3 +6,6 @@ Outline View
 Definitions
   Drag (rather than click) to add
   Click to select definition
+
+Architecture
+  Move built in definitions out of AppRoot.definitions

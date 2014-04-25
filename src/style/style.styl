@@ -9,6 +9,9 @@ inline(va)
   display inline-block
   vertical-align va
 
+shadow(size, opacity)
+  box-shadow 0px size 2*size rgba(0, 0, 0, opacity)
+
 
 
 html, body
@@ -54,10 +57,18 @@ canvas
 .Definition
   position relative
   box-sizing border-box
-  width 48px
-  height 48px
-  border 1px solid #ccc
+  width 60px
+  height 60px
+  // border 1px solid #eee
   margin 12px
+  // shadow 1px 0.2
+
+  opacity 0.3
+  &.Selected
+    opacity 1
+    outline 1px solid highlightColor
+    // border 1px solid #666
+    // shadow 1px 0.5
 
 
 // ============================================================================

@@ -33,8 +33,13 @@ R.create "DefinitionView",
     else
       bounds = @definition.bounds
 
+    className = R.cx {
+      Definition: true
+      Selected: UI.selectedDefinition == @definition
+    }
+
     R.div {
-      className: "Definition"
+      className: className
       onMouseDown: @handleMouseDown
     },
       R.div {className: "PlotContainer"},

@@ -470,8 +470,9 @@
   C.BuiltInDefinition = (function(_super) {
     __extends(BuiltInDefinition, _super);
 
-    function BuiltInDefinition(fnName) {
+    function BuiltInDefinition(fnName, label) {
       this.fnName = fnName;
+      this.label = label;
     }
 
     BuiltInDefinition.prototype.getExprString = function(parameter) {
@@ -486,6 +487,7 @@
     __extends(CompoundDefinition, _super);
 
     function CompoundDefinition() {
+      this.label = "";
       this.combiner = "sum";
       this.childReferences = [];
       this.bounds = {
@@ -538,7 +540,7 @@
 
   C.AppRoot = (function() {
     function AppRoot() {
-      this.definitions = [new C.BuiltInDefinition("identity"), new C.BuiltInDefinition("abs"), new C.BuiltInDefinition("fract"), new C.BuiltInDefinition("floor"), new C.BuiltInDefinition("sin"), new C.CompoundDefinition()];
+      this.definitions = [new C.BuiltInDefinition("identity", "Line"), new C.BuiltInDefinition("abs", "Abs"), new C.BuiltInDefinition("fract", "Fract"), new C.BuiltInDefinition("floor", "Floor"), new C.BuiltInDefinition("sin", "Sine"), new C.CompoundDefinition()];
     }
 
     return AppRoot;
@@ -1252,7 +1254,7 @@
       return UI.selectedDefinition.childReferences.push(childReference);
     },
     render: function() {
-      var bounds, exprString, fnString;
+      var bounds, className, exprString, fnString;
       exprString = this.definition.getExprString("x");
       fnString = "(function (x) { return " + exprString + "; })";
       if (this.definition instanceof C.BuiltInDefinition) {
@@ -1260,8 +1262,12 @@
       } else {
         bounds = this.definition.bounds;
       }
+      className = R.cx({
+        Definition: true,
+        Selected: UI.selectedDefinition === this.definition
+      });
       return R.div({
-        className: "Definition",
+        className: className,
         onMouseDown: this.handleMouseDown
       }, R.div({
         className: "PlotContainer"

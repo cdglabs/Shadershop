@@ -33,10 +33,14 @@ canvas {
 .Definition {
   position: relative;
   box-sizing: border-box;
-  width: 48px;
-  height: 48px;
-  border: 1px solid #ccc;
+  width: 60px;
+  height: 60px;
   margin: 12px;
+  opacity: 0.3;
+}
+.Definition.Selected {
+  opacity: 1;
+  outline: 1px solid #09c;
 }
 .PlotContainer {
   position: absolute;

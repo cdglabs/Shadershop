@@ -18,7 +18,7 @@ class C.Definition
 
 
 class C.BuiltInDefinition extends C.Definition
-  constructor: (@fnName) ->
+  constructor: (@fnName, @label) ->
 
   getExprString: (parameter) ->
     "#{@fnName}(#{parameter})"
@@ -26,6 +26,7 @@ class C.BuiltInDefinition extends C.Definition
 
 class C.CompoundDefinition extends C.Definition
   constructor: ->
+    @label = ""
     @combiner = "sum"
     @childReferences = []
     @bounds = {
@@ -69,11 +70,11 @@ class C.Reference
 class C.AppRoot
   constructor: ->
     @definitions = [
-      new C.BuiltInDefinition("identity")
-      new C.BuiltInDefinition("abs")
-      new C.BuiltInDefinition("fract")
-      new C.BuiltInDefinition("floor")
-      new C.BuiltInDefinition("sin")
+      new C.BuiltInDefinition("identity", "Line")
+      new C.BuiltInDefinition("abs", "Abs")
+      new C.BuiltInDefinition("fract", "Fract")
+      new C.BuiltInDefinition("floor", "Floor")
+      new C.BuiltInDefinition("sin", "Sine")
       new C.CompoundDefinition()
     ]
 
