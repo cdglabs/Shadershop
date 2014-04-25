@@ -1,7 +1,7 @@
 Outline View
   Display references better
-  Show combiner method
-    Add new combiner methods
+  Reorder references (for composition)
+  Think about richer outline
 
 Definitions
   Drag (rather than click) to add

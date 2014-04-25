@@ -499,14 +499,29 @@
     }
 
     CompoundDefinition.prototype.getExprString = function(parameter) {
-      var childExprStrings;
+      var childExprStrings, childReference, exprString, _i, _len, _ref;
+      if (this.combiner === "composition") {
+        exprString = parameter;
+        _ref = this.childReferences;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          childReference = _ref[_i];
+          exprString = childReference.getExprString(exprString);
+        }
+        return exprString;
+      }
       childExprStrings = this.childReferences.map((function(_this) {
         return function(childReference) {
           return childReference.getExprString(parameter);
         };
       })(this));
-      childExprStrings.unshift("0");
-      return childExprStrings.join(" + ");
+      if (this.combiner === "sum") {
+        childExprStrings.unshift("0");
+        return childExprStrings.join(" + ");
+      }
+      if (this.combiner === "product") {
+        childExprStrings.unshift("1");
+        return childExprStrings.join(" * ");
+      }
     };
 
     return CompoundDefinition;
@@ -1271,7 +1286,9 @@
         onMouseDown: this.handleMouseDown
       }, R.div({
         className: "PlotContainer"
-      }, R.PlotCartesianView({
+      }, R.GridView({
+        bounds: bounds
+      }), R.PlotCartesianView({
         bounds: bounds,
         fnString: fnString,
         style: config.style.main
@@ -1512,7 +1529,9 @@
     render: function() {
       return R.div({
         className: "Outline"
-      }, this.definition.childReferences.map((function(_this) {
+      }, R.CombinerView({
+        definition: this.definition
+      }), this.definition.childReferences.map((function(_this) {
         return function(childReference, index) {
           return R.ReferenceView({
             reference: childReference,
@@ -1521,6 +1540,29 @@
           });
         };
       })(this)));
+    }
+  });
+
+  R.create("CombinerView", {
+    propTypes: {
+      definition: C.Definition
+    },
+    handleChange: function(e) {
+      var value;
+      value = e.target.selectedOptions[0].value;
+      return this.definition.combiner = value;
+    },
+    render: function() {
+      return R.div({}, R.select({
+        value: this.definition.combiner,
+        onChange: this.handleChange
+      }, R.option({
+        value: "sum"
+      }, "Add"), R.option({
+        value: "product"
+      }, "Multiply"), R.option({
+        value: "composition"
+      }, "Compose")));
     }
   });
 

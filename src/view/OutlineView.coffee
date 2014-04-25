@@ -4,6 +4,8 @@ R.create "OutlineView",
 
   render: ->
     R.div {className: "Outline"},
+      R.CombinerView {definition: @definition}
+
       @definition.childReferences.map (childReference, index) =>
         R.ReferenceView {
           reference: childReference
@@ -11,6 +13,22 @@ R.create "OutlineView",
           index: index
         }
 
+
+
+R.create "CombinerView",
+  propTypes:
+    definition: C.Definition
+
+  handleChange: (e) ->
+    value = e.target.selectedOptions[0].value
+    @definition.combiner = value
+
+  render: ->
+    R.div {},
+      R.select {value: @definition.combiner, onChange: @handleChange},
+        R.option {value: "sum"}, "Add"
+        R.option {value: "product"}, "Multiply"
+        R.option {value: "composition"}, "Compose"
 
 
 

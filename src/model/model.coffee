@@ -37,10 +37,22 @@ class C.CompoundDefinition extends C.Definition
     }
 
   getExprString: (parameter) ->
+    if @combiner == "composition"
+      exprString = parameter
+      for childReference in @childReferences
+        exprString = childReference.getExprString(exprString)
+      return exprString
+
     childExprStrings = @childReferences.map (childReference) =>
       childReference.getExprString(parameter)
-    childExprStrings.unshift("0")
-    return childExprStrings.join(" + ")
+
+    if @combiner == "sum"
+      childExprStrings.unshift("0")
+      return childExprStrings.join(" + ")
+
+    if @combiner == "product"
+      childExprStrings.unshift("1")
+      return childExprStrings.join(" * ")
 
 
 
@@ -82,34 +94,3 @@ class C.AppRoot
 
 
 
-
-
-
-# class C.Sine
-#   constructor: ->
-#     @domainTranslate = new C.Variable("0")
-#     @domainScale = new C.Variable("1")
-#     @rangeTranslate = new C.Variable("0")
-#     @rangeScale = new C.Variable("1")
-
-#   exprString: ->
-#     fn = "sin"
-#     domainTranslate = @domainTranslate.getValue()
-#     domainScale = @domainScale.getValue()
-#     rangeTranslate = @rangeTranslate.getValue()
-#     rangeScale = @rangeScale.getValue()
-#     return "(#{fn}((x - (#{domainTranslate})) / (#{domainScale})) * (#{rangeScale}) + (#{rangeTranslate}))"
-
-#   fnString: ->
-#     return "(function (x) { return #{@exprString()}; })"
-
-
-# class C.AppRoot
-#   constructor: ->
-#     @sines = []
-#     @bounds = {
-#       xMin: -10
-#       xMax: 10
-#       yMin: -10
-#       yMax: 10
-#     }

@@ -43,6 +43,8 @@ R.create "DefinitionView",
       onMouseDown: @handleMouseDown
     },
       R.div {className: "PlotContainer"},
+        R.GridView {bounds}
+
         R.PlotCartesianView {
           bounds
           fnString
