@@ -2,13 +2,24 @@ R.create "DefinitionsView",
   propTypes:
     appRoot: C.AppRoot
 
+  addDefinition: ->
+    definition = new C.CompoundDefinition()
+    @appRoot.definitions.push(definition)
+    UI.selectedDefinition = definition
+
   render: ->
     R.div {className: "Definitions"},
+
       builtIn.definitions.map (definition) =>
         R.DefinitionView {definition}
+
       R.div {className: "Divider"}
+
       @appRoot.definitions.map (definition) =>
         R.DefinitionView {definition}
+
+      R.div {className: "AddDefinition"},
+        R.button {className: "AddButton", onClick: @addDefinition}
 
 
 defaultBounds = {

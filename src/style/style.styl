@@ -1,7 +1,10 @@
 highlightColor = #09c
 plotBackgroundColor = #FAF8F2
 
+PlusButtonSize = 18px
+
 pointControlSize = 12px
+
 
 
 
@@ -13,9 +16,15 @@ shadow(size, opacity)
   box-shadow 0px size 2*size rgba(0, 0, 0, opacity)
 
 
+// ============================================================================
+// Generic
+// ============================================================================
 
 html, body
   margin 0
+
+[contenteditable]:active, [contenteditable]:focus, button:active, button:focus
+  outline none
 
 body
   font-family "Lucida Sans Unicode", "Lucida Grande", sans-serif
@@ -27,8 +36,6 @@ canvas
   left 0
   width 100%
   height 100%
-
-
 
 
 // ============================================================================
@@ -73,6 +80,11 @@ canvas
 .Divider
   border-bottom 1px solid #eee
 
+.AddDefinition
+  margin 12px
+  width 60px
+  text-align center
+
 
 // ============================================================================
 // Main Plot
@@ -103,20 +115,6 @@ canvas
 // Outline
 // ============================================================================
 
-
-.Sidebar
-  position absolute
-  top 0
-  left 100vh
-  height 100vh
-
-
-.TextButton
-  cursor pointer
-  font-size 10px
-  &:hover
-    color highlightColor
-
 .Reference
   padding 6px 0px
   .Extras
@@ -138,6 +136,37 @@ canvas
   margin-right 6px
 
 
+// ============================================================================
+// Buttons
+// ============================================================================
 
+.TextButton
+  cursor pointer
+  font-size 10px
+  &:hover
+    color highlightColor
+
+.AddButton
+  width PlusButtonSize
+  height PlusButtonSize
+  padding 0
+  line-height PlusButtonSize
+  font-size 9px
+  color #777
+  font-family verdana
+  font-weight bold
+  text-shadow 0 1px 0 rgba(255,255,255,0.5)
+  background-color #ddd
+  background-image linear-gradient(to bottom, #eee, #ccc)
+  box-shadow 0 2px 1px rgba(0,0,0,0.16), 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.55)
+  border-radius 20px
+  border 0px
+  &:before
+    content "+"
+  &:hover
+    background-image linear-gradient(to bottom, #f3f3f3, #d3d3d3)
+  &:active
+    background-image linear-gradient(to bottom, #cacaca, #d5d5d5)
+    box-shadow 0 1px 1px rgba(255,255,255,0.35), inset 0 0 1px rgba(0,0,0,0.5), inset 0 1px 4px rgba(0,0,0,0.4)
 
 

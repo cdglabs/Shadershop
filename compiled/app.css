@@ -2,6 +2,12 @@ html,
 body {
   margin: 0;
 }
+[contenteditable]:active,
+[contenteditable]:focus,
+button:active,
+button:focus {
+  outline: none;
+}
 body {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   font-size: 12px;
@@ -45,6 +51,11 @@ canvas {
 .Divider {
   border-bottom: 1px solid #eee;
 }
+.AddDefinition {
+  margin: 12px;
+  width: 60px;
+  text-align: center;
+}
 .PlotContainer {
   position: absolute;
   top: 0;
@@ -65,19 +76,6 @@ canvas {
 }
 .PointControl:hover {
   opacity: 1;
-}
-.Sidebar {
-  position: absolute;
-  top: 0;
-  left: 100vh;
-  height: 100vh;
-}
-.TextButton {
-  cursor: pointer;
-  font-size: 10px;
-}
-.TextButton:hover {
-  color: #09c;
 }
 .Reference {
   padding: 6px 0px;
@@ -100,4 +98,37 @@ canvas {
   display: inline-block;
   min-width: 48px;
   margin-right: 6px;
+}
+.TextButton {
+  cursor: pointer;
+  font-size: 10px;
+}
+.TextButton:hover {
+  color: #09c;
+}
+.AddButton {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  line-height: 18px;
+  font-size: 9px;
+  color: #777;
+  font-family: verdana;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  background-color: #ddd;
+  background-image: linear-gradient(to bottom, #eee, #ccc);
+  box-shadow: 0 2px 1px rgba(0,0,0,0.16), 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.55);
+  border-radius: 20px;
+  border: 0px;
+}
+.AddButton:before {
+  content: "+";
+}
+.AddButton:hover {
+  background-image: linear-gradient(to bottom, #f3f3f3, #d3d3d3);
+}
+.AddButton:active {
+  background-image: linear-gradient(to bottom, #cacaca, #d5d5d5);
+  box-shadow: 0 1px 1px rgba(255,255,255,0.35), inset 0 0 1px rgba(0,0,0,0.5), inset 0 1px 4px rgba(0,0,0,0.4);
 }

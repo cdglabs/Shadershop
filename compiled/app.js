@@ -1243,6 +1243,12 @@
     propTypes: {
       appRoot: C.AppRoot
     },
+    addDefinition: function() {
+      var definition;
+      definition = new C.CompoundDefinition();
+      this.appRoot.definitions.push(definition);
+      return UI.selectedDefinition = definition;
+    },
     render: function() {
       return R.div({
         className: "Definitions"
@@ -1260,7 +1266,12 @@
             definition: definition
           });
         };
-      })(this)));
+      })(this)), R.div({
+        className: "AddDefinition"
+      }, R.button({
+        className: "AddButton",
+        onClick: this.addDefinition
+      })));
     }
   });
 
