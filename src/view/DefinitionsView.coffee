@@ -34,9 +34,20 @@ R.create "DefinitionView",
     definition: C.Definition
 
   handleMouseDown: (e) ->
-    childReference = new C.Reference()
-    childReference.definition = @definition
-    UI.selectedDefinition.childReferences.push(childReference)
+    UI.preventDefault(e)
+
+    addChildReference = =>
+      childReference = new C.Reference()
+      childReference.definition = @definition
+      UI.selectedDefinition.childReferences.push(childReference)
+      UI.selectedChildReference = childReference
+
+    selectDefinition = =>
+      if @definition instanceof C.CompoundDefinition
+        UI.selectedDefinition = @definition
+
+    util.onceDragConsummated(e, addChildReference, selectDefinition)
+
 
   render: ->
     exprString = @definition.getExprString("x")

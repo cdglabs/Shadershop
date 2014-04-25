@@ -6,7 +6,10 @@ class C.Variable
   getValue: ->
     value = @_lastWorkingValue
     try
-      value = util.evaluate(@valueString)
+      if /^[-+]?[0-9]*\.?[0-9]+$/.test(@valueString)
+        value = parseFloat(@valueString)
+      else
+        value = util.evaluate(@valueString)
     @_lastWorkingValue = value
     return value
 
@@ -21,7 +24,10 @@ class C.BuiltInDefinition extends C.Definition
   constructor: (@fnName, @label) ->
 
   getExprString: (parameter) ->
-    "#{@fnName}(#{parameter})"
+    if @fnName == "identity"
+      return parameter
+
+    return "#{@fnName}(#{parameter})"
 
 
 class C.CompoundDefinition extends C.Definition
@@ -48,11 +54,11 @@ class C.CompoundDefinition extends C.Definition
 
     if @combiner == "sum"
       childExprStrings.unshift("0")
-      return childExprStrings.join(" + ")
+      return "(" + childExprStrings.join(" + ") + ")"
 
     if @combiner == "product"
       childExprStrings.unshift("1")
-      return childExprStrings.join(" * ")
+      return "(" + childExprStrings.join(" * ") + ")"
 
 
 

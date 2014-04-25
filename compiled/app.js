@@ -451,7 +451,11 @@
       var value;
       value = this._lastWorkingValue;
       try {
-        value = util.evaluate(this.valueString);
+        if (/^[-+]?[0-9]*\.?[0-9]+$/.test(this.valueString)) {
+          value = parseFloat(this.valueString);
+        } else {
+          value = util.evaluate(this.valueString);
+        }
       } catch (_error) {}
       this._lastWorkingValue = value;
       return value;
@@ -477,6 +481,9 @@
     }
 
     BuiltInDefinition.prototype.getExprString = function(parameter) {
+      if (this.fnName === "identity") {
+        return parameter;
+      }
       return "" + this.fnName + "(" + parameter + ")";
     };
 
@@ -517,11 +524,11 @@
       })(this));
       if (this.combiner === "sum") {
         childExprStrings.unshift("0");
-        return childExprStrings.join(" + ");
+        return "(" + childExprStrings.join(" + ") + ")";
       }
       if (this.combiner === "product") {
         childExprStrings.unshift("1");
-        return childExprStrings.join(" * ");
+        return "(" + childExprStrings.join(" * ") + ")";
       }
     };
 
@@ -605,7 +612,7 @@
   };
 
   drawCartesian = function(ctx, opts) {
-    var cx, cxMax, cxMin, cy, cyMax, cyMin, dCy1, dCy2, end, fn, i, line, lineStart, lines, numSamples, piece, pieceStart, pieces, previousX, pushLine, pushPiece, sample, samples, start, testDiscontinuity, x, xMax, xMin, y, yMax, yMin, _i, _j, _k, _l, _len, _len1, _len2, _m, _ref, _ref1, _ref2, _ref3, _results;
+    var cx, cxMax, cxMin, cy, cyMax, cyMin, dCy, fn, i, lastCx, lastCy, lastSample, testDiscontinuity, x, xMax, xMin, y, yMax, yMin, _i, _ref, _ref1;
     xMin = opts.xMin;
     xMax = opts.xMax;
     yMin = opts.yMin;
@@ -616,82 +623,30 @@
     };
     _ref1 = canvasBounds(ctx), cxMin = _ref1.cxMin, cxMax = _ref1.cxMax, cyMin = _ref1.cyMin, cyMax = _ref1.cyMax;
     ctx.beginPath();
-    numSamples = cxMax / config.resolution;
-    samples = [];
-    for (i = _i = 0; 0 <= numSamples ? _i <= numSamples : _i >= numSamples; i = 0 <= numSamples ? ++_i : --_i) {
+    lastSample = cxMax / config.resolution;
+    lastCx = null;
+    lastCy = null;
+    dCy = null;
+    for (i = _i = 0; 0 <= lastSample ? _i <= lastSample : _i >= lastSample; i = 0 <= lastSample ? ++_i : --_i) {
       cx = i * config.resolution;
       x = lerp(cx, cxMin, cxMax, xMin, xMax);
       y = fn(x);
       cy = lerp(y, yMin, yMax, cyMin, cyMax);
-      samples.push({
-        x: x,
-        y: y,
-        cx: cx,
-        cy: cy
-      });
-    }
-    pieces = [];
-    pieceStart = 0;
-    pushPiece = function(pieceEnd) {
-      pieces.push({
-        start: pieceStart,
-        end: pieceEnd
-      });
-      return pieceStart = pieceEnd;
-    };
-    for (i = _j = 0, _len = samples.length; _j < _len; i = ++_j) {
-      sample = samples[i];
-      if (i === 0) {
-        continue;
+      if (lastCy == null) {
+        ctx.moveTo(cx, cy);
       }
-      x = samples[i].x;
-      previousX = samples[i - 1].x;
-      if (testDiscontinuity([previousX, x])) {
-        pushPiece(i - 1);
-        pieceStart = i;
-      }
-    }
-    pushPiece(samples.length - 1);
-    lines = [];
-    lineStart = 0;
-    pushLine = function(lineEnd) {
-      lines.push({
-        start: lineStart,
-        end: lineEnd
-      });
-      return lineStart = lineEnd;
-    };
-    for (_k = 0, _len1 = pieces.length; _k < _len1; _k++) {
-      piece = pieces[_k];
-      lineStart = piece.start;
-      for (i = _l = _ref2 = piece.start + 1, _ref3 = piece.end; _ref2 <= _ref3 ? _l <= _ref3 : _l >= _ref3; i = _ref2 <= _ref3 ? ++_l : --_l) {
-        if (i - 1 === lineStart) {
-          continue;
-        }
-        dCy1 = samples[i].cy - samples[i - 1].cy;
-        dCy2 = samples[i - 1].cy - samples[i - 2].cy;
-        if (Math.abs(dCy1 - dCy2) > .000001) {
-          pushLine(i - 1);
-        }
-        if (i === piece.end) {
-          pushLine(i);
+      if (dCy != null) {
+        if (Math.abs((cy - lastCy) - dCy) > .000001) {
+          ctx.lineTo(lastCx, lastCy);
         }
       }
-    }
-    _results = [];
-    for (_m = 0, _len2 = lines.length; _m < _len2; _m++) {
-      line = lines[_m];
-      start = samples[line.start];
-      end = samples[line.end];
-      if (start.cx === end.cx) {
-        ctx.moveTo(start.cx, start.cy);
-        _results.push(ctx.lineTo(end.cx + 0.1, end.cy));
-      } else {
-        ctx.moveTo(start.cx, start.cy);
-        _results.push(ctx.lineTo(end.cx, end.cy));
+      if (lastCy != null) {
+        dCy = cy - lastCy;
       }
+      lastCx = cx;
+      lastCy = cy;
     }
-    return _results;
+    return ctx.lineTo(cx, cy);
   };
 
   drawVertical = function(ctx, opts) {
@@ -1287,10 +1242,25 @@
       definition: C.Definition
     },
     handleMouseDown: function(e) {
-      var childReference;
-      childReference = new C.Reference();
-      childReference.definition = this.definition;
-      return UI.selectedDefinition.childReferences.push(childReference);
+      var addChildReference, selectDefinition;
+      UI.preventDefault(e);
+      addChildReference = (function(_this) {
+        return function() {
+          var childReference;
+          childReference = new C.Reference();
+          childReference.definition = _this.definition;
+          UI.selectedDefinition.childReferences.push(childReference);
+          return UI.selectedChildReference = childReference;
+        };
+      })(this);
+      selectDefinition = (function(_this) {
+        return function() {
+          if (_this.definition instanceof C.CompoundDefinition) {
+            return UI.selectedDefinition = _this.definition;
+          }
+        };
+      })(this);
+      return util.onceDragConsummated(e, addChildReference, selectDefinition);
     },
     render: function() {
       var bounds, className, exprString, fnString;
