@@ -13,3 +13,10 @@ Plot
 Architecture
   Move "builtIn" into its own file.
   Move "combiners" into their own thing. Think of better name.
+
+
+
+
+
+Wishlist
+  Hide and show children

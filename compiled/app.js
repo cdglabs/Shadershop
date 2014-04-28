@@ -1288,6 +1288,9 @@
       })(this);
       return util.onceDragConsummated(e, addChildReference, selectDefinition);
     },
+    handleLabelInput: function(newValue) {
+      return this.definition.label = newValue;
+    },
     render: function() {
       var bounds, className, exprString, fnString;
       exprString = this.definition.getExprString("x");
@@ -1302,17 +1305,23 @@
         Selected: UI.selectedDefinition === this.definition
       });
       return R.div({
-        className: className,
-        onMouseDown: this.handleMouseDown
+        className: className
       }, R.div({
-        className: "PlotContainer"
+        className: "PlotContainer",
+        onMouseDown: this.handleMouseDown
       }, R.GridView({
         bounds: bounds
       }), R.PlotCartesianView({
         bounds: bounds,
         fnString: fnString,
         style: config.style.main
-      })));
+      })), this.definition instanceof C.BuiltInDefinition ? R.div({
+        className: "Label"
+      }, this.definition.label) : R.TextFieldView({
+        className: "Label",
+        value: this.definition.label,
+        onInput: this.handleLabelInput
+      }));
     }
   });
 

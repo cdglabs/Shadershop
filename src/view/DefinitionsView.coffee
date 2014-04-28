@@ -43,6 +43,9 @@ R.create "DefinitionView",
     util.onceDragConsummated(e, addChildReference, selectDefinition)
 
 
+  handleLabelInput: (newValue) ->
+    @definition.label = newValue
+
   render: ->
     exprString = @definition.getExprString("x")
     fnString = "(function (x) { return #{exprString}; })"
@@ -59,9 +62,8 @@ R.create "DefinitionView",
 
     R.div {
       className: className
-      onMouseDown: @handleMouseDown
     },
-      R.div {className: "PlotContainer"},
+      R.div {className: "PlotContainer", onMouseDown: @handleMouseDown},
         R.GridView {bounds}
 
         R.PlotCartesianView {
@@ -69,3 +71,13 @@ R.create "DefinitionView",
           fnString
           style: config.style.main
         }
+
+      if @definition instanceof C.BuiltInDefinition
+        R.div {className: "Label"}, @definition.label
+      else
+        R.TextFieldView {
+          className: "Label"
+          value: @definition.label
+          onInput: @handleLabelInput
+        }
+

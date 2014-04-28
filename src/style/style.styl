@@ -38,6 +38,17 @@ canvas
   height 100%
 
 
+// Kill scrollbars in webkit...
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+}
+
+
+
+
+
+
 // ============================================================================
 // Main Layout
 // ============================================================================
@@ -45,6 +56,8 @@ canvas
 .Definitions
   inline top
   height 100vh
+  overflow-x hidden
+  overflow-y auto
 
 .MainPlot
   inline top
@@ -55,6 +68,8 @@ canvas
 .Outline
   inline top
   height 100vh
+  box-sizing border-box
+  padding 12px
 
 
 // ============================================================================
@@ -62,27 +77,31 @@ canvas
 // ============================================================================
 
 .Definition
-  position relative
-  box-sizing border-box
-  width 60px
-  height 60px
-  // border 1px solid #eee
   margin 12px
-  shadow 1px 0.2
 
-  // opacity 0.3
+  .PlotContainer
+    position relative
+    box-sizing border-box
+    width 72px
+    height 72px
+    shadow 1px 0.2
+
   &.Selected
-    // opacity 1
-    outline 1px solid highlightColor
-    // border 1px solid #666
-    shadow 1px 0.5
+    .PlotContainer
+      outline 1px solid highlightColor
+      shadow 1px 0.5
+
+  .Label
+    width 72px
+    margin-top 4px
+    text-align center
 
 .Divider
   border-bottom 1px solid #eee
 
 .AddDefinition
   margin 12px
-  width 60px
+  width 72px
   text-align center
 
 
