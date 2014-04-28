@@ -39,12 +39,10 @@ R.create "ReferenceView",
     index: Number
 
   handleMouseDown: ->
-    UI.selectedChildReference = @reference
+    UI.selectChildReference(@reference)
 
   remove: ->
-    @definition.childReferences.splice(@index, 1)
-    if UI.selectedChildReference == @reference
-      UI.selectedChildReference = null
+    UI.removeChildReference(@definition, @index)
 
   render: ->
     className = R.cx {

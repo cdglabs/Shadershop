@@ -27,7 +27,7 @@ R.create "MainPlotView",
       if distance < config.hitTolerance * pixelWidth
         found = childReference
 
-    UI.selectedChildReference = found
+    UI.selectChildReference(found)
 
   startPan: (e) ->
     originalX = e.clientX

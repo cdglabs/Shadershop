@@ -3,9 +3,7 @@ R.create "DefinitionsView",
     appRoot: C.AppRoot
 
   addDefinition: ->
-    definition = new C.CompoundDefinition()
-    @appRoot.definitions.push(definition)
-    UI.selectedDefinition = definition
+    UI.addDefinition(@appRoot)
 
   render: ->
     R.div {className: "Definitions"},
@@ -37,14 +35,10 @@ R.create "DefinitionView",
     UI.preventDefault(e)
 
     addChildReference = =>
-      childReference = new C.Reference()
-      childReference.definition = @definition
-      UI.selectedDefinition.childReferences.push(childReference)
-      UI.selectedChildReference = childReference
+      UI.addChildReference(@definition)
 
     selectDefinition = =>
-      if @definition instanceof C.CompoundDefinition
-        UI.selectedDefinition = @definition
+      UI.selectDefinition(@definition)
 
     util.onceDragConsummated(e, addChildReference, selectDefinition)
 

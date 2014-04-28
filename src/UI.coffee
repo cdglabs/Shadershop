@@ -67,6 +67,35 @@ window.UI = UI = new class
 
 
   # ===========================================================================
+  # Controller
+  # ===========================================================================
+
+  selectDefinition: (definition) ->
+    return unless definition instanceof C.CompoundDefinition
+    @selectedDefinition = definition
+    @selectedChildReference = null
+
+  selectChildReference: (childReference) ->
+    @selectedChildReference = childReference
+
+  addDefinition: (appRoot) ->
+    definition = new C.CompoundDefinition()
+    appRoot.definitions.push(definition)
+    @selectDefinition(definition)
+
+  addChildReference: (childReferenceDefinition) ->
+    childReference = new C.Reference()
+    childReference.definition = childReferenceDefinition
+    @selectedDefinition.childReferences.push(childReference)
+    @selectChildReference(childReference)
+
+  removeChildReference: (definition, childReferenceIndex) ->
+    [removedChildReference] = definition.childReferences.splice(childReferenceIndex, 1)
+    if @selectedChildReference == removedChildReference
+      @selectChildReference(null)
+
+
+  # ===========================================================================
   # Scrubbing variables
   # ===========================================================================
 

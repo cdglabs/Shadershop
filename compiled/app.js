@@ -122,6 +122,41 @@
       return el != null ? el.dataFor : void 0;
     };
 
+    _Class.prototype.selectDefinition = function(definition) {
+      if (!(definition instanceof C.CompoundDefinition)) {
+        return;
+      }
+      this.selectedDefinition = definition;
+      return this.selectedChildReference = null;
+    };
+
+    _Class.prototype.selectChildReference = function(childReference) {
+      return this.selectedChildReference = childReference;
+    };
+
+    _Class.prototype.addDefinition = function(appRoot) {
+      var definition;
+      definition = new C.CompoundDefinition();
+      appRoot.definitions.push(definition);
+      return this.selectDefinition(definition);
+    };
+
+    _Class.prototype.addChildReference = function(childReferenceDefinition) {
+      var childReference;
+      childReference = new C.Reference();
+      childReference.definition = childReferenceDefinition;
+      this.selectedDefinition.childReferences.push(childReference);
+      return this.selectChildReference(childReference);
+    };
+
+    _Class.prototype.removeChildReference = function(definition, childReferenceIndex) {
+      var removedChildReference;
+      removedChildReference = definition.childReferences.splice(childReferenceIndex, 1)[0];
+      if (this.selectedChildReference === removedChildReference) {
+        return this.selectChildReference(null);
+      }
+    };
+
     _Class.prototype.startVariableScrub = function(opts) {
       var cursor, onMove, variable;
       variable = opts.variable;
@@ -1199,10 +1234,7 @@
       appRoot: C.AppRoot
     },
     addDefinition: function() {
-      var definition;
-      definition = new C.CompoundDefinition();
-      this.appRoot.definitions.push(definition);
-      return UI.selectedDefinition = definition;
+      return UI.addDefinition(this.appRoot);
     },
     render: function() {
       return R.div({
@@ -1246,18 +1278,12 @@
       UI.preventDefault(e);
       addChildReference = (function(_this) {
         return function() {
-          var childReference;
-          childReference = new C.Reference();
-          childReference.definition = _this.definition;
-          UI.selectedDefinition.childReferences.push(childReference);
-          return UI.selectedChildReference = childReference;
+          return UI.addChildReference(_this.definition);
         };
       })(this);
       selectDefinition = (function(_this) {
         return function() {
-          if (_this.definition instanceof C.CompoundDefinition) {
-            return UI.selectedDefinition = _this.definition;
-          }
+          return UI.selectDefinition(_this.definition);
         };
       })(this);
       return util.onceDragConsummated(e, addChildReference, selectDefinition);
@@ -1325,7 +1351,7 @@
           found = childReference;
         }
       }
-      return UI.selectedChildReference = found;
+      return UI.selectChildReference(found);
     },
     startPan: function(e) {
       var originalBounds, originalX, originalY, rect, xScale, yScale;
@@ -1567,13 +1593,10 @@
       index: Number
     },
     handleMouseDown: function() {
-      return UI.selectedChildReference = this.reference;
+      return UI.selectChildReference(this.reference);
     },
     remove: function() {
-      this.definition.childReferences.splice(this.index, 1);
-      if (UI.selectedChildReference === this.reference) {
-        return UI.selectedChildReference = null;
-      }
+      return UI.removeChildReference(this.definition, this.index);
     },
     render: function() {
       var className;
