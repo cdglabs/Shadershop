@@ -122,6 +122,7 @@ require("./AppRootView")
 require("./DefinitionsView")
 require("./MainPlotView")
 require("./OutlineView")
+require("./VariableView")
 
 require("./plot/CanvasView")
 require("./plot/GridView")

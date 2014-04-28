@@ -1,9 +1,9 @@
 R.create "MainPlotView",
   propTypes:
-    definition: C.Definition
+    fn: C.Fn
 
   getLocalMouseCoords: ->
-    bounds = @definition.bounds
+    bounds = @fn.bounds
     rect = @getDOMNode().getBoundingClientRect()
     x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax)
     y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
@@ -13,30 +13,30 @@ R.create "MainPlotView",
     {x, y} = @getLocalMouseCoords()
 
     rect = @getDOMNode().getBoundingClientRect()
-    bounds = @definition.bounds
+    bounds = @fn.bounds
     pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
 
     found = null
-    for childReference in @definition.childReferences
-      exprString = childReference.getExprString("x")
+    for childFn in @fn.childFns
+      exprString = childFn.getExprString("x")
       fnString = "(function (x) { return #{exprString}; })"
 
       fn = util.evaluate(fnString)
 
       distance = Math.abs(y - fn(x))
       if distance < config.hitTolerance * pixelWidth
-        found = childReference
+        found = childFn
 
-    UI.selectChildReference(found)
+    UI.selectChildFn(found)
 
   startPan: (e) ->
     originalX = e.clientX
     originalY = e.clientY
     originalBounds = {
-      xMin: @definition.bounds.xMin
-      xMax: @definition.bounds.xMax
-      yMin: @definition.bounds.yMin
-      yMax: @definition.bounds.yMax
+      xMin: @fn.bounds.xMin
+      xMax: @fn.bounds.xMax
+      yMin: @fn.bounds.yMin
+      yMax: @fn.bounds.yMax
     }
 
     rect = @getDOMNode().getBoundingClientRect()
@@ -48,7 +48,7 @@ R.create "MainPlotView",
       onMove: (e) =>
         dx = e.clientX - originalX
         dy = e.clientY - originalY
-        @definition.bounds = {
+        @fn.bounds = {
           xMin: originalBounds.xMin - dx * xScale
           xMax: originalBounds.xMax - dx * xScale
           yMin: originalBounds.yMin + dy * yScale
@@ -69,12 +69,12 @@ R.create "MainPlotView",
 
     {x, y} = @getLocalMouseCoords()
 
-    bounds = @definition.bounds
+    bounds = @fn.bounds
 
     scaleFactor = 1.1
     scale = if e.deltaY > 0 then scaleFactor else 1/scaleFactor
 
-    @definition.bounds = {
+    @fn.bounds = {
       xMin: (bounds.xMin - x) * scale + x
       xMax: (bounds.xMax - x) * scale + x
       yMin: (bounds.yMin - y) * scale + y
@@ -86,7 +86,7 @@ R.create "MainPlotView",
     exprString = curve.getExprString("x")
     fnString = "(function (x) { return #{exprString}; })"
     return R.PlotCartesianView {
-      bounds: @definition.bounds
+      bounds: @fn.bounds
       fnString
       style
     }
@@ -96,35 +96,33 @@ R.create "MainPlotView",
     R.div {className: "MainPlot", onMouseDown: @handleMouseDown, onWheel: @handleWheel},
       R.div {className: "PlotContainer"},
         # Grid
-        R.GridView {bounds: @definition.bounds}
+        R.GridView {bounds: @fn.bounds}
 
-        # Child References
-        @definition.childReferences.map (childReference) =>
-          @renderPlot(childReference, config.style.default)
+        # Child Fns
+        @fn.childFns.map (childFn) =>
+          @renderPlot(childFn, config.style.default)
 
         # Main
-        @renderPlot(@definition, config.style.main)
+        @renderPlot(@fn, config.style.main)
 
-        if UI.selectedChildReference
-          @renderPlot(UI.selectedChildReference, config.style.selected)
+        if UI.selectedChildFn
+          @renderPlot(UI.selectedChildFn, config.style.selected)
 
-        if UI.selectedChildReference
-          R.ReferenceControlsView {
-            definition: @definition
-            reference: UI.selectedChildReference
+        if UI.selectedChildFn
+          R.TransformedFnControlsView {
+            transformedFn: UI.selectedChildFn
           }
 
 
-R.create "ReferenceControlsView",
+R.create "TransformedFnControlsView",
   propTypes:
-    reference: C.Reference
-    definition: C.Definition
+    transformedFn: C.TransformedFn
 
   snap: (value) ->
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()
 
-    bounds = @definition.bounds
+    bounds = @lookup("fn").bounds
 
     pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
 
@@ -152,23 +150,23 @@ R.create "ReferenceControlsView",
     return util.floatToString(value, precision)
 
   handleTranslateChange: (x, y) ->
-    @reference.domainTranslate.valueString = @snap(x)
-    @reference.rangeTranslate.valueString  = @snap(y)
+    @transformedFn.domainTranslate.valueString = @snap(x)
+    @transformedFn.rangeTranslate.valueString  = @snap(y)
 
   handleScaleChange: (x, y) ->
-    @reference.domainScale.valueString = @snap(x - @reference.domainTranslate.getValue())
-    @reference.rangeScale.valueString  = @snap(y - @reference.rangeTranslate.getValue())
+    @transformedFn.domainScale.valueString = @snap(x - @transformedFn.domainTranslate.getValue())
+    @transformedFn.rangeScale.valueString  = @snap(y - @transformedFn.rangeTranslate.getValue())
 
   render: ->
     R.span {},
       R.PointControlView {
-        x: @reference.domainTranslate.getValue()
-        y: @reference.rangeTranslate.getValue()
+        x: @transformedFn.domainTranslate.getValue()
+        y: @transformedFn.rangeTranslate.getValue()
         onChange: @handleTranslateChange
       }
       R.PointControlView {
-        x: @reference.domainTranslate.getValue() + @reference.domainScale.getValue()
-        y: @reference.rangeTranslate.getValue()  + @reference.rangeScale.getValue()
+        x: @transformedFn.domainTranslate.getValue() + @transformedFn.domainScale.getValue()
+        y: @transformedFn.rangeTranslate.getValue()  + @transformedFn.rangeScale.getValue()
         onChange: @handleScaleChange
       }
 
@@ -193,7 +191,7 @@ R.create "PointControlView",
 
     UI.dragging = {
       onMove: (e) =>
-        bounds = @lookup("definition").bounds
+        bounds = @lookup("fn").bounds
 
         x = (e.clientX - rect.left) / rect.width
         y = (e.clientY - rect.top)  / rect.height
@@ -206,7 +204,7 @@ R.create "PointControlView",
 
 
   style: ->
-    bounds = @lookup("definition").bounds
+    bounds = @lookup("fn").bounds
     top  = util.lerp(@y, bounds.yMin, bounds.yMax, 100, 0) + "%"
     left = util.lerp(@x, bounds.xMin, bounds.xMax, 0, 100) + "%"
     return {top, left}

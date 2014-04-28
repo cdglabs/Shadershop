@@ -1,15 +1,15 @@
 R.create "OutlineView",
   propTypes:
-    definition: C.Definition
+    compoundFn: C.CompoundFn
 
   render: ->
     R.div {className: "Outline"},
-      R.CombinerView {definition: @definition}
+      R.CombinerView {compoundFn: @compoundFn}
 
-      @definition.childReferences.map (childReference, index) =>
-        R.ReferenceView {
-          reference: childReference
-          definition: @definition
+      @compoundFn.childFns.map (childFn, index) =>
+        R.TransformedFnView {
+          transformedFn: childFn
+          compoundFn: @compoundFn
           index: index
         }
 
@@ -17,65 +17,47 @@ R.create "OutlineView",
 
 R.create "CombinerView",
   propTypes:
-    definition: C.Definition
+    compoundFn: C.CompoundFn
 
   handleChange: (e) ->
     value = e.target.selectedOptions[0].value
-    @definition.combiner = value
+    @compoundFn.combiner = value
 
   render: ->
     R.div {},
-      R.select {value: @definition.combiner, onChange: @handleChange},
+      R.select {value: @compoundFn.combiner, onChange: @handleChange},
         R.option {value: "sum"}, "Add"
         R.option {value: "product"}, "Multiply"
         R.option {value: "composition"}, "Compose"
 
 
 
-R.create "ReferenceView",
+R.create "TransformedFnView",
   propTypes:
-    reference: C.Reference
-    definition: C.Definition
+    transformedFn: C.TransformedFn
+    compoundFn: C.CompoundFn
     index: Number
 
   handleMouseDown: ->
-    UI.selectChildReference(@reference)
+    UI.selectChildFn(@transformedFn)
 
   remove: ->
-    UI.removeChildReference(@definition, @index)
+    UI.removeChildFn(@compoundFn, @index)
 
   render: ->
     className = R.cx {
       Reference: true
-      Selected: @reference == UI.selectedChildReference
+      Selected: @transformedFn == UI.selectedChildFn
     }
     R.div {className, onMouseDown: @handleMouseDown},
-      R.div {className: "FnName"}, @reference.definition.label
+      R.div {className: "FnName"}, @transformedFn.fn.label
       R.div {},
         R.span {className: "TransformLabel"}, "+"
-        R.VariableView {variable: @reference.domainTranslate}
-        R.VariableView {variable: @reference.rangeTranslate}
+        R.VariableView {variable: @transformedFn.domainTranslate}
+        R.VariableView {variable: @transformedFn.rangeTranslate}
       R.div {},
         R.span {className: "TransformLabel"}, "*"
-        R.VariableView {variable: @reference.domainScale}
-        R.VariableView {variable: @reference.rangeScale}
+        R.VariableView {variable: @transformedFn.domainScale}
+        R.VariableView {variable: @transformedFn.rangeScale}
       R.div {className: "Extras"},
         R.div {className: "TextButton", onClick: @remove}, "remove"
-
-
-
-
-R.create "VariableView",
-  propTypes:
-    variable: C.Variable
-
-  handleInput: (newValue) ->
-    @variable.valueString = newValue
-
-  render: ->
-    R.TextFieldView {
-      className: "Variable"
-      value: @variable.valueString
-      onInput: @handleInput
-    }
-

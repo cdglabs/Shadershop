@@ -16,11 +16,45 @@ class C.Variable
 
 
 
-class C.Definition
+
+
+###
+
+
+Fn
+
+BuiltInFn
+  label
+
+CompoundFn
+  label
+  reducer
+  fns
+
+TransformedFn
+  fn
+  domainTranslate
+  domainScale
+  rangeTranslate
+  rangeScale
+
+Reducer
+  identity: Fn
+
+
+###
+
+
+
+
+
+
+
+class C.Fn
   constructor: ->
 
 
-class C.BuiltInDefinition extends C.Definition
+class C.BuiltInFn extends C.Fn
   constructor: (@fnName, @label) ->
 
   getExprString: (parameter) ->
@@ -30,11 +64,11 @@ class C.BuiltInDefinition extends C.Definition
     return "#{@fnName}(#{parameter})"
 
 
-class C.CompoundDefinition extends C.Definition
+class C.CompoundFn extends C.Fn
   constructor: ->
     @label = ""
     @combiner = "sum"
-    @childReferences = []
+    @childFns = []
     @bounds = {
       xMin: -6
       xMax: 6
@@ -45,12 +79,12 @@ class C.CompoundDefinition extends C.Definition
   getExprString: (parameter) ->
     if @combiner == "composition"
       exprString = parameter
-      for childReference in @childReferences
-        exprString = childReference.getExprString(exprString)
+      for childFn in @childFns
+        exprString = childFn.getExprString(exprString)
       return exprString
 
-    childExprStrings = @childReferences.map (childReference) =>
-      childReference.getExprString(parameter)
+    childExprStrings = @childFns.map (childFn) =>
+      childFn.getExprString(parameter)
 
     if @combiner == "sum"
       childExprStrings.unshift("0")
@@ -62,9 +96,9 @@ class C.CompoundDefinition extends C.Definition
 
 
 
-class C.Reference
+class C.TransformedFn
   constructor: ->
-    @definition = null
+    @fn = null
     @domainTranslate = new C.Variable("0")
     @domainScale = new C.Variable("1")
     @rangeTranslate = new C.Variable("0")
@@ -77,7 +111,7 @@ class C.Reference
     rangeScale = @rangeScale.getValue()
 
     exprString = "((#{parameter} - #{domainTranslate}) / #{domainScale})"
-    exprString = @definition.getExprString(exprString)
+    exprString = @fn.getExprString(exprString)
     exprString = "(#{exprString} * #{rangeScale} + #{rangeTranslate})"
     return exprString
 
@@ -87,19 +121,19 @@ class C.Reference
 
 class C.AppRoot
   constructor: ->
-    @definitions = [
-      new C.CompoundDefinition()
+    @fns = [
+      new C.CompoundFn()
     ]
 
 
 
 window.builtIn = builtIn = {}
 
-builtIn.definitions = [
-  new C.BuiltInDefinition("identity", "Line")
-  new C.BuiltInDefinition("abs", "Abs")
-  new C.BuiltInDefinition("fract", "Fract")
-  new C.BuiltInDefinition("floor", "Floor")
-  new C.BuiltInDefinition("sin", "Sine")
+builtIn.fns = [
+  new C.BuiltInFn("identity", "Line")
+  new C.BuiltInFn("abs", "Abs")
+  new C.BuiltInFn("fract", "Fract")
+  new C.BuiltInFn("floor", "Floor")
+  new C.BuiltInFn("sin", "Sine")
 ]
 

@@ -2,22 +2,22 @@ R.create "DefinitionsView",
   propTypes:
     appRoot: C.AppRoot
 
-  addDefinition: ->
-    UI.addDefinition(@appRoot)
+  addFn: ->
+    UI.addFn(@appRoot)
 
   render: ->
     R.div {className: "Definitions"},
 
-      builtIn.definitions.map (definition) =>
-        R.DefinitionView {definition}
+      builtIn.fns.map (fn) =>
+        R.DefinitionView {fn}
 
       R.div {className: "Divider"}
 
-      @appRoot.definitions.map (definition) =>
-        R.DefinitionView {definition}
+      @appRoot.fns.map (fn) =>
+        R.DefinitionView {fn}
 
       R.div {className: "AddDefinition"},
-        R.button {className: "AddButton", onClick: @addDefinition}
+        R.button {className: "AddButton", onClick: @addFn}
 
 
 defaultBounds = {
@@ -29,35 +29,35 @@ defaultBounds = {
 
 R.create "DefinitionView",
   propTypes:
-    definition: C.Definition
+    fn: C.Fn
 
   handleMouseDown: (e) ->
     UI.preventDefault(e)
 
-    addChildReference = =>
-      UI.addChildReference(@definition)
+    addChildFn = =>
+      UI.addChildFn(@fn)
 
-    selectDefinition = =>
-      UI.selectDefinition(@definition)
+    selectFn = =>
+      UI.selectFn(@fn)
 
-    util.onceDragConsummated(e, addChildReference, selectDefinition)
+    util.onceDragConsummated(e, addChildFn, selectFn)
 
 
   handleLabelInput: (newValue) ->
-    @definition.label = newValue
+    @fn.label = newValue
 
   render: ->
-    exprString = @definition.getExprString("x")
+    exprString = @fn.getExprString("x")
     fnString = "(function (x) { return #{exprString}; })"
 
-    if @definition instanceof C.BuiltInDefinition
+    if @fn instanceof C.BuiltInFn
       bounds = defaultBounds
     else
-      bounds = @definition.bounds
+      bounds = @fn.bounds
 
     className = R.cx {
       Definition: true
-      Selected: UI.selectedDefinition == @definition
+      Selected: UI.selectedFn == @fn
     }
 
     R.div {
@@ -72,12 +72,12 @@ R.create "DefinitionView",
           style: config.style.main
         }
 
-      if @definition instanceof C.BuiltInDefinition
-        R.div {className: "Label"}, @definition.label
+      if @fn instanceof C.BuiltInFn
+        R.div {className: "Label"}, @fn.label
       else
         R.TextFieldView {
           className: "Label"
-          value: @definition.label
+          value: @fn.label
           onInput: @handleLabelInput
         }
 

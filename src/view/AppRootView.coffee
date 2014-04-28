@@ -5,5 +5,5 @@ R.create "AppRootView",
   render: ->
     R.div {},
       R.DefinitionsView {appRoot: @appRoot}
-      R.MainPlotView {definition: UI.selectedDefinition}
-      R.OutlineView {definition: UI.selectedDefinition}
+      R.MainPlotView {fn: UI.selectedFn}
+      R.OutlineView {compoundFn: UI.selectedFn}

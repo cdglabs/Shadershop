@@ -58,12 +58,8 @@
       this.handleWindowMouseMove = __bind(this.handleWindowMouseMove, this);
       this.dragging = null;
       this.autofocus = null;
-      this.selectedDefinition = _.last(appRoot.definitions);
-      this.selectedChildReference = null;
-      this.hoverData = null;
-      this.hoverIsActive = false;
-      this.selectedData = null;
-      this.activeTransclusionDropView = null;
+      this.selectedFn = _.last(appRoot.fns);
+      this.selectedChildFn = null;
       this.registerEvents();
     }
 
@@ -122,38 +118,38 @@
       return el != null ? el.dataFor : void 0;
     };
 
-    _Class.prototype.selectDefinition = function(definition) {
-      if (!(definition instanceof C.CompoundDefinition)) {
+    _Class.prototype.selectFn = function(fn) {
+      if (!(fn instanceof C.CompoundFn)) {
         return;
       }
-      this.selectedDefinition = definition;
-      return this.selectedChildReference = null;
+      this.selectedFn = fn;
+      return this.selectedChildFn = null;
     };
 
-    _Class.prototype.selectChildReference = function(childReference) {
-      return this.selectedChildReference = childReference;
+    _Class.prototype.selectChildFn = function(childFn) {
+      return this.selectedChildFn = childFn;
     };
 
-    _Class.prototype.addDefinition = function(appRoot) {
-      var definition;
-      definition = new C.CompoundDefinition();
-      appRoot.definitions.push(definition);
-      return this.selectDefinition(definition);
+    _Class.prototype.addFn = function(appRoot) {
+      var fn;
+      fn = new C.CompoundFn();
+      appRoot.fns.push(fn);
+      return this.selectFn(fn);
     };
 
-    _Class.prototype.addChildReference = function(childReferenceDefinition) {
-      var childReference;
-      childReference = new C.Reference();
-      childReference.definition = childReferenceDefinition;
-      this.selectedDefinition.childReferences.push(childReference);
-      return this.selectChildReference(childReference);
+    _Class.prototype.addChildFn = function(untransformedChildFn) {
+      var childFn;
+      childFn = new C.TransformedFn();
+      childFn.fn = untransformedChildFn;
+      this.selectedFn.childFns.push(childFn);
+      return this.selectChildFn(childFn);
     };
 
-    _Class.prototype.removeChildReference = function(definition, childReferenceIndex) {
-      var removedChildReference;
-      removedChildReference = definition.childReferences.splice(childReferenceIndex, 1)[0];
-      if (this.selectedChildReference === removedChildReference) {
-        return this.selectChildReference(null);
+    _Class.prototype.removeChildFn = function(fn, childFnIndex) {
+      var removedChildFn;
+      removedChildFn = fn.childFns.splice(childFnIndex, 1)[0];
+      if (this.selectedChildFn === removedChildFn) {
+        return this.selectChildFn(null);
       }
     };
 
@@ -500,39 +496,64 @@
 
   })();
 
-  C.Definition = (function() {
-    function Definition() {}
 
-    return Definition;
+  /*
+  
+  
+  Fn
+  
+  BuiltInFn
+    label
+  
+  CompoundFn
+    label
+    reducer
+    fns
+  
+  TransformedFn
+    fn
+    domainTranslate
+    domainScale
+    rangeTranslate
+    rangeScale
+  
+  Reducer
+    identity: Fn
+   */
+
+  C.Fn = (function() {
+    function Fn() {}
+
+    return Fn;
 
   })();
 
-  C.BuiltInDefinition = (function(_super) {
-    __extends(BuiltInDefinition, _super);
+  C.BuiltInFn = (function(_super) {
+    __extends(BuiltInFn, _super);
 
-    function BuiltInDefinition(fnName, label) {
+    function BuiltInFn(fnName, label) {
       this.fnName = fnName;
       this.label = label;
     }
 
-    BuiltInDefinition.prototype.getExprString = function(parameter) {
+    BuiltInFn.prototype.getExprString = function(parameter) {
       if (this.fnName === "identity") {
         return parameter;
       }
       return "" + this.fnName + "(" + parameter + ")";
     };
 
-    return BuiltInDefinition;
+    return BuiltInFn;
 
-  })(C.Definition);
+  })(C.Fn);
 
-  C.CompoundDefinition = (function(_super) {
-    __extends(CompoundDefinition, _super);
+  C.CompoundFn = (function(_super) {
+    __extends(CompoundFn, _super);
 
-    function CompoundDefinition() {
+    function CompoundFn() {
       this.label = "";
       this.combiner = "sum";
-      this.childReferences = [];
+      this.childFns = [];
       this.bounds = {
         xMin: -6,
         xMax: 6,
@@ -541,20 +562,20 @@
       };
     }
 
-    CompoundDefinition.prototype.getExprString = function(parameter) {
-      var childExprStrings, childReference, exprString, _i, _len, _ref;
+    CompoundFn.prototype.getExprString = function(parameter) {
+      var childExprStrings, childFn, exprString, _i, _len, _ref;
       if (this.combiner === "composition") {
         exprString = parameter;
-        _ref = this.childReferences;
+        _ref = this.childFns;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          childReference = _ref[_i];
-          exprString = childReference.getExprString(exprString);
+          childFn = _ref[_i];
+          exprString = childFn.getExprString(exprString);
         }
         return exprString;
       }
-      childExprStrings = this.childReferences.map((function(_this) {
-        return function(childReference) {
-          return childReference.getExprString(parameter);
+      childExprStrings = this.childFns.map((function(_this) {
+        return function(childFn) {
+          return childFn.getExprString(parameter);
         };
       })(this));
       if (this.combiner === "sum") {
@@ -567,38 +588,38 @@
       }
     };
 
-    return CompoundDefinition;
+    return CompoundFn;
 
-  })(C.Definition);
+  })(C.Fn);
 
-  C.Reference = (function() {
-    function Reference() {
-      this.definition = null;
+  C.TransformedFn = (function() {
+    function TransformedFn() {
+      this.fn = null;
       this.domainTranslate = new C.Variable("0");
       this.domainScale = new C.Variable("1");
       this.rangeTranslate = new C.Variable("0");
       this.rangeScale = new C.Variable("1");
     }
 
-    Reference.prototype.getExprString = function(parameter) {
+    TransformedFn.prototype.getExprString = function(parameter) {
       var domainScale, domainTranslate, exprString, rangeScale, rangeTranslate;
       domainTranslate = this.domainTranslate.getValue();
       domainScale = this.domainScale.getValue();
       rangeTranslate = this.rangeTranslate.getValue();
       rangeScale = this.rangeScale.getValue();
       exprString = "((" + parameter + " - " + domainTranslate + ") / " + domainScale + ")";
-      exprString = this.definition.getExprString(exprString);
+      exprString = this.fn.getExprString(exprString);
       exprString = "(" + exprString + " * " + rangeScale + " + " + rangeTranslate + ")";
       return exprString;
     };
 
-    return Reference;
+    return TransformedFn;
 
   })();
 
   C.AppRoot = (function() {
     function AppRoot() {
-      this.definitions = [new C.CompoundDefinition()];
+      this.fns = [new C.CompoundFn()];
     }
 
     return AppRoot;
@@ -607,7 +628,7 @@
 
   window.builtIn = builtIn = {};
 
-  builtIn.definitions = [new C.BuiltInDefinition("identity", "Line"), new C.BuiltInDefinition("abs", "Abs"), new C.BuiltInDefinition("fract", "Fract"), new C.BuiltInDefinition("floor", "Floor"), new C.BuiltInDefinition("sin", "Sine")];
+  builtIn.fns = [new C.BuiltInFn("identity", "Line"), new C.BuiltInFn("abs", "Abs"), new C.BuiltInFn("fract", "Fract"), new C.BuiltInFn("floor", "Floor"), new C.BuiltInFn("sin", "Sine")];
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
@@ -1218,9 +1239,9 @@
       return R.div({}, R.DefinitionsView({
         appRoot: this.appRoot
       }), R.MainPlotView({
-        definition: UI.selectedDefinition
+        fn: UI.selectedFn
       }), R.OutlineView({
-        definition: UI.selectedDefinition
+        compoundFn: UI.selectedFn
       }));
     }
   });
@@ -1233,31 +1254,31 @@
     propTypes: {
       appRoot: C.AppRoot
     },
-    addDefinition: function() {
-      return UI.addDefinition(this.appRoot);
+    addFn: function() {
+      return UI.addFn(this.appRoot);
     },
     render: function() {
       return R.div({
         className: "Definitions"
-      }, builtIn.definitions.map((function(_this) {
-        return function(definition) {
+      }, builtIn.fns.map((function(_this) {
+        return function(fn) {
           return R.DefinitionView({
-            definition: definition
+            fn: fn
           });
         };
       })(this)), R.div({
         className: "Divider"
-      }), this.appRoot.definitions.map((function(_this) {
-        return function(definition) {
+      }), this.appRoot.fns.map((function(_this) {
+        return function(fn) {
           return R.DefinitionView({
-            definition: definition
+            fn: fn
           });
         };
       })(this)), R.div({
         className: "AddDefinition"
       }, R.button({
         className: "AddButton",
-        onClick: this.addDefinition
+        onClick: this.addFn
       })));
     }
   });
@@ -1271,38 +1292,38 @@
 
   R.create("DefinitionView", {
     propTypes: {
-      definition: C.Definition
+      fn: C.Fn
     },
     handleMouseDown: function(e) {
-      var addChildReference, selectDefinition;
+      var addChildFn, selectFn;
       UI.preventDefault(e);
-      addChildReference = (function(_this) {
+      addChildFn = (function(_this) {
         return function() {
-          return UI.addChildReference(_this.definition);
+          return UI.addChildFn(_this.fn);
         };
       })(this);
-      selectDefinition = (function(_this) {
+      selectFn = (function(_this) {
         return function() {
-          return UI.selectDefinition(_this.definition);
+          return UI.selectFn(_this.fn);
         };
       })(this);
-      return util.onceDragConsummated(e, addChildReference, selectDefinition);
+      return util.onceDragConsummated(e, addChildFn, selectFn);
     },
     handleLabelInput: function(newValue) {
-      return this.definition.label = newValue;
+      return this.fn.label = newValue;
     },
     render: function() {
       var bounds, className, exprString, fnString;
-      exprString = this.definition.getExprString("x");
+      exprString = this.fn.getExprString("x");
       fnString = "(function (x) { return " + exprString + "; })";
-      if (this.definition instanceof C.BuiltInDefinition) {
+      if (this.fn instanceof C.BuiltInFn) {
         bounds = defaultBounds;
       } else {
-        bounds = this.definition.bounds;
+        bounds = this.fn.bounds;
       }
       className = R.cx({
         Definition: true,
-        Selected: UI.selectedDefinition === this.definition
+        Selected: UI.selectedFn === this.fn
       });
       return R.div({
         className: className
@@ -1315,11 +1336,11 @@
         bounds: bounds,
         fnString: fnString,
         style: config.style.main
-      })), this.definition instanceof C.BuiltInDefinition ? R.div({
+      })), this.fn instanceof C.BuiltInFn ? R.div({
         className: "Label"
-      }, this.definition.label) : R.TextFieldView({
+      }, this.fn.label) : R.TextFieldView({
         className: "Label",
-        value: this.definition.label,
+        value: this.fn.label,
         onInput: this.handleLabelInput
       }));
     }
@@ -1329,11 +1350,11 @@
 }, "view/MainPlotView": function(exports, require, module) {(function() {
   R.create("MainPlotView", {
     propTypes: {
-      definition: C.Definition
+      fn: C.Fn
     },
     getLocalMouseCoords: function() {
       var bounds, rect, x, y;
-      bounds = this.definition.bounds;
+      bounds = this.fn.bounds;
       rect = this.getDOMNode().getBoundingClientRect();
       x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
       y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
@@ -1343,34 +1364,34 @@
       };
     },
     changeSelection: function() {
-      var bounds, childReference, distance, exprString, fn, fnString, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
+      var bounds, childFn, distance, exprString, fn, fnString, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       rect = this.getDOMNode().getBoundingClientRect();
-      bounds = this.definition.bounds;
+      bounds = this.fn.bounds;
       pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
       found = null;
-      _ref1 = this.definition.childReferences;
+      _ref1 = this.fn.childFns;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        childReference = _ref1[_i];
-        exprString = childReference.getExprString("x");
+        childFn = _ref1[_i];
+        exprString = childFn.getExprString("x");
         fnString = "(function (x) { return " + exprString + "; })";
         fn = util.evaluate(fnString);
         distance = Math.abs(y - fn(x));
         if (distance < config.hitTolerance * pixelWidth) {
-          found = childReference;
+          found = childFn;
         }
       }
-      return UI.selectChildReference(found);
+      return UI.selectChildFn(found);
     },
     startPan: function(e) {
       var originalBounds, originalX, originalY, rect, xScale, yScale;
       originalX = e.clientX;
       originalY = e.clientY;
       originalBounds = {
-        xMin: this.definition.bounds.xMin,
-        xMax: this.definition.bounds.xMax,
-        yMin: this.definition.bounds.yMin,
-        yMax: this.definition.bounds.yMax
+        xMin: this.fn.bounds.xMin,
+        xMax: this.fn.bounds.xMax,
+        yMin: this.fn.bounds.yMin,
+        yMax: this.fn.bounds.yMax
       };
       rect = this.getDOMNode().getBoundingClientRect();
       xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width;
@@ -1382,7 +1403,7 @@
             var dx, dy;
             dx = e.clientX - originalX;
             dy = e.clientY - originalY;
-            return _this.definition.bounds = {
+            return _this.fn.bounds = {
               xMin: originalBounds.xMin - dx * xScale,
               xMax: originalBounds.xMax - dx * xScale,
               yMin: originalBounds.yMin + dy * yScale,
@@ -1408,10 +1429,10 @@
       var bounds, scale, scaleFactor, x, y, _ref;
       e.preventDefault();
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      bounds = this.definition.bounds;
+      bounds = this.fn.bounds;
       scaleFactor = 1.1;
       scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
-      return this.definition.bounds = {
+      return this.fn.bounds = {
         xMin: (bounds.xMin - x) * scale + x,
         xMax: (bounds.xMax - x) * scale + x,
         yMin: (bounds.yMin - y) * scale + y,
@@ -1423,7 +1444,7 @@
       exprString = curve.getExprString("x");
       fnString = "(function (x) { return " + exprString + "; })";
       return R.PlotCartesianView({
-        bounds: this.definition.bounds,
+        bounds: this.fn.bounds,
         fnString: fnString,
         style: style
       });
@@ -1436,28 +1457,26 @@
       }, R.div({
         className: "PlotContainer"
       }, R.GridView({
-        bounds: this.definition.bounds
-      }), this.definition.childReferences.map((function(_this) {
-        return function(childReference) {
-          return _this.renderPlot(childReference, config.style["default"]);
+        bounds: this.fn.bounds
+      }), this.fn.childFns.map((function(_this) {
+        return function(childFn) {
+          return _this.renderPlot(childFn, config.style["default"]);
         };
-      })(this)), this.renderPlot(this.definition, config.style.main), UI.selectedChildReference ? this.renderPlot(UI.selectedChildReference, config.style.selected) : void 0, UI.selectedChildReference ? R.ReferenceControlsView({
-        definition: this.definition,
-        reference: UI.selectedChildReference
+      })(this)), this.renderPlot(this.fn, config.style.main), UI.selectedChildFn ? this.renderPlot(UI.selectedChildFn, config.style.selected) : void 0, UI.selectedChildFn ? R.TransformedFnControlsView({
+        transformedFn: UI.selectedChildFn
       }) : void 0));
     }
   });
 
-  R.create("ReferenceControlsView", {
+  R.create("TransformedFnControlsView", {
     propTypes: {
-      reference: C.Reference,
-      definition: C.Definition
+      transformedFn: C.TransformedFn
     },
     snap: function(value) {
       var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelWidth, precision, rect, smallSpacing, snapTolerance, _ref;
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
-      bounds = this.definition.bounds;
+      bounds = this.lookup("fn").bounds;
       pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
       _ref = util.canvas.getSpacing({
         xMin: bounds.xMin,
@@ -1480,21 +1499,21 @@
       return util.floatToString(value, precision);
     },
     handleTranslateChange: function(x, y) {
-      this.reference.domainTranslate.valueString = this.snap(x);
-      return this.reference.rangeTranslate.valueString = this.snap(y);
+      this.transformedFn.domainTranslate.valueString = this.snap(x);
+      return this.transformedFn.rangeTranslate.valueString = this.snap(y);
     },
     handleScaleChange: function(x, y) {
-      this.reference.domainScale.valueString = this.snap(x - this.reference.domainTranslate.getValue());
-      return this.reference.rangeScale.valueString = this.snap(y - this.reference.rangeTranslate.getValue());
+      this.transformedFn.domainScale.valueString = this.snap(x - this.transformedFn.domainTranslate.getValue());
+      return this.transformedFn.rangeScale.valueString = this.snap(y - this.transformedFn.rangeTranslate.getValue());
     },
     render: function() {
       return R.span({}, R.PointControlView({
-        x: this.reference.domainTranslate.getValue(),
-        y: this.reference.rangeTranslate.getValue(),
+        x: this.transformedFn.domainTranslate.getValue(),
+        y: this.transformedFn.rangeTranslate.getValue(),
         onChange: this.handleTranslateChange
       }), R.PointControlView({
-        x: this.reference.domainTranslate.getValue() + this.reference.domainScale.getValue(),
-        y: this.reference.rangeTranslate.getValue() + this.reference.rangeScale.getValue(),
+        x: this.transformedFn.domainTranslate.getValue() + this.transformedFn.domainScale.getValue(),
+        y: this.transformedFn.rangeTranslate.getValue() + this.transformedFn.rangeScale.getValue(),
         onChange: this.handleScaleChange
       }));
     }
@@ -1520,7 +1539,7 @@
         onMove: (function(_this) {
           return function(e) {
             var bounds, x, y;
-            bounds = _this.lookup("definition").bounds;
+            bounds = _this.lookup("fn").bounds;
             x = (e.clientX - rect.left) / rect.width;
             y = (e.clientY - rect.top) / rect.height;
             x = util.lerp(x, 0, 1, bounds.xMin, bounds.xMax);
@@ -1532,7 +1551,7 @@
     },
     style: function() {
       var bounds, left, top;
-      bounds = this.lookup("definition").bounds;
+      bounds = this.lookup("fn").bounds;
       top = util.lerp(this.y, bounds.yMin, bounds.yMax, 100, 0) + "%";
       left = util.lerp(this.x, bounds.xMin, bounds.xMax, 0, 100) + "%";
       return {
@@ -1553,18 +1572,18 @@
 }, "view/OutlineView": function(exports, require, module) {(function() {
   R.create("OutlineView", {
     propTypes: {
-      definition: C.Definition
+      compoundFn: C.CompoundFn
     },
     render: function() {
       return R.div({
         className: "Outline"
       }, R.CombinerView({
-        definition: this.definition
-      }), this.definition.childReferences.map((function(_this) {
-        return function(childReference, index) {
-          return R.ReferenceView({
-            reference: childReference,
-            definition: _this.definition,
+        compoundFn: this.compoundFn
+      }), this.compoundFn.childFns.map((function(_this) {
+        return function(childFn, index) {
+          return R.TransformedFnView({
+            transformedFn: childFn,
+            compoundFn: _this.compoundFn,
             index: index
           });
         };
@@ -1574,16 +1593,16 @@
 
   R.create("CombinerView", {
     propTypes: {
-      definition: C.Definition
+      compoundFn: C.CompoundFn
     },
     handleChange: function(e) {
       var value;
       value = e.target.selectedOptions[0].value;
-      return this.definition.combiner = value;
+      return this.compoundFn.combiner = value;
     },
     render: function() {
       return R.div({}, R.select({
-        value: this.definition.combiner,
+        value: this.compoundFn.combiner,
         onChange: this.handleChange
       }, R.option({
         value: "sum"
@@ -1595,63 +1614,47 @@
     }
   });
 
-  R.create("ReferenceView", {
+  R.create("TransformedFnView", {
     propTypes: {
-      reference: C.Reference,
-      definition: C.Definition,
+      transformedFn: C.TransformedFn,
+      compoundFn: C.CompoundFn,
       index: Number
     },
     handleMouseDown: function() {
-      return UI.selectChildReference(this.reference);
+      return UI.selectChildFn(this.transformedFn);
     },
     remove: function() {
-      return UI.removeChildReference(this.definition, this.index);
+      return UI.removeChildFn(this.compoundFn, this.index);
     },
     render: function() {
       var className;
       className = R.cx({
         Reference: true,
-        Selected: this.reference === UI.selectedChildReference
+        Selected: this.transformedFn === UI.selectedChildFn
       });
       return R.div({
         className: className,
         onMouseDown: this.handleMouseDown
       }, R.div({
         className: "FnName"
-      }, this.reference.definition.label), R.div({}, R.span({
+      }, this.transformedFn.fn.label), R.div({}, R.span({
         className: "TransformLabel"
       }, "+"), R.VariableView({
-        variable: this.reference.domainTranslate
+        variable: this.transformedFn.domainTranslate
       }), R.VariableView({
-        variable: this.reference.rangeTranslate
+        variable: this.transformedFn.rangeTranslate
       })), R.div({}, R.span({
         className: "TransformLabel"
       }, "*"), R.VariableView({
-        variable: this.reference.domainScale
+        variable: this.transformedFn.domainScale
       }), R.VariableView({
-        variable: this.reference.rangeScale
+        variable: this.transformedFn.rangeScale
       })), R.div({
         className: "Extras"
       }, R.div({
         className: "TextButton",
         onClick: this.remove
       }, "remove")));
-    }
-  });
-
-  R.create("VariableView", {
-    propTypes: {
-      variable: C.Variable
-    },
-    handleInput: function(newValue) {
-      return this.variable.valueString = newValue;
-    },
-    render: function() {
-      return R.TextFieldView({
-        className: "Variable",
-        value: this.variable.valueString,
-        onInput: this.handleInput
-      });
     }
   });
 
@@ -1793,11 +1796,31 @@
 
   require("./OutlineView");
 
+  require("./VariableView");
+
   require("./plot/CanvasView");
 
   require("./plot/GridView");
 
   require("./plot/PlotCartesianView");
+
+}).call(this);
+}, "view/VariableView": function(exports, require, module) {(function() {
+  R.create("VariableView", {
+    propTypes: {
+      variable: C.Variable
+    },
+    handleInput: function(newValue) {
+      return this.variable.valueString = newValue;
+    },
+    render: function() {
+      return R.TextFieldView({
+        className: "Variable",
+        value: this.variable.valueString,
+        onInput: this.handleInput
+      });
+    }
+  });
 
 }).call(this);
 }, "view/plot/CanvasView": function(exports, require, module) {(function() {

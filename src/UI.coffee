@@ -3,21 +3,10 @@ window.UI = UI = new class
     @dragging = null
     @autofocus = null
 
-    @selectedDefinition = _.last(appRoot.definitions)
+    @selectedFn = _.last(appRoot.fns)
 
-    @selectedChildReference = null
+    @selectedChildFn = null
 
-
-
-
-
-
-    @hoverData = null
-    @hoverIsActive = false
-
-    @selectedData = null
-
-    @activeTransclusionDropView = null
 
     @registerEvents()
 
@@ -70,29 +59,29 @@ window.UI = UI = new class
   # Controller
   # ===========================================================================
 
-  selectDefinition: (definition) ->
-    return unless definition instanceof C.CompoundDefinition
-    @selectedDefinition = definition
-    @selectedChildReference = null
+  selectFn: (fn) ->
+    return unless fn instanceof C.CompoundFn
+    @selectedFn = fn
+    @selectedChildFn = null
 
-  selectChildReference: (childReference) ->
-    @selectedChildReference = childReference
+  selectChildFn: (childFn) ->
+    @selectedChildFn = childFn
 
-  addDefinition: (appRoot) ->
-    definition = new C.CompoundDefinition()
-    appRoot.definitions.push(definition)
-    @selectDefinition(definition)
+  addFn: (appRoot) ->
+    fn = new C.CompoundFn()
+    appRoot.fns.push(fn)
+    @selectFn(fn)
 
-  addChildReference: (childReferenceDefinition) ->
-    childReference = new C.Reference()
-    childReference.definition = childReferenceDefinition
-    @selectedDefinition.childReferences.push(childReference)
-    @selectChildReference(childReference)
+  addChildFn: (untransformedChildFn) ->
+    childFn = new C.TransformedFn()
+    childFn.fn = untransformedChildFn
+    @selectedFn.childFns.push(childFn)
+    @selectChildFn(childFn)
 
-  removeChildReference: (definition, childReferenceIndex) ->
-    [removedChildReference] = definition.childReferences.splice(childReferenceIndex, 1)
-    if @selectedChildReference == removedChildReference
-      @selectChildReference(null)
+  removeChildFn: (fn, childFnIndex) ->
+    [removedChildFn] = fn.childFns.splice(childFnIndex, 1)
+    if @selectedChildFn == removedChildFn
+      @selectChildFn(null)
 
 
   # ===========================================================================
