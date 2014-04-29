@@ -41,8 +41,6 @@ canvas {
   display: inline-block;
   vertical-align: top;
   height: 100vh;
-  box-sizing: border-box;
-  padding: 12px;
 }
 .Definition {
   margin: 12px;
@@ -92,27 +90,28 @@ canvas {
 .PointControl:hover {
   opacity: 1;
 }
-.Reference {
-  padding: 6px 0px;
+.OutlineContainer {
+  margin: 24px;
+  border-collapse: collapse;
 }
-.Reference .Extras {
-  opacity: 0;
+.OutlineContainer td {
+  vertical-align: top;
+  border-right: 1px solid #eee;
+  padding: 2px 6px;
+  height: 1em;
 }
-.Reference:hover .Extras {
-  opacity: 1;
+.OutlineContainer tbody {
+  border: 1px solid #eee;
 }
-.Reference.Selected {
+.OutlineContainer tbody.Selected {
   background-color: #e5f4f9;
 }
-.TransformLabel {
-  display: inline-block;
-  min-width: 18px;
-  text-align: center;
+.OutlineContainer .OutlineNodeMain {
+  vertical-align: middle;
+  padding: 4px 24px 4px 6px;
 }
 .Variable {
-  display: inline-block;
-  min-width: 48px;
-  margin-right: 6px;
+  text-align: center;
 }
 .TextButton {
   cursor: pointer;

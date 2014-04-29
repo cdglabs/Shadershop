@@ -96,7 +96,7 @@ class C.CompoundFn extends C.Fn
 
 
 
-class C.TransformedFn
+class C.TransformedFn extends C.Fn
   constructor: ->
     @fn = null
     @domainTranslate = new C.Variable("0")

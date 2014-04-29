@@ -592,7 +592,9 @@
 
   })(C.Fn);
 
-  C.TransformedFn = (function() {
+  C.TransformedFn = (function(_super) {
+    __extends(TransformedFn, _super);
+
     function TransformedFn() {
       this.fn = null;
       this.domainTranslate = new C.Variable("0");
@@ -615,7 +617,7 @@
 
     return TransformedFn;
 
-  })();
+  })(C.Fn);
 
   C.AppRoot = (function() {
     function AppRoot() {
@@ -1574,20 +1576,101 @@
     propTypes: {
       compoundFn: C.CompoundFn
     },
+    getNodes: function() {
+      var nodes, recurse;
+      nodes = [];
+      recurse = function(fn, indentLevel) {
+        var childFn, _i, _len, _ref, _ref1, _results;
+        nodes.push({
+          fn: fn,
+          indentLevel: indentLevel
+        });
+        fn = (_ref = fn.fn) != null ? _ref : fn;
+        if (fn instanceof C.CompoundFn) {
+          _ref1 = fn.childFns;
+          _results = [];
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            childFn = _ref1[_i];
+            _results.push(recurse(childFn, indentLevel + 1));
+          }
+          return _results;
+        }
+      };
+      recurse(this.compoundFn, 0);
+      return nodes;
+    },
     render: function() {
       return R.div({
         className: "Outline"
-      }, R.CombinerView({
-        compoundFn: this.compoundFn
-      }), this.compoundFn.childFns.map((function(_this) {
-        return function(childFn, index) {
-          return R.TransformedFnView({
-            transformedFn: childFn,
-            compoundFn: _this.compoundFn,
-            index: index
-          });
-        };
-      })(this)));
+      }, R.table({
+        className: "OutlineContainer"
+      }, this.getNodes().map(function(_arg) {
+        var fn, indentLevel;
+        fn = _arg.fn, indentLevel = _arg.indentLevel;
+        return R.OutlineNodeView({
+          fn: fn,
+          indentLevel: indentLevel
+        });
+      })));
+    }
+  });
+
+  R.create("OutlineNodeView", {
+    propTypes: {
+      fn: C.Fn,
+      indentLevel: Number
+    },
+    render: function() {
+      var className;
+      className = R.cx({
+        Selected: this.fn === UI.selectedChildFn
+      });
+      return R.tbody({
+        className: className
+      }, R.tr({}, R.td({
+        className: "OutlineNodeMain",
+        rowSpan: 2,
+        style: {
+          paddingLeft: this.indentLevel + "em"
+        }
+      }, R.OutlineMainView({
+        fn: this.fn
+      })), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+        variable: this.fn.domainTranslate
+      }) : void 0), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+        variable: this.fn.rangeTranslate
+      }) : void 0)), R.tr({}, R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+        variable: this.fn.domainScale
+      }) : void 0), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+        variable: this.fn.rangeScale
+      }) : void 0)));
+    }
+  });
+
+  R.create("OutlineMainView", {
+    propTypes: {
+      fn: C.Fn
+    },
+    render: function() {
+      var fn, _ref;
+      fn = (_ref = this.fn.fn) != null ? _ref : this.fn;
+      return R.div({}, R.LabelView({
+        fn: fn
+      }), fn instanceof C.CompoundFn ? R.CombinerView({
+        compoundFn: fn
+      }) : void 0);
+    }
+  });
+
+  R.create("LabelView", {
+    propTypes: {
+      fn: C.Fn
+    },
+    render: function() {
+      return R.TextFieldView({
+        className: "OutlineNodeLabel",
+        value: this.fn.label
+      });
     }
   });
 
@@ -1611,50 +1694,6 @@
       }, "Multiply"), R.option({
         value: "composition"
       }, "Compose")));
-    }
-  });
-
-  R.create("TransformedFnView", {
-    propTypes: {
-      transformedFn: C.TransformedFn,
-      compoundFn: C.CompoundFn,
-      index: Number
-    },
-    handleMouseDown: function() {
-      return UI.selectChildFn(this.transformedFn);
-    },
-    remove: function() {
-      return UI.removeChildFn(this.compoundFn, this.index);
-    },
-    render: function() {
-      var className;
-      className = R.cx({
-        Reference: true,
-        Selected: this.transformedFn === UI.selectedChildFn
-      });
-      return R.div({
-        className: className,
-        onMouseDown: this.handleMouseDown
-      }, R.div({
-        className: "FnName"
-      }, this.transformedFn.fn.label), R.div({}, R.span({
-        className: "TransformLabel"
-      }, "+"), R.VariableView({
-        variable: this.transformedFn.domainTranslate
-      }), R.VariableView({
-        variable: this.transformedFn.rangeTranslate
-      })), R.div({}, R.span({
-        className: "TransformLabel"
-      }, "*"), R.VariableView({
-        variable: this.transformedFn.domainScale
-      }), R.VariableView({
-        variable: this.transformedFn.rangeScale
-      })), R.div({
-        className: "Extras"
-      }, R.div({
-        className: "TextButton",
-        onClick: this.remove
-      }, "remove")));
     }
   });
 

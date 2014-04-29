@@ -2,17 +2,78 @@ R.create "OutlineView",
   propTypes:
     compoundFn: C.CompoundFn
 
+  getNodes: ->
+    # Return a list of {fn, indentLevel} for the outline display
+    nodes = []
+    recurse = (fn, indentLevel) ->
+      nodes.push {fn, indentLevel}
+      fn = fn.fn ? fn
+      if fn instanceof C.CompoundFn
+        for childFn in fn.childFns
+          recurse(childFn, indentLevel + 1)
+    recurse(@compoundFn, 0)
+    return nodes
+
   render: ->
     R.div {className: "Outline"},
-      R.CombinerView {compoundFn: @compoundFn}
+      R.table {className: "OutlineContainer"},
+        @getNodes().map ({fn, indentLevel}) ->
+          R.OutlineNodeView {fn, indentLevel}
 
-      @compoundFn.childFns.map (childFn, index) =>
-        R.TransformedFnView {
-          transformedFn: childFn
-          compoundFn: @compoundFn
-          index: index
-        }
 
+# =============================================================================
+
+R.create "OutlineNodeView",
+  propTypes:
+    fn: C.Fn
+    indentLevel: Number
+
+  render: ->
+    className = R.cx {
+      Selected: @fn == UI.selectedChildFn
+    }
+    R.tbody {className: className},
+      R.tr {},
+        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: @indentLevel + "em"}},
+          R.OutlineMainView {fn: @fn}
+        R.td {},
+          if @fn instanceof C.TransformedFn
+            R.VariableView {variable: @fn.domainTranslate}
+        R.td {},
+          if @fn instanceof C.TransformedFn
+            R.VariableView {variable: @fn.rangeTranslate}
+      R.tr {},
+        R.td {},
+          if @fn instanceof C.TransformedFn
+            R.VariableView {variable: @fn.domainScale}
+        R.td {},
+          if @fn instanceof C.TransformedFn
+            R.VariableView {variable: @fn.rangeScale}
+
+
+# =============================================================================
+
+R.create "OutlineMainView",
+  propTypes:
+    fn: C.Fn
+
+  render: ->
+    fn = @fn.fn ? @fn
+    R.div {},
+      R.LabelView {fn}
+      if fn instanceof C.CompoundFn
+        R.CombinerView {compoundFn: fn}
+
+
+R.create "LabelView",
+  propTypes:
+    fn: C.Fn
+
+  render: ->
+    R.TextFieldView {
+      className: "OutlineNodeLabel"
+      value: @fn.label
+    }
 
 
 R.create "CombinerView",
@@ -29,35 +90,3 @@ R.create "CombinerView",
         R.option {value: "sum"}, "Add"
         R.option {value: "product"}, "Multiply"
         R.option {value: "composition"}, "Compose"
-
-
-
-R.create "TransformedFnView",
-  propTypes:
-    transformedFn: C.TransformedFn
-    compoundFn: C.CompoundFn
-    index: Number
-
-  handleMouseDown: ->
-    UI.selectChildFn(@transformedFn)
-
-  remove: ->
-    UI.removeChildFn(@compoundFn, @index)
-
-  render: ->
-    className = R.cx {
-      Reference: true
-      Selected: @transformedFn == UI.selectedChildFn
-    }
-    R.div {className, onMouseDown: @handleMouseDown},
-      R.div {className: "FnName"}, @transformedFn.fn.label
-      R.div {},
-        R.span {className: "TransformLabel"}, "+"
-        R.VariableView {variable: @transformedFn.domainTranslate}
-        R.VariableView {variable: @transformedFn.rangeTranslate}
-      R.div {},
-        R.span {className: "TransformLabel"}, "*"
-        R.VariableView {variable: @transformedFn.domainScale}
-        R.VariableView {variable: @transformedFn.rangeScale}
-      R.div {className: "Extras"},
-        R.div {className: "TextButton", onClick: @remove}, "remove"
