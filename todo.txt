@@ -26,3 +26,10 @@ Wishlist
 Misc
   Figure out how React context works
   Profile and redo so we don't have to relayout all the time
+
+
+
+
+
+Transform numbers shouldn't show when they're the default value
+Highlight transform numbers when hovering the control point

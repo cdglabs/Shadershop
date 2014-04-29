@@ -97,7 +97,6 @@ canvas {
 .OutlineContainer td {
   vertical-align: top;
   border-right: 1px solid #eee;
-  padding: 2px 6px;
   height: 1em;
 }
 .OutlineContainer tbody {
@@ -107,10 +106,10 @@ canvas {
   background-color: #e5f4f9;
 }
 .OutlineContainer .OutlineNodeMain {
-  vertical-align: middle;
   padding: 4px 24px 4px 6px;
 }
 .Variable {
+  padding: 2px 6px;
   text-align: center;
 }
 .DisclosureTriangle {
@@ -118,9 +117,17 @@ canvas {
   vertical-align: top;
   width: 0;
   height: 0;
+  margin-top: 1px;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   border-left: 10.392px solid #ccc;
+  transition: -webkit-transform 0.05s;
+}
+.DisclosureTriangle.Expanded {
+  -webkit-transform: rotate(90deg);
+}
+.DisclosureTriangle.Hidden {
+  visibility: hidden;
 }
 .OutlineMainContent {
   margin-left: 6px;

@@ -60,6 +60,7 @@
       this.autofocus = null;
       this.selectedFn = _.last(appRoot.fns);
       this.selectedChildFn = null;
+      this.expandedPaths = {};
       this.registerEvents();
     }
 
@@ -151,6 +152,26 @@
       if (this.selectedChildFn === removedChildFn) {
         return this.selectChildFn(null);
       }
+    };
+
+    _Class.prototype.getPathString = function(path) {
+      var pathIds, pathString;
+      pathIds = path.map(function(transformedFn) {
+        return C.id(transformedFn);
+      });
+      return pathString = pathIds.join(",");
+    };
+
+    _Class.prototype.isPathExpanded = function(path) {
+      var pathString;
+      pathString = this.getPathString(path);
+      return this.expandedPaths[pathString];
+    };
+
+    _Class.prototype.setPathExpanded = function(path, expanded) {
+      var pathString;
+      pathString = this.getPathString(path);
+      return this.expandedPaths[pathString] = expanded;
     };
 
     _Class.prototype.startVariableScrub = function(opts) {
@@ -1577,52 +1598,47 @@
     propTypes: {
       compoundFn: C.CompoundFn
     },
-    getNodes: function() {
-      var nodes, recurse;
-      nodes = [];
-      recurse = function(fn, indentLevel) {
-        var childFn, _i, _len, _ref, _ref1, _results;
-        nodes.push({
+    render: function() {
+      var nodeViews, recurse;
+      nodeViews = [];
+      recurse = function(fn, path) {
+        var childFn, nodeView, _i, _len, _ref, _ref1, _results;
+        nodeView = R.OutlineNodeView({
           fn: fn,
-          indentLevel: indentLevel
+          path: path,
+          key: UI.getPathString(path)
         });
-        fn = (_ref = fn.fn) != null ? _ref : fn;
-        if (fn instanceof C.CompoundFn) {
-          _ref1 = fn.childFns;
-          _results = [];
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            childFn = _ref1[_i];
-            _results.push(recurse(childFn, indentLevel + 1));
+        nodeViews.push(nodeView);
+        if (UI.isPathExpanded(path)) {
+          fn = (_ref = fn.fn) != null ? _ref : fn;
+          if (fn instanceof C.CompoundFn) {
+            _ref1 = fn.childFns;
+            _results = [];
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              childFn = _ref1[_i];
+              _results.push(recurse(childFn, path.concat(childFn)));
+            }
+            return _results;
           }
-          return _results;
         }
       };
-      recurse(this.compoundFn, 0);
-      return nodes;
-    },
-    render: function() {
+      recurse(this.compoundFn, []);
       return R.div({
         className: "Outline"
       }, R.table({
         className: "OutlineContainer"
-      }, this.getNodes().map(function(_arg) {
-        var fn, indentLevel;
-        fn = _arg.fn, indentLevel = _arg.indentLevel;
-        return R.OutlineNodeView({
-          fn: fn,
-          indentLevel: indentLevel
-        });
-      })));
+      }, nodeViews));
     }
   });
 
   R.create("OutlineNodeView", {
     propTypes: {
       fn: C.Fn,
-      indentLevel: Number
+      path: Array
     },
     render: function() {
-      var className;
+      var className, indentLevel;
+      indentLevel = this.path.length;
       className = R.cx({
         Selected: this.fn === UI.selectedChildFn
       });
@@ -1632,10 +1648,11 @@
         className: "OutlineNodeMain",
         rowSpan: 2,
         style: {
-          paddingLeft: this.indentLevel * config.outlineIndent
+          paddingLeft: indentLevel * config.outlineIndent
         }
       }, R.OutlineMainView({
-        fn: this.fn
+        fn: this.fn,
+        path: this.path
       })), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
         variable: this.fn.domainTranslate
       }) : void 0), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
@@ -1650,18 +1667,31 @@
 
   R.create("OutlineMainView", {
     propTypes: {
-      fn: C.Fn
+      fn: C.Fn,
+      path: Array
+    },
+    toggleExpanded: function() {
+      var expanded;
+      expanded = UI.isPathExpanded(this.path);
+      return UI.setPathExpanded(this.path, !expanded);
     },
     render: function() {
-      var fn, _ref;
+      var disclosureClassName, expanded, fn, _ref;
       fn = (_ref = this.fn.fn) != null ? _ref : this.fn;
+      expanded = UI.isPathExpanded(this.path);
+      disclosureClassName = R.cx({
+        DisclosureTriangle: true,
+        Expanded: expanded,
+        Hidden: fn instanceof C.BuiltInFn
+      });
       return R.div({}, R.div({
-        className: "DisclosureTriangle"
+        className: disclosureClassName,
+        onClick: this.toggleExpanded
       }), R.div({
         className: "OutlineMainContent"
       }, R.LabelView({
         fn: fn
-      }), fn instanceof C.CompoundFn ? R.CombinerView({
+      }), fn instanceof C.CompoundFn && expanded ? R.CombinerView({
         compoundFn: fn
       }) : void 0));
     }

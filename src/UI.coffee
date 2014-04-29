@@ -7,6 +7,8 @@ window.UI = UI = new class
 
     @selectedChildFn = null
 
+    @expandedPaths = {}
+
 
     @registerEvents()
 
@@ -82,6 +84,19 @@ window.UI = UI = new class
     [removedChildFn] = fn.childFns.splice(childFnIndex, 1)
     if @selectedChildFn == removedChildFn
       @selectChildFn(null)
+
+
+  getPathString: (path) ->
+    pathIds = path.map (transformedFn) -> C.id(transformedFn)
+    return pathString = pathIds.join(",")
+
+  isPathExpanded: (path) ->
+    pathString = @getPathString(path)
+    return @expandedPaths[pathString]
+
+  setPathExpanded: (path, expanded) ->
+    pathString = @getPathString(path)
+    @expandedPaths[pathString] = expanded
 
 
   # ===========================================================================

@@ -141,7 +141,6 @@ canvas
   td
     vertical-align top
     border-right 1px solid #eee
-    padding 2px 6px
     height 1em
   tbody
     border 1px solid #eee
@@ -149,20 +148,26 @@ canvas
       background-color tint(highlightColor, 90%)
 
   .OutlineNodeMain
-    vertical-align middle
+    // vertical-align middle
     padding 4px 24px 4px 6px
 
 .Variable
+  padding 2px 6px
   text-align center
 
 .DisclosureTriangle
   inline top
   width 0
   height 0
+  margin-top 1px
   border-top: 0.5*DisclosureTriangleSize solid transparent
   border-bottom: 0.5*DisclosureTriangleSize solid transparent
   border-left: 0.866*DisclosureTriangleSize solid #ccc
-  // -webkit-transform: rotate(90deg)
+  transition -webkit-transform 0.05s
+  &.Expanded
+    -webkit-transform: rotate(90deg)
+  &.Hidden
+    visibility hidden
 
 .OutlineMainContent
   margin-left 6px

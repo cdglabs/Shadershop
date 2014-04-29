@@ -2,23 +2,28 @@ R.create "OutlineView",
   propTypes:
     compoundFn: C.CompoundFn
 
-  getNodes: ->
-    # Return a list of {fn, indentLevel} for the outline display
-    nodes = []
-    recurse = (fn, indentLevel) ->
-      nodes.push {fn, indentLevel}
-      fn = fn.fn ? fn
-      if fn instanceof C.CompoundFn
-        for childFn in fn.childFns
-          recurse(childFn, indentLevel + 1)
-    recurse(@compoundFn, 0)
-    return nodes
-
   render: ->
+    nodeViews = []
+
+    recurse = (fn, path) ->
+      nodeView = R.OutlineNodeView {
+        fn: fn
+        path: path
+        key: UI.getPathString(path)
+      }
+      nodeViews.push(nodeView)
+
+      if UI.isPathExpanded(path)
+        fn = fn.fn ? fn
+        if fn instanceof C.CompoundFn
+          for childFn in fn.childFns
+            recurse(childFn, path.concat(childFn))
+
+    recurse(@compoundFn, [])
+
     R.div {className: "Outline"},
       R.table {className: "OutlineContainer"},
-        @getNodes().map ({fn, indentLevel}) ->
-          R.OutlineNodeView {fn, indentLevel}
+        nodeViews
 
 
 # =============================================================================
@@ -26,16 +31,17 @@ R.create "OutlineView",
 R.create "OutlineNodeView",
   propTypes:
     fn: C.Fn
-    indentLevel: Number
+    path: Array
 
   render: ->
+    indentLevel = @path.length
     className = R.cx {
       Selected: @fn == UI.selectedChildFn
     }
     R.tbody {className: className},
       R.tr {},
-        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: @indentLevel * config.outlineIndent}},
-          R.OutlineMainView {fn: @fn}
+        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: indentLevel * config.outlineIndent}},
+          R.OutlineMainView {fn: @fn, path: @path}
         R.td {},
           if @fn instanceof C.TransformedFn
             R.VariableView {variable: @fn.domainTranslate}
@@ -56,14 +62,27 @@ R.create "OutlineNodeView",
 R.create "OutlineMainView",
   propTypes:
     fn: C.Fn
+    path: Array
+
+  toggleExpanded: ->
+    expanded = UI.isPathExpanded(@path)
+    UI.setPathExpanded(@path, !expanded)
 
   render: ->
     fn = @fn.fn ? @fn
+    expanded = UI.isPathExpanded(@path)
+
+    disclosureClassName = R.cx {
+      DisclosureTriangle: true
+      Expanded: expanded
+      Hidden: fn instanceof C.BuiltInFn
+    }
+
     R.div {},
-      R.div {className: "DisclosureTriangle"}
+      R.div {className: disclosureClassName, onClick: @toggleExpanded}
       R.div {className: "OutlineMainContent"},
         R.LabelView {fn}
-        if fn instanceof C.CompoundFn
+        if fn instanceof C.CompoundFn and expanded
           R.CombinerView {compoundFn: fn}
 
 
