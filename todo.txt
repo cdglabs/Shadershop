@@ -29,6 +29,10 @@ Misc
 
 
 
+Rename TransformedFn -> ChildFn
+Show "visible" fns on the main plot
+  Do appropriate transformation
+Select child fns from the outline
 
 
 Transform numbers shouldn't show when they're the default value
