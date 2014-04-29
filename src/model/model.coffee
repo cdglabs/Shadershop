@@ -15,41 +15,6 @@ class C.Variable
 
 
 
-
-
-
-###
-
-
-Fn
-
-BuiltInFn
-  label
-
-CompoundFn
-  label
-  reducer
-  fns
-
-TransformedFn
-  fn
-  domainTranslate
-  domainScale
-  rangeTranslate
-  rangeScale
-
-Reducer
-  identity: Fn
-
-
-###
-
-
-
-
-
-
-
 class C.Fn
   constructor: ->
 
@@ -96,7 +61,7 @@ class C.CompoundFn extends C.Fn
 
 
 
-class C.TransformedFn extends C.Fn
+class C.ChildFn extends C.Fn
   constructor: ->
     @fn = null
     @domainTranslate = new C.Variable("0")

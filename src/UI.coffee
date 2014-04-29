@@ -74,9 +74,9 @@ window.UI = UI = new class
     appRoot.fns.push(fn)
     @selectFn(fn)
 
-  addChildFn: (untransformedChildFn) ->
-    childFn = new C.TransformedFn()
-    childFn.fn = untransformedChildFn
+  addChildFn: (fn) ->
+    childFn = new C.ChildFn()
+    childFn.fn = fn
     @selectedFn.childFns.push(childFn)
     @selectChildFn(childFn)
 
@@ -87,7 +87,7 @@ window.UI = UI = new class
 
 
   getPathString: (path) ->
-    pathIds = path.map (transformedFn) -> C.id(transformedFn)
+    pathIds = path.map (childFn) -> C.id(childFn)
     return pathString = pathIds.join(",")
 
   isPathExpanded: (path) ->

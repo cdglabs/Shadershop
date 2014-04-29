@@ -43,17 +43,17 @@ R.create "OutlineNodeView",
         R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: indentLevel * config.outlineIndent}},
           R.OutlineMainView {fn: @fn, path: @path}
         R.td {},
-          if @fn instanceof C.TransformedFn
+          if @fn instanceof C.ChildFn
             R.VariableView {variable: @fn.domainTranslate}
         R.td {},
-          if @fn instanceof C.TransformedFn
+          if @fn instanceof C.ChildFn
             R.VariableView {variable: @fn.rangeTranslate}
       R.tr {},
         R.td {},
-          if @fn instanceof C.TransformedFn
+          if @fn instanceof C.ChildFn
             R.VariableView {variable: @fn.domainScale}
         R.td {},
-          if @fn instanceof C.TransformedFn
+          if @fn instanceof C.ChildFn
             R.VariableView {variable: @fn.rangeScale}
 
 

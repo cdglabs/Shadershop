@@ -109,14 +109,14 @@ R.create "MainPlotView",
           @renderPlot(UI.selectedChildFn, config.style.selected)
 
         if UI.selectedChildFn
-          R.TransformedFnControlsView {
-            transformedFn: UI.selectedChildFn
+          R.ChildFnControlsView {
+            childFn: UI.selectedChildFn
           }
 
 
-R.create "TransformedFnControlsView",
+R.create "ChildFnControlsView",
   propTypes:
-    transformedFn: C.TransformedFn
+    childFn: C.ChildFn
 
   snap: (value) ->
     container = @getDOMNode().closest(".PlotContainer")
@@ -150,23 +150,23 @@ R.create "TransformedFnControlsView",
     return util.floatToString(value, precision)
 
   handleTranslateChange: (x, y) ->
-    @transformedFn.domainTranslate.valueString = @snap(x)
-    @transformedFn.rangeTranslate.valueString  = @snap(y)
+    @childFn.domainTranslate.valueString = @snap(x)
+    @childFn.rangeTranslate.valueString  = @snap(y)
 
   handleScaleChange: (x, y) ->
-    @transformedFn.domainScale.valueString = @snap(x - @transformedFn.domainTranslate.getValue())
-    @transformedFn.rangeScale.valueString  = @snap(y - @transformedFn.rangeTranslate.getValue())
+    @childFn.domainScale.valueString = @snap(x - @childFn.domainTranslate.getValue())
+    @childFn.rangeScale.valueString  = @snap(y - @childFn.rangeTranslate.getValue())
 
   render: ->
     R.span {},
       R.PointControlView {
-        x: @transformedFn.domainTranslate.getValue()
-        y: @transformedFn.rangeTranslate.getValue()
+        x: @childFn.domainTranslate.getValue()
+        y: @childFn.rangeTranslate.getValue()
         onChange: @handleTranslateChange
       }
       R.PointControlView {
-        x: @transformedFn.domainTranslate.getValue() + @transformedFn.domainScale.getValue()
-        y: @transformedFn.rangeTranslate.getValue()  + @transformedFn.rangeScale.getValue()
+        x: @childFn.domainTranslate.getValue() + @childFn.domainScale.getValue()
+        y: @childFn.rangeTranslate.getValue()  + @childFn.rangeScale.getValue()
         onChange: @handleScaleChange
       }
 

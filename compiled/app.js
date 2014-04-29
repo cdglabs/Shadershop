@@ -138,10 +138,10 @@
       return this.selectFn(fn);
     };
 
-    _Class.prototype.addChildFn = function(untransformedChildFn) {
+    _Class.prototype.addChildFn = function(fn) {
       var childFn;
-      childFn = new C.TransformedFn();
-      childFn.fn = untransformedChildFn;
+      childFn = new C.ChildFn();
+      childFn.fn = fn;
       this.selectedFn.childFns.push(childFn);
       return this.selectChildFn(childFn);
     };
@@ -156,8 +156,8 @@
 
     _Class.prototype.getPathString = function(path) {
       var pathIds, pathString;
-      pathIds = path.map(function(transformedFn) {
-        return C.id(transformedFn);
+      pathIds = path.map(function(childFn) {
+        return C.id(childFn);
       });
       return pathString = pathIds.join(",");
     };
@@ -518,31 +518,6 @@
 
   })();
 
-
-  /*
-  
-  
-  Fn
-  
-  BuiltInFn
-    label
-  
-  CompoundFn
-    label
-    reducer
-    fns
-  
-  TransformedFn
-    fn
-    domainTranslate
-    domainScale
-    rangeTranslate
-    rangeScale
-  
-  Reducer
-    identity: Fn
-   */
-
   C.Fn = (function() {
     function Fn() {}
 
@@ -614,10 +589,10 @@
 
   })(C.Fn);
 
-  C.TransformedFn = (function(_super) {
-    __extends(TransformedFn, _super);
+  C.ChildFn = (function(_super) {
+    __extends(ChildFn, _super);
 
-    function TransformedFn() {
+    function ChildFn() {
       this.fn = null;
       this.domainTranslate = new C.Variable("0");
       this.domainScale = new C.Variable("1");
@@ -625,7 +600,7 @@
       this.rangeScale = new C.Variable("1");
     }
 
-    TransformedFn.prototype.getExprString = function(parameter) {
+    ChildFn.prototype.getExprString = function(parameter) {
       var domainScale, domainTranslate, exprString, rangeScale, rangeTranslate;
       domainTranslate = this.domainTranslate.getValue();
       domainScale = this.domainScale.getValue();
@@ -637,7 +612,7 @@
       return exprString;
     };
 
-    return TransformedFn;
+    return ChildFn;
 
   })(C.Fn);
 
@@ -1486,15 +1461,15 @@
         return function(childFn) {
           return _this.renderPlot(childFn, config.style["default"]);
         };
-      })(this)), this.renderPlot(this.fn, config.style.main), UI.selectedChildFn ? this.renderPlot(UI.selectedChildFn, config.style.selected) : void 0, UI.selectedChildFn ? R.TransformedFnControlsView({
-        transformedFn: UI.selectedChildFn
+      })(this)), this.renderPlot(this.fn, config.style.main), UI.selectedChildFn ? this.renderPlot(UI.selectedChildFn, config.style.selected) : void 0, UI.selectedChildFn ? R.ChildFnControlsView({
+        childFn: UI.selectedChildFn
       }) : void 0));
     }
   });
 
-  R.create("TransformedFnControlsView", {
+  R.create("ChildFnControlsView", {
     propTypes: {
-      transformedFn: C.TransformedFn
+      childFn: C.ChildFn
     },
     snap: function(value) {
       var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelWidth, precision, rect, smallSpacing, snapTolerance, _ref;
@@ -1523,21 +1498,21 @@
       return util.floatToString(value, precision);
     },
     handleTranslateChange: function(x, y) {
-      this.transformedFn.domainTranslate.valueString = this.snap(x);
-      return this.transformedFn.rangeTranslate.valueString = this.snap(y);
+      this.childFn.domainTranslate.valueString = this.snap(x);
+      return this.childFn.rangeTranslate.valueString = this.snap(y);
     },
     handleScaleChange: function(x, y) {
-      this.transformedFn.domainScale.valueString = this.snap(x - this.transformedFn.domainTranslate.getValue());
-      return this.transformedFn.rangeScale.valueString = this.snap(y - this.transformedFn.rangeTranslate.getValue());
+      this.childFn.domainScale.valueString = this.snap(x - this.childFn.domainTranslate.getValue());
+      return this.childFn.rangeScale.valueString = this.snap(y - this.childFn.rangeTranslate.getValue());
     },
     render: function() {
       return R.span({}, R.PointControlView({
-        x: this.transformedFn.domainTranslate.getValue(),
-        y: this.transformedFn.rangeTranslate.getValue(),
+        x: this.childFn.domainTranslate.getValue(),
+        y: this.childFn.rangeTranslate.getValue(),
         onChange: this.handleTranslateChange
       }), R.PointControlView({
-        x: this.transformedFn.domainTranslate.getValue() + this.transformedFn.domainScale.getValue(),
-        y: this.transformedFn.rangeTranslate.getValue() + this.transformedFn.rangeScale.getValue(),
+        x: this.childFn.domainTranslate.getValue() + this.childFn.domainScale.getValue(),
+        y: this.childFn.rangeTranslate.getValue() + this.childFn.rangeScale.getValue(),
         onChange: this.handleScaleChange
       }));
     }
@@ -1653,13 +1628,13 @@
       }, R.OutlineMainView({
         fn: this.fn,
         path: this.path
-      })), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+      })), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
         variable: this.fn.domainTranslate
-      }) : void 0), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+      }) : void 0), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
         variable: this.fn.rangeTranslate
-      }) : void 0)), R.tr({}, R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+      }) : void 0)), R.tr({}, R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
         variable: this.fn.domainScale
-      }) : void 0), R.td({}, this.fn instanceof C.TransformedFn ? R.VariableView({
+      }) : void 0), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
         variable: this.fn.rangeScale
       }) : void 0)));
     }
