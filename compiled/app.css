@@ -113,6 +113,20 @@ canvas {
 .Variable {
   text-align: center;
 }
+.DisclosureTriangle {
+  display: inline-block;
+  vertical-align: top;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10.392px solid #ccc;
+}
+.OutlineMainContent {
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: top;
+}
 .TextButton {
   cursor: pointer;
   font-size: 10px;

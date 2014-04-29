@@ -20,3 +20,9 @@ Architecture
 
 Wishlist
   Hide and show children
+
+
+
+Misc
+  Figure out how React context works
+  Profile and redo so we don't have to relayout all the time

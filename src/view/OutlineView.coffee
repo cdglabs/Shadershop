@@ -34,7 +34,7 @@ R.create "OutlineNodeView",
     }
     R.tbody {className: className},
       R.tr {},
-        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: @indentLevel + "em"}},
+        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: @indentLevel * config.outlineIndent}},
           R.OutlineMainView {fn: @fn}
         R.td {},
           if @fn instanceof C.TransformedFn
@@ -60,9 +60,11 @@ R.create "OutlineMainView",
   render: ->
     fn = @fn.fn ? @fn
     R.div {},
-      R.LabelView {fn}
-      if fn instanceof C.CompoundFn
-        R.CombinerView {compoundFn: fn}
+      R.div {className: "DisclosureTriangle"}
+      R.div {className: "OutlineMainContent"},
+        R.LabelView {fn}
+        if fn instanceof C.CompoundFn
+          R.CombinerView {compoundFn: fn}
 
 
 R.create "LabelView",

@@ -231,6 +231,7 @@
     minGridSpacing: 90,
     hitTolerance: 10,
     snapTolerance: 7,
+    outlineIndent: 16,
     gridColor: "204,194,163",
     style: {
       main: {
@@ -1631,7 +1632,7 @@
         className: "OutlineNodeMain",
         rowSpan: 2,
         style: {
-          paddingLeft: this.indentLevel + "em"
+          paddingLeft: this.indentLevel * config.outlineIndent
         }
       }, R.OutlineMainView({
         fn: this.fn
@@ -1654,11 +1655,15 @@
     render: function() {
       var fn, _ref;
       fn = (_ref = this.fn.fn) != null ? _ref : this.fn;
-      return R.div({}, R.LabelView({
+      return R.div({}, R.div({
+        className: "DisclosureTriangle"
+      }), R.div({
+        className: "OutlineMainContent"
+      }, R.LabelView({
         fn: fn
       }), fn instanceof C.CompoundFn ? R.CombinerView({
         compoundFn: fn
-      }) : void 0);
+      }) : void 0));
     }
   });
 

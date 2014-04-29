@@ -13,6 +13,8 @@ window.config = config = {
   hitTolerance: 10
   snapTolerance: 7
 
+  outlineIndent: 16
+
   gridColor: "204,194,163"
 
 
