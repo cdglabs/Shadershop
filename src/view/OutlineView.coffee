@@ -90,10 +90,14 @@ R.create "LabelView",
   propTypes:
     fn: C.Fn
 
+  handleInput: (newValue) ->
+    @fn.label = newValue
+
   render: ->
     R.TextFieldView {
       className: "OutlineNodeLabel"
       value: @fn.label
+      onInput: @handleInput
     }
 
 

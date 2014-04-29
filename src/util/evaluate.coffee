@@ -28,6 +28,10 @@ pow = (a, b) -> Math.pow(Math.abs(a), b)
 
 
 
+PI = Math.PI
+TAU = Math.PI * 2
+
+
 
 util.evaluate = evaluate
 util.evaluateFn = evaluateFn

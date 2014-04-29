@@ -898,7 +898,7 @@
 
 }).call(this);
 }, "util/evaluate": function(exports, require, module) {(function() {
-  var abs, add, ceil, cos, div, evaluate, evaluateFn, floor, fract, identity, max, min, mul, pow, sin, sqrt, sub;
+  var PI, TAU, abs, add, ceil, cos, div, evaluate, evaluateFn, floor, fract, identity, max, min, mul, pow, sin, sqrt, sub;
 
   evaluate = function(jsString) {
     return eval(jsString);
@@ -951,6 +951,10 @@
   pow = function(a, b) {
     return Math.pow(Math.abs(a), b);
   };
+
+  PI = Math.PI;
+
+  TAU = Math.PI * 2;
 
   util.evaluate = evaluate;
 
@@ -1676,10 +1680,14 @@
     propTypes: {
       fn: C.Fn
     },
+    handleInput: function(newValue) {
+      return this.fn.label = newValue;
+    },
     render: function() {
       return R.TextFieldView({
         className: "OutlineNodeLabel",
-        value: this.fn.label
+        value: this.fn.label,
+        onInput: this.handleInput
       });
     }
   });
