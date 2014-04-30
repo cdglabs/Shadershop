@@ -961,6 +961,41 @@
   util.evaluateFn = evaluateFn;
 
 }).call(this);
+}, "util/numeric": function(exports, require, module) {(function() {
+  var normalize, num, reflectionMatrix, rotationMatrix, rotationScalingMatrix;
+
+  num = numeric;
+
+  normalize = function(a) {
+    return num.div(a, num.norm2(a));
+  };
+
+  reflectionMatrix = function(n) {
+    var I;
+    I = num.identity(n.length);
+    return num.sub(I, num.mul(2, num.dot(num.transpose([n]), [n])));
+  };
+
+  rotationMatrix = function(a, b) {
+    var Rb, Rn, n;
+    n = normalize(num.add(a, b));
+    Rn = reflectionMatrix(n);
+    Rb = reflectionMatrix(b);
+    return num.dot(Rb, Rn);
+  };
+
+  rotationScalingMatrix = function(a, b) {
+    var I, R, S, aUnit, bUnit, scaleFactor;
+    aUnit = normalize(a);
+    bUnit = normalize(b);
+    scaleFactor = num.norm2(b) / num.norm2(a);
+    I = num.identity(a.length);
+    S = num.mul(scaleFactor, I);
+    R = rotationMatrix(aUnit, bUnit);
+    return num.dot(S, R);
+  };
+
+}).call(this);
 }, "util/selection": function(exports, require, module) {(function() {
   var afterSelection, beforeSelection, findEditingHost, focusBody, get, getHost, isAtEnd, isAtStart, set, setAll, setAtEnd, setAtStart;
 
