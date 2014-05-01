@@ -2071,15 +2071,14 @@
       this._glod.canvas(canvasEl, {
         antialias: true
       });
-      this._numSamples = rect.width / config.resolution;
-      bufferCartesianSamples(this._glod, this._numSamples);
+      bufferCartesianSamples(this._glod, 10000);
       return this._programs = {};
     },
     getName: function(plot, i) {
       return "p" + i;
     },
     draw: function() {
-      var i, name, plot, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var i, name, numSamples, plot, _i, _j, _len, _len1, _ref, _ref1, _results;
       _ref = this.plots;
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         plot = _ref[i];
@@ -2089,12 +2088,13 @@
           this._programs[name] = plot.exprString;
         }
       }
+      numSamples = this.getDOMNode().width / config.resolution;
       _ref1 = this.plots;
       _results = [];
       for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
         plot = _ref1[i];
         name = this.getName(plot, i);
-        _results.push(drawCartesianProgram(this._glod, name, this._numSamples, plot.color, this.bounds));
+        _results.push(drawCartesianProgram(this._glod, name, numSamples, plot.color, this.bounds));
       }
       return _results;
     },
@@ -2125,17 +2125,16 @@
 
   createCartesianProgram = function(glod, name, expr) {
     var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 sample;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float x = lerp(sample.x, 0., 1., xMin, xMax);\n  float y = " + expr + ";\n\n  float px = lerp(x, xMin, xMax, -1., 1.);\n  float py = lerp(y, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample.x / numSamples;\n\n  float x = lerp(s, 0., 1., xMin, xMax);\n  float y = " + expr + ";\n\n  float px = lerp(x, xMin, xMax, -1., 1.);\n  float py = lerp(y, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
   bufferCartesianSamples = function(glod, numSamples) {
-    var i, samplesArray, x, _i;
+    var i, samplesArray, _i;
     samplesArray = [];
     for (i = _i = 0; 0 <= numSamples ? _i <= numSamples : _i >= numSamples; i = 0 <= numSamples ? ++_i : --_i) {
-      x = i / numSamples;
-      samplesArray.push(x, 0, 0, 1);
+      samplesArray.push(i, 0, 0, 1);
     }
     if (glod.hasVBO("samples")) {
       glod.deleteVBO("samples");
@@ -2154,6 +2153,7 @@
     glod.value("xMax", bounds.xMax);
     glod.value("yMin", bounds.yMin);
     glod.value("yMax", bounds.yMax);
+    glod.value("numSamples", numSamples);
     glod.ready().lineStrip().drawArrays(0, numSamples);
     return glod.end();
   };

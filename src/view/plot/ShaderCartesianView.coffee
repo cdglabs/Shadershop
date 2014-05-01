@@ -14,8 +14,7 @@ R.create "ShaderCartesianView",
     canvasEl.height = rect.height
     @_glod.canvas(canvasEl, {antialias: true})
 
-    @_numSamples = rect.width / config.resolution
-    bufferCartesianSamples(@_glod, @_numSamples)
+    bufferCartesianSamples(@_glod, 10000)
 
     @_programs = {}
 
@@ -30,9 +29,11 @@ R.create "ShaderCartesianView",
         createCartesianProgram(@_glod, name, plot.exprString)
         @_programs[name] = plot.exprString
 
+    numSamples = @getDOMNode().width / config.resolution
+
     for plot, i in @plots
       name = @getName(plot, i)
-      drawCartesianProgram(@_glod, name, @_numSamples, plot.color, @bounds)
+      drawCartesianProgram(@_glod, name, numSamples, plot.color, @bounds)
 
 
   componentDidMount: ->
@@ -65,6 +66,7 @@ createCartesianProgram = (glod, name, expr) ->
   precision highp int;
 
   attribute vec4 sample;
+  uniform float numSamples;
   uniform float xMin;
   uniform float xMax;
   uniform float yMin;
@@ -76,7 +78,9 @@ createCartesianProgram = (glod, name, expr) ->
   }
 
   void main() {
-    float x = lerp(sample.x, 0., 1., xMin, xMax);
+    float s = sample.x / numSamples;
+
+    float x = lerp(s, 0., 1., xMin, xMax);
     float y = #{expr};
 
     float px = lerp(x, xMin, xMax, -1., 1.);
@@ -103,8 +107,7 @@ createCartesianProgram = (glod, name, expr) ->
 bufferCartesianSamples = (glod, numSamples) ->
   samplesArray = []
   for i in [0..numSamples]
-    x = i / numSamples
-    samplesArray.push(x, 0, 0, 1)
+    samplesArray.push(i, 0, 0, 1)
 
   if glod.hasVBO("samples")
     glod.deleteVBO("samples")
@@ -127,6 +130,8 @@ drawCartesianProgram = (glod, name, numSamples, color, bounds) ->
   glod.value("xMax", bounds.xMax)
   glod.value("yMin", bounds.yMin)
   glod.value("yMax", bounds.yMax)
+
+  glod.value("numSamples", numSamples)
 
   glod.ready().lineStrip().drawArrays(0, numSamples)
 
