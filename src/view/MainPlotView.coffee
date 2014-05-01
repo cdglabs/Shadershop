@@ -93,20 +93,38 @@ R.create "MainPlotView",
 
 
   render: ->
+    plots = []
+
+    # Child Fns
+    for childFn in @fn.childFns
+      plots.push {
+        exprString: childFn.getExprString("x")
+        color: [0.8, 0.8, 0.8, 1]
+      }
+
+    # Main
+    plots.push {
+      exprString: @fn.getExprString("x")
+      color: [0.2, 0.2, 0.2, 1]
+    }
+
+    # Selected
+    if UI.selectedChildFn
+      plots.push {
+        exprString: UI.selectedChildFn.getExprString("x")
+        color: [0, 0.6, 0.8, 1]
+      }
+
+
     R.div {className: "MainPlot", onMouseDown: @handleMouseDown, onWheel: @handleWheel},
       R.div {className: "PlotContainer"},
         # Grid
         R.GridView {bounds: @fn.bounds}
 
-        # Child Fns
-        @fn.childFns.map (childFn) =>
-          @renderPlot(childFn, config.style.default)
-
-        # Main
-        @renderPlot(@fn, config.style.main)
-
-        if UI.selectedChildFn
-          @renderPlot(UI.selectedChildFn, config.style.selected)
+        R.ShaderCartesianView {
+          bounds: @fn.bounds
+          plots: plots
+        }
 
         if UI.selectedChildFn
           R.ChildFnControlsView {

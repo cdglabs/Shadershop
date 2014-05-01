@@ -127,5 +127,6 @@ require("./VariableView")
 require("./plot/CanvasView")
 require("./plot/GridView")
 require("./plot/PlotCartesianView")
+require("./plot/ShaderCartesianView")
 
 

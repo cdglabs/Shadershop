@@ -52,11 +52,11 @@ class C.CompoundFn extends C.Fn
       childFn.getExprString(parameter)
 
     if @combiner == "sum"
-      childExprStrings.unshift("0")
+      childExprStrings.unshift("0.")
       return "(" + childExprStrings.join(" + ") + ")"
 
     if @combiner == "product"
-      childExprStrings.unshift("1")
+      childExprStrings.unshift("1.")
       return "(" + childExprStrings.join(" * ") + ")"
 
 
@@ -70,10 +70,10 @@ class C.ChildFn extends C.Fn
     @rangeScale = new C.Variable("1")
 
   getExprString: (parameter) ->
-    domainTranslate = @domainTranslate.getValue()
-    domainScale = @domainScale.getValue()
-    rangeTranslate = @rangeTranslate.getValue()
-    rangeScale = @rangeScale.getValue()
+    domainTranslate = util.glslFloatToString(@domainTranslate.getValue())
+    domainScale     = util.glslFloatToString(@domainScale.getValue())
+    rangeTranslate  = util.glslFloatToString(@rangeTranslate.getValue())
+    rangeScale      = util.glslFloatToString(@rangeScale.getValue())
 
     exprString = "((#{parameter} - #{domainTranslate}) / #{domainScale})"
     exprString = @fn.getExprString(exprString)

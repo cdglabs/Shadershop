@@ -78,6 +78,13 @@ util.floatToString = (value, precision = 0.1, removeExtraZeros = false) ->
   return string
 
 
+util.glslFloatToString = (value) ->
+  string = "" + value
+  unless /\./.test(string)
+    string = string + "."
+  return string
+
+
 util.onceDragConsummated = (downEvent, callback, notConsummatedCallback=null) ->
   consummated = false
   originalX = downEvent.clientX
