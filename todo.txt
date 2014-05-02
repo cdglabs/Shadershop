@@ -41,5 +41,3 @@ Select child fns from the outline
 Transform numbers shouldn't show when they're the default value
 Highlight transform numbers when hovering the control point
 
-
-Cartesian samples/index can be optimized by not being a vec4...

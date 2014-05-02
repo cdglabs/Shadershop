@@ -96,7 +96,7 @@ createCartesianProgram = (glod, name, expr) ->
   precision highp float;
   precision highp int;
 
-  attribute vec4 sample;
+  attribute float sample;
   uniform float numSamples;
   uniform float xMin;
   uniform float xMax;
@@ -109,7 +109,7 @@ createCartesianProgram = (glod, name, expr) ->
   }
 
   void main() {
-    float s = sample.x / numSamples;
+    float s = sample / numSamples;
 
     float x = lerp(s, 0., 1., xMin, xMax);
     float y = #{expr};
@@ -138,7 +138,7 @@ createCartesianProgram = (glod, name, expr) ->
 bufferCartesianSamples = (glod, numSamples) ->
   samplesArray = []
   for i in [0..numSamples]
-    samplesArray.push(i, 0, 0, 1)
+    samplesArray.push(i)
 
   if glod.hasVBO("samples")
     glod.deleteVBO("samples")
