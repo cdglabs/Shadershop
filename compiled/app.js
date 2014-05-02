@@ -354,7 +354,7 @@
 
   refresh();
 
-  if (location.protocol === "file:") {
+  if (location.protocol === "file:" && navigator.userAgent.indexOf("Firefox") === -1) {
     document.styleSheets.start_autoreload(1000);
   }
 

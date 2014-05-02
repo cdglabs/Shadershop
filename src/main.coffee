@@ -82,6 +82,6 @@ refresh()
 
 
 
-
-if location.protocol == "file:"
+# Firefox crashes when the stylesheet reloads.
+if location.protocol == "file:" and navigator.userAgent.indexOf("Firefox") == -1
   document.styleSheets.start_autoreload(1000)
