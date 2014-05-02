@@ -66,10 +66,14 @@ R.create "DefinitionView",
       R.div {className: "PlotContainer", onMouseDown: @handleMouseDown},
         R.GridView {bounds}
 
-        R.PlotCartesianView {
+        R.ShaderCartesianView {
           bounds
-          fnString
-          style: config.style.main
+          plots: [
+            {
+              exprString: @fn.getExprString("x")
+              color: [0.2, 0.2, 0.2, 1]
+            }
+          ]
         }
 
       if @fn instanceof C.BuiltInFn

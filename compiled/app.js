@@ -1282,6 +1282,15 @@
     propTypes: {
       appRoot: C.AppRoot
     },
+    refreshShaderOverlay: function() {
+      return this.refs.shaderOverlay.draw();
+    },
+    componentDidMount: function() {
+      return this.refreshShaderOverlay();
+    },
+    componentDidUpdate: function() {
+      return this.refreshShaderOverlay();
+    },
     render: function() {
       return R.div({}, R.DefinitionsView({
         appRoot: this.appRoot
@@ -1289,6 +1298,8 @@
         fn: UI.selectedFn
       }), R.OutlineView({
         compoundFn: UI.selectedFn
+      }), R.ShaderOverlayView({
+        ref: "shaderOverlay"
       }));
     }
   });
@@ -1379,10 +1390,14 @@
         onMouseDown: this.handleMouseDown
       }, R.GridView({
         bounds: bounds
-      }), R.PlotCartesianView({
+      }), R.ShaderCartesianView({
         bounds: bounds,
-        fnString: fnString,
-        style: config.style.main
+        plots: [
+          {
+            exprString: this.fn.getExprString("x"),
+            color: [0.2, 0.2, 0.2, 1]
+          }
+        ]
       })), this.fn instanceof C.BuiltInFn ? R.div({
         className: "Label"
       }, this.fn.label) : R.TextFieldView({
@@ -1485,16 +1500,6 @@
         yMin: (bounds.yMin - y) * scale + y,
         yMax: (bounds.yMax - y) * scale + y
       };
-    },
-    renderPlot: function(curve, style) {
-      var exprString, fnString;
-      exprString = curve.getExprString("x");
-      fnString = "(function (x) { return " + exprString + "; })";
-      return R.PlotCartesianView({
-        bounds: this.fn.bounds,
-        fnString: fnString,
-        style: style
-      });
     },
     render: function() {
       var childFn, plots, _i, _len, _ref;
@@ -1910,6 +1915,8 @@
 
   require("./AppRootView");
 
+  require("./ShaderOverlayView");
+
   require("./DefinitionsView");
 
   require("./MainPlotView");
@@ -1925,6 +1932,136 @@
   require("./plot/PlotCartesianView");
 
   require("./plot/ShaderCartesianView");
+
+}).call(this);
+}, "view/ShaderOverlayView": function(exports, require, module) {(function() {
+  var Glod, bufferCartesianSamples, createCartesianProgram, createProgramFromSrc, drawCartesianProgram,
+    __hasProp = {}.hasOwnProperty;
+
+  Glod = require("./plot/glod");
+
+  R.create("ShaderOverlayView", {
+    initializeGlod: function() {
+      var canvas;
+      this.glod = new Glod();
+      canvas = this.getDOMNode();
+      this.glod.canvas(canvas, {
+        antialias: true
+      });
+      bufferCartesianSamples(this.glod, 20000);
+      this.programs = {};
+      return createCartesianProgram(this.glod, "test", "sin(x*x)");
+    },
+    sizeCanvas: function() {
+      var canvas, rect;
+      canvas = this.getDOMNode();
+      rect = canvas.getBoundingClientRect();
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width;
+        return canvas.height = rect.height;
+      }
+    },
+    draw: function() {
+      var bounds, canvas, junk, name, numSamples, plot, plots, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      canvas = this.getDOMNode();
+      usedPrograms = {};
+      shaderEls = document.querySelectorAll(".Shader");
+      for (_i = 0, _len = shaderEls.length; _i < _len; _i++) {
+        shaderEl = shaderEls[_i];
+        rect = shaderEl.getBoundingClientRect();
+        this.glod.viewport(rect.left, canvas.height - rect.bottom, rect.width, rect.height);
+        shaderView = shaderEl.dataFor;
+        plots = shaderView.plots;
+        bounds = shaderView.bounds;
+        numSamples = rect.width / config.resolution;
+        for (_j = 0, _len1 = plots.length; _j < _len1; _j++) {
+          plot = plots[_j];
+          name = plot.exprString;
+          if (!this.programs[name]) {
+            createCartesianProgram(this.glod, name, name);
+            this.programs[name] = true;
+          }
+          usedPrograms[name] = true;
+          drawCartesianProgram(this.glod, name, numSamples, plot.color, bounds);
+        }
+      }
+      _ref = this.programs;
+      _results = [];
+      for (name in _ref) {
+        if (!__hasProp.call(_ref, name)) continue;
+        junk = _ref[name];
+        if (!usedPrograms[name]) {
+          delete this.glod._programs[name];
+          _results.push(delete this.programs[name]);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    },
+    handleResize: function() {
+      this.sizeCanvas();
+      return this.draw();
+    },
+    componentDidMount: function() {
+      this.initializeGlod();
+      this.sizeCanvas();
+      return window.addEventListener("resize", this.handleResize);
+    },
+    componentWillUnmount: function() {
+      return window.removeEventListener("resize", this.handleResize);
+    },
+    render: function() {
+      return R.canvas({
+        className: "ShaderOverlay"
+      });
+    }
+  });
+
+  createProgramFromSrc = function(glod, name, vertex, fragment) {
+    Glod.preprocessed[name] = {
+      name: name,
+      fragment: fragment,
+      vertex: vertex
+    };
+    delete glod._programs[name];
+    return glod.createProgram(name);
+  };
+
+  createCartesianProgram = function(glod, name, expr) {
+    var fragment, vertex;
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample.x / numSamples;\n\n  float x = lerp(s, 0., 1., xMin, xMax);\n  float y = " + expr + ";\n\n  float px = lerp(x, xMin, xMax, -1., 1.);\n  float py = lerp(y, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
+    return createProgramFromSrc(glod, name, vertex, fragment);
+  };
+
+  bufferCartesianSamples = function(glod, numSamples) {
+    var i, samplesArray, _i;
+    samplesArray = [];
+    for (i = _i = 0; 0 <= numSamples ? _i <= numSamples : _i >= numSamples; i = 0 <= numSamples ? ++_i : --_i) {
+      samplesArray.push(i, 0, 0, 1);
+    }
+    if (glod.hasVBO("samples")) {
+      glod.deleteVBO("samples");
+    }
+    return glod.createVBO("samples").bufferDataStatic("samples", new Float32Array(samplesArray));
+  };
+
+  drawCartesianProgram = function(glod, name, numSamples, color, bounds) {
+    var gl;
+    gl = glod.gl();
+    gl.lineWidth(1.25);
+    glod.begin(name);
+    glod.pack("samples", "sample");
+    glod.valuev("color", color);
+    glod.value("xMin", bounds.xMin);
+    glod.value("xMax", bounds.xMax);
+    glod.value("yMin", bounds.yMin);
+    glod.value("yMax", bounds.yMax);
+    glod.value("numSamples", numSamples);
+    glod.ready().lineStrip().drawArrays(0, numSamples);
+    return glod.end();
+  };
 
 }).call(this);
 }, "view/VariableView": function(exports, require, module) {(function() {
@@ -2052,111 +2189,17 @@
 
 }).call(this);
 }, "view/plot/ShaderCartesianView": function(exports, require, module) {(function() {
-  var Glod, bufferCartesianSamples, createCartesianProgram, createProgramFromSrc, drawCartesianProgram;
-
-  Glod = require("./glod");
-
   R.create("ShaderCartesianView", {
     propTypes: {
       bounds: Object,
       plots: Array
     },
-    initialize: function() {
-      var canvasEl, rect;
-      this._glod = new Glod();
-      canvasEl = this.getDOMNode();
-      rect = canvasEl.getBoundingClientRect();
-      canvasEl.width = rect.width;
-      canvasEl.height = rect.height;
-      this._glod.canvas(canvasEl, {
-        antialias: true
-      });
-      bufferCartesianSamples(this._glod, 10000);
-      return this._programs = {};
-    },
-    getName: function(plot, i) {
-      return "p" + i;
-    },
-    draw: function() {
-      var i, name, numSamples, plot, _i, _j, _len, _len1, _ref, _ref1, _results;
-      _ref = this.plots;
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        plot = _ref[i];
-        name = this.getName(plot, i);
-        if (this._programs[name] !== plot.exprString) {
-          createCartesianProgram(this._glod, name, plot.exprString);
-          this._programs[name] = plot.exprString;
-        }
-      }
-      numSamples = this.getDOMNode().width / config.resolution;
-      _ref1 = this.plots;
-      _results = [];
-      for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
-        plot = _ref1[i];
-        name = this.getName(plot, i);
-        _results.push(drawCartesianProgram(this._glod, name, numSamples, plot.color, this.bounds));
-      }
-      return _results;
-    },
-    componentDidMount: function() {
-      this.initialize();
-      return this.draw();
-    },
-    componentDidUpdate: function() {
-      return this.draw();
-    },
-    shouldComponentUpdate: function() {
-      return true;
-    },
     render: function() {
-      return R.canvas({});
+      return R.div({
+        className: "Shader"
+      });
     }
   });
-
-  createProgramFromSrc = function(glod, name, vertex, fragment) {
-    Glod.preprocessed[name] = {
-      name: name,
-      fragment: fragment,
-      vertex: vertex
-    };
-    delete glod._programs[name];
-    return glod.createProgram(name);
-  };
-
-  createCartesianProgram = function(glod, name, expr) {
-    var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample.x / numSamples;\n\n  float x = lerp(s, 0., 1., xMin, xMax);\n  float y = " + expr + ";\n\n  float px = lerp(x, xMin, xMax, -1., 1.);\n  float py = lerp(y, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
-    return createProgramFromSrc(glod, name, vertex, fragment);
-  };
-
-  bufferCartesianSamples = function(glod, numSamples) {
-    var i, samplesArray, _i;
-    samplesArray = [];
-    for (i = _i = 0; 0 <= numSamples ? _i <= numSamples : _i >= numSamples; i = 0 <= numSamples ? ++_i : --_i) {
-      samplesArray.push(i, 0, 0, 1);
-    }
-    if (glod.hasVBO("samples")) {
-      glod.deleteVBO("samples");
-    }
-    return glod.createVBO("samples").bufferDataStatic("samples", new Float32Array(samplesArray));
-  };
-
-  drawCartesianProgram = function(glod, name, numSamples, color, bounds) {
-    var gl;
-    gl = glod.gl();
-    gl.lineWidth(1.25);
-    glod.begin(name);
-    glod.pack("samples", "sample");
-    glod.valuev("color", color);
-    glod.value("xMin", bounds.xMin);
-    glod.value("xMax", bounds.xMax);
-    glod.value("yMin", bounds.yMin);
-    glod.value("yMax", bounds.yMax);
-    glod.value("numSamples", numSamples);
-    glod.ready().lineStrip().drawArrays(0, numSamples);
-    return glod.end();
-  };
 
 }).call(this);
 }, "view/plot/glod": function(exports, require, module) {'use strict';

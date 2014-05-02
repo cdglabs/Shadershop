@@ -119,6 +119,8 @@ require("./ui/TextFieldView")
 
 require("./AppRootView")
 
+require("./ShaderOverlayView")
+
 require("./DefinitionsView")
 require("./MainPlotView")
 require("./OutlineView")

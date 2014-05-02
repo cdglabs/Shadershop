@@ -82,16 +82,6 @@ R.create "MainPlotView",
     }
 
 
-  renderPlot: (curve, style) ->
-    exprString = curve.getExprString("x")
-    fnString = "(function (x) { return #{exprString}; })"
-    return R.PlotCartesianView {
-      bounds: @fn.bounds
-      fnString
-      style
-    }
-
-
   render: ->
     plots = []
 

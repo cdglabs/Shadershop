@@ -12,7 +12,8 @@ body {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   font-size: 12px;
 }
-canvas {
+canvas,
+.Shader {
   position: absolute;
   top: 0;
   left: 0;
@@ -22,6 +23,10 @@ canvas {
 ::-webkit-scrollbar {
   width: 0px;
   height: 0px;
+}
+.ShaderOverlay {
+  z-index: 10;
+  pointer-events: none;
 }
 .Definitions {
   display: inline-block;
