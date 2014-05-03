@@ -1,12 +1,3 @@
-Outline View
-  Display references better
-  Reorder references (for composition)
-  Think about richer outline
-
-Definitions
-  Drag (rather than click) to add
-  Click to select definition
-
 Plot
   Tune mousewheel scrolling
 
@@ -40,4 +31,48 @@ Select child fns from the outline
 
 Transform numbers shouldn't show when they're the default value
 Highlight transform numbers when hovering the control point
+
+
+
+
+
+zIndex should be variables in style
+colors for cartesian plots should be in config (and remove canvas styles)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vectors stored as array
+matrices stored as array of arrays in row major order (as in numeric.js)
+
+
+Adding dimensionality
+  childFn
+    getDomainTranslate -> [..4..]
+    getDomainTransform -> [[..4..]]
+    getRangeTranslate  -> [..4..]
+    getRangeTransform  -> [[..4..]]
+
+  util.glsl.
+    numberToString
+    vectorToString
+    matrixToString - note: needs to transpose because glsl is column major order
+
+  Fn.evaluate
+    we want to remove dependency of js on exprString since it will be glsl specific
+
+
+
+
+
 

@@ -631,8 +631,7 @@
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
-  var canvasBounds, clear, drawCartesian, drawGrid, drawHorizontal, drawLine, drawVertical, getSpacing, lerp, setStyle, ticks,
-    __hasProp = {}.hasOwnProperty;
+  var canvasBounds, clear, drawGrid, drawLine, getSpacing, lerp, ticks;
 
   lerp = util.lerp;
 
@@ -653,79 +652,6 @@
     var canvas;
     canvas = ctx.canvas;
     return ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
-
-  setStyle = function(ctx, styleOpts) {
-    var key, value, _results;
-    _results = [];
-    for (key in styleOpts) {
-      if (!__hasProp.call(styleOpts, key)) continue;
-      value = styleOpts[key];
-      _results.push(ctx[key] = value);
-    }
-    return _results;
-  };
-
-  drawCartesian = function(ctx, opts) {
-    var cx, cxMax, cxMin, cy, cyMax, cyMin, dCy, fn, i, lastCx, lastCy, lastSample, testDiscontinuity, x, xMax, xMin, y, yMax, yMin, _i, _ref, _ref1;
-    xMin = opts.xMin;
-    xMax = opts.xMax;
-    yMin = opts.yMin;
-    yMax = opts.yMax;
-    fn = opts.fn;
-    testDiscontinuity = (_ref = opts.testDiscontinuity) != null ? _ref : function() {
-      return false;
-    };
-    _ref1 = canvasBounds(ctx), cxMin = _ref1.cxMin, cxMax = _ref1.cxMax, cyMin = _ref1.cyMin, cyMax = _ref1.cyMax;
-    ctx.beginPath();
-    lastSample = cxMax / config.resolution;
-    lastCx = null;
-    lastCy = null;
-    dCy = null;
-    for (i = _i = 0; 0 <= lastSample ? _i <= lastSample : _i >= lastSample; i = 0 <= lastSample ? ++_i : --_i) {
-      cx = i * config.resolution;
-      x = lerp(cx, cxMin, cxMax, xMin, xMax);
-      y = fn(x);
-      cy = lerp(y, yMin, yMax, cyMin, cyMax);
-      if (lastCy == null) {
-        ctx.moveTo(cx, cy);
-      }
-      if (dCy != null) {
-        if (Math.abs((cy - lastCy) - dCy) > .000001) {
-          ctx.lineTo(lastCx, lastCy);
-        }
-      }
-      if (lastCy != null) {
-        dCy = cy - lastCy;
-      }
-      lastCx = cx;
-      lastCy = cy;
-    }
-    return ctx.lineTo(cx, cy);
-  };
-
-  drawVertical = function(ctx, opts) {
-    var cx, cxMax, cxMin, cyMax, cyMin, x, xMax, xMin, _ref;
-    xMin = opts.xMin;
-    xMax = opts.xMax;
-    x = opts.x;
-    _ref = canvasBounds(ctx), cxMin = _ref.cxMin, cxMax = _ref.cxMax, cyMin = _ref.cyMin, cyMax = _ref.cyMax;
-    ctx.beginPath();
-    cx = lerp(x, xMin, xMax, cxMin, cxMax);
-    ctx.moveTo(cx, cyMin);
-    return ctx.lineTo(cx, cyMax);
-  };
-
-  drawHorizontal = function(ctx, opts) {
-    var cxMax, cxMin, cy, cyMax, cyMin, y, yMax, yMin, _ref;
-    yMin = opts.yMin;
-    yMax = opts.yMax;
-    y = opts.y;
-    _ref = canvasBounds(ctx), cxMin = _ref.cxMin, cxMax = _ref.cxMax, cyMin = _ref.cyMin, cyMax = _ref.cyMax;
-    ctx.beginPath();
-    cy = lerp(y, yMin, yMax, cyMin, cyMax);
-    ctx.moveTo(cxMin, cy);
-    return ctx.lineTo(cxMax, cy);
   };
 
   ticks = function(spacing, min, max) {
@@ -888,10 +814,6 @@
   util.canvas = {
     lerp: lerp,
     clear: clear,
-    setStyle: setStyle,
-    drawCartesian: drawCartesian,
-    drawVertical: drawVertical,
-    drawHorizontal: drawHorizontal,
     getSpacing: getSpacing,
     drawGrid: drawGrid
   };
@@ -1929,8 +1851,6 @@
 
   require("./plot/GridView");
 
-  require("./plot/PlotCartesianView");
-
   require("./plot/ShaderCartesianView");
 
 }).call(this);
@@ -2148,41 +2068,6 @@
     render: function() {
       return R.CanvasView({
         drawFn: this.drawFn
-      });
-    }
-  });
-
-}).call(this);
-}, "view/plot/PlotCartesianView": function(exports, require, module) {(function() {
-  R.create("PlotCartesianView", {
-    propTypes: {
-      bounds: Object,
-      fnString: String,
-      style: Object
-    },
-    drawFn: function(canvas) {
-      var ctx, fn, xMax, xMin, yMax, yMin, _ref;
-      ctx = canvas.getContext("2d");
-      fn = util.evaluate(this.fnString);
-      util.canvas.clear(ctx);
-      _ref = this.bounds, xMin = _ref.xMin, xMax = _ref.xMax, yMin = _ref.yMin, yMax = _ref.yMax;
-      util.canvas.drawCartesian(ctx, {
-        xMin: xMin,
-        xMax: xMax,
-        yMin: yMin,
-        yMax: yMax,
-        fn: fn
-      });
-      util.canvas.setStyle(ctx, this.style);
-      return ctx.stroke();
-    },
-    shouldComponentUpdate: function(nextProps) {
-      return this.bounds !== nextProps.bounds || this.fnString !== nextProps.fnString || this.style !== nextProps.style;
-    },
-    render: function() {
-      return R.CanvasView({
-        drawFn: this.drawFn,
-        ref: "canvas"
       });
     }
   });
