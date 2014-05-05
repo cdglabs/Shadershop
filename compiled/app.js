@@ -1717,6 +1717,11 @@
       fn: C.Fn,
       path: Array
     },
+    select: function() {
+      if (this.path.length === 1) {
+        return UI.selectChildFn(this.fn);
+      }
+    },
     render: function() {
       var className, indentLevel;
       indentLevel = this.path.length;
@@ -1724,7 +1729,8 @@
         Selected: this.fn === UI.selectedChildFn
       });
       return R.tbody({
-        className: className
+        className: className,
+        onMouseDown: this.select
       }, R.tr({}, R.td({
         className: "OutlineNodeMain",
         rowSpan: 2,

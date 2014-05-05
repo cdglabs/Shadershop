@@ -33,12 +33,16 @@ R.create "OutlineNodeView",
     fn: C.Fn
     path: Array
 
+  select: ->
+    if @path.length == 1
+      UI.selectChildFn(@fn)
+
   render: ->
     indentLevel = @path.length
     className = R.cx {
       Selected: @fn == UI.selectedChildFn
     }
-    R.tbody {className: className},
+    R.tbody {className: className, onMouseDown: @select},
       R.tr {},
         R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: indentLevel * config.outlineIndent}},
           R.OutlineMainView {fn: @fn, path: @path}
