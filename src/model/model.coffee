@@ -69,15 +69,28 @@ class C.ChildFn extends C.Fn
     @rangeTranslate = new C.Variable("0")
     @rangeScale = new C.Variable("1")
 
-  getExprString: (parameter) ->
-    domainTranslate = util.glslString(@domainTranslate.getValue())
-    domainScale     = util.glslString(@domainScale.getValue())
-    rangeTranslate  = util.glslString(@rangeTranslate.getValue())
-    rangeScale      = util.glslString(@rangeScale.getValue())
+  getDomainTranslate: ->
+    [@domainTranslate.getValue()]
 
-    exprString = "((#{parameter} - #{domainTranslate}) / #{domainScale})"
+  getDomainTransform: ->
+    [[@domainScale.getValue()]]
+
+  getRangeTranslate: ->
+    [@rangeTranslate.getValue()]
+
+  getRangeTransform: ->
+    [[@rangeScale.getValue()]]
+
+  getExprString: (parameter) ->
+    domainTranslate    = util.glslString(@getDomainTranslate())
+    domainTransformInv = util.glslString(numeric.inv(@getDomainTransform()))
+    rangeTranslate     = util.glslString(@getRangeTranslate())
+    rangeTransform     = util.glslString(@getRangeTransform())
+
+    exprString = "((#{parameter} - #{domainTranslate}) * #{domainTransformInv})"
     exprString = @fn.getExprString(exprString)
-    exprString = "(#{exprString} * #{rangeScale} + #{rangeTranslate})"
+    exprString = "(#{exprString} * #{rangeTransform} + #{rangeTranslate})"
+
     return exprString
 
 

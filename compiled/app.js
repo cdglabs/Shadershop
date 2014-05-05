@@ -600,15 +600,31 @@
       this.rangeScale = new C.Variable("1");
     }
 
+    ChildFn.prototype.getDomainTranslate = function() {
+      return [this.domainTranslate.getValue()];
+    };
+
+    ChildFn.prototype.getDomainTransform = function() {
+      return [[this.domainScale.getValue()]];
+    };
+
+    ChildFn.prototype.getRangeTranslate = function() {
+      return [this.rangeTranslate.getValue()];
+    };
+
+    ChildFn.prototype.getRangeTransform = function() {
+      return [[this.rangeScale.getValue()]];
+    };
+
     ChildFn.prototype.getExprString = function(parameter) {
-      var domainScale, domainTranslate, exprString, rangeScale, rangeTranslate;
-      domainTranslate = util.glslString(this.domainTranslate.getValue());
-      domainScale = util.glslString(this.domainScale.getValue());
-      rangeTranslate = util.glslString(this.rangeTranslate.getValue());
-      rangeScale = util.glslString(this.rangeScale.getValue());
-      exprString = "((" + parameter + " - " + domainTranslate + ") / " + domainScale + ")";
+      var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
+      domainTranslate = util.glslString(this.getDomainTranslate());
+      domainTransformInv = util.glslString(numeric.inv(this.getDomainTransform()));
+      rangeTranslate = util.glslString(this.getRangeTranslate());
+      rangeTransform = util.glslString(this.getRangeTransform());
+      exprString = "((" + parameter + " - " + domainTranslate + ") * " + domainTransformInv + ")";
       exprString = this.fn.getExprString(exprString);
-      exprString = "(" + exprString + " * " + rangeScale + " + " + rangeTranslate + ")";
+      exprString = "(" + exprString + " * " + rangeTransform + " + " + rangeTranslate + ")";
       return exprString;
     };
 
