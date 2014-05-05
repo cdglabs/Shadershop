@@ -32,7 +32,15 @@ Select child fns from the outline
 Transform numbers shouldn't show when they're the default value
 Highlight transform numbers when hovering the control point
 
+Do something better than util.safeInv
 
+
+
+
+In model ChildFn
+  Make transform a matrix of Variables
+
+Show entire matrix in outline view
 
 
 

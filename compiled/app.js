@@ -660,7 +660,7 @@
     ChildFn.prototype.evaluate = function(x) {
       var domainTransformInv, domainTranslate, rangeTransform, rangeTranslate;
       domainTranslate = this.getDomainTranslate();
-      domainTransformInv = numeric.inv(this.getDomainTransform());
+      domainTransformInv = util.safeInv(this.getDomainTransform());
       rangeTranslate = this.getRangeTranslate();
       rangeTransform = this.getRangeTransform();
       x = numeric.dot(domainTransformInv, numeric.sub(x, domainTranslate));
@@ -672,7 +672,7 @@
     ChildFn.prototype.getExprString = function(parameter) {
       var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
       domainTranslate = util.glslString(this.getDomainTranslate());
-      domainTransformInv = util.glslString(numeric.inv(this.getDomainTransform()));
+      domainTransformInv = util.glslString(util.safeInv(this.getDomainTransform()));
       rangeTranslate = util.glslString(this.getRangeTranslate());
       rangeTransform = util.glslString(this.getRangeTransform());
       exprString = "(" + domainTransformInv + " * (" + parameter + " - " + domainTranslate + "))";
@@ -1260,6 +1260,14 @@
       }
       string = "mat" + length + "(" + (strings.join(',')) + ")";
       return string;
+    }
+  };
+
+  util.safeInv = function(m) {
+    try {
+      return numeric.inv(m);
+    } catch (_error) {
+      return numeric.identity(m.length);
     }
   };
 

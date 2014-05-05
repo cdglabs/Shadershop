@@ -107,7 +107,7 @@ class C.ChildFn extends C.Fn
 
   evaluate: (x) ->
     domainTranslate    = @getDomainTranslate()
-    domainTransformInv = numeric.inv(@getDomainTransform())
+    domainTransformInv = util.safeInv(@getDomainTransform())
     rangeTranslate     = @getRangeTranslate()
     rangeTransform     = @getRangeTransform()
 
@@ -118,7 +118,7 @@ class C.ChildFn extends C.Fn
 
   getExprString: (parameter) ->
     domainTranslate    = util.glslString(@getDomainTranslate())
-    domainTransformInv = util.glslString(numeric.inv(@getDomainTransform()))
+    domainTransformInv = util.glslString(util.safeInv(@getDomainTransform()))
     rangeTranslate     = util.glslString(@getRangeTranslate())
     rangeTransform     = util.glslString(@getRangeTransform())
 

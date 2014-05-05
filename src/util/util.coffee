@@ -110,6 +110,12 @@ util.glslString = (value) ->
 
 
 
+util.safeInv = (m) ->
+  try
+    return numeric.inv(m)
+  catch
+    return numeric.identity(m.length)
+
 
 
 util.onceDragConsummated = (downEvent, callback, notConsummatedCallback=null) ->
