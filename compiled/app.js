@@ -1959,7 +1959,7 @@
 
 }).call(this);
 }, "view/ShaderOverlayView": function(exports, require, module) {(function() {
-  var Glod, bufferCartesianSamples, createCartesianProgram, createProgramFromSrc, drawCartesianProgram,
+  var Glod, bufferCartesianSamples, bufferQuad, createCartesianProgram, createColorMapProgram, createProgramFromSrc, drawCartesianProgram, drawColorMapProgram, setViewport,
     __hasProp = {}.hasOwnProperty;
 
   Glod = require("./plot/glod");
@@ -1972,6 +1972,7 @@
       this.glod.canvas(canvas, {
         antialias: true
       });
+      bufferQuad(this.glod);
       bufferCartesianSamples(this.glod, 20000);
       return this.programs = {};
     },
@@ -1992,7 +1993,7 @@
       for (_i = 0, _len = shaderEls.length; _i < _len; _i++) {
         shaderEl = shaderEls[_i];
         rect = shaderEl.getBoundingClientRect();
-        this.glod.viewport(rect.left, canvas.height - rect.bottom, rect.width, rect.height);
+        setViewport(this.glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height);
         shaderView = shaderEl.dataFor;
         plots = shaderView.plots;
         bounds = shaderView.bounds;
@@ -2051,11 +2052,18 @@
     return glod.createProgram(name);
   };
 
-  createCartesianProgram = function(glod, name, expr) {
-    var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);\n  vec4 y = " + expr + ";\n\n  float px = lerp(x.x, xMin, xMax, -1., 1.);\n  float py = lerp(y.x, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
-    return createProgramFromSrc(glod, name, vertex, fragment);
+  setViewport = function(glod, x, y, w, h) {
+    glod.viewport(x, y, w, h);
+    return glod.viewport_ = {
+      x: x,
+      y: y,
+      w: w,
+      h: h
+    };
+  };
+
+  bufferQuad = function(glod) {
+    return glod.createVBO("quad").uploadCCWQuad("quad");
   };
 
   bufferCartesianSamples = function(glod, numSamples) {
@@ -2068,6 +2076,13 @@
       glod.deleteVBO("samples");
     }
     return glod.createVBO("samples").bufferDataStatic("samples", new Float32Array(samplesArray));
+  };
+
+  createCartesianProgram = function(glod, name, expr) {
+    var fragment, vertex;
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);\n  vec4 y = " + expr + ";\n\n  float px = lerp(x.x, xMin, xMax, -1., 1.);\n  float py = lerp(y.x, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
+    return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
   drawCartesianProgram = function(glod, name, numSamples, color, bounds) {
@@ -2083,6 +2098,30 @@
     glod.value("yMax", bounds.yMax);
     glod.value("numSamples", numSamples);
     glod.ready().lineStrip().drawArrays(0, numSamples);
+    return glod.end();
+  };
+
+  createColorMapProgram = function(glod, name, expr) {
+    var fragment, vertex;
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\n\nvoid main() {\n  gl_Position = position;\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float screenXMin, screenXMax, screenYMin, screenYMax;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(gl_FragCoord.x, screenXMin, screenXMax, xMin, xMax),\n    lerp(gl_FragCoord.y, screenYMin, screenYMax, yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  gl_FragColor = vec4(vec3(y.x), 1.);\n}";
+    return createProgramFromSrc(glod, name, vertex, fragment);
+  };
+
+  drawColorMapProgram = function(glod, name, bounds) {
+    var canvas;
+    canvas = glod.canvas();
+    glod.begin(name);
+    glod.pack("quad", "position");
+    glod.value("screenXMin", glod.viewport_.x);
+    glod.value("screenXMax", glod.viewport_.x + glod.viewport_.w);
+    glod.value("screenYMin", glod.viewport_.y);
+    glod.value("screenYMax", glod.viewport_.y + glod.viewport_.h);
+    glod.value("xMin", bounds.xMin);
+    glod.value("xMax", bounds.xMax);
+    glod.value("yMin", bounds.yMin);
+    glod.value("yMax", bounds.yMax);
+    glod.ready().triangles().drawArrays(0, 6);
     return glod.end();
   };
 
