@@ -33,6 +33,12 @@ window.config = config = {
     }
   }
 
+  color: {
+    main: [0.2, 0.2, 0.2, 1]
+    child: [0.8, 0.8, 0.8, 1]
+    selected: [0, 0.6, 0.8, 1]
+  }
+
 
 
   cursor: {

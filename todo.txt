@@ -36,12 +36,6 @@ Highlight transform numbers when hovering the control point
 
 
 
-zIndex should be variables in style
-colors for cartesian plots should be in config (and remove canvas styles)
-
-
-
-
 
 
 

@@ -268,6 +268,11 @@
         lineWidth: 1.25
       }
     },
+    color: {
+      main: [0.2, 0.2, 0.2, 1],
+      child: [0.8, 0.8, 0.8, 1],
+      selected: [0, 0.6, 0.8, 1]
+    },
     cursor: {
       text: "text",
       grab: "-webkit-grab",
@@ -1418,7 +1423,7 @@
         plots: [
           {
             exprString: this.fn.getExprString("x"),
-            color: [0.2, 0.2, 0.2, 1]
+            color: config.color.main
           }
         ]
       })), this.fn instanceof C.BuiltInFn ? R.div({
@@ -1530,17 +1535,17 @@
         childFn = _ref[_i];
         plots.push({
           exprString: childFn.getExprString("x"),
-          color: [0.8, 0.8, 0.8, 1]
+          color: config.color.child
         });
       }
       plots.push({
         exprString: this.fn.getExprString("x"),
-        color: [0.2, 0.2, 0.2, 1]
+        color: config.color.main
       });
       if (UI.selectedChildFn) {
         plots.push({
           exprString: UI.selectedChildFn.getExprString("x"),
-          color: [0, 0.6, 0.8, 1]
+          color: config.color.selected
         });
       }
       return R.div({

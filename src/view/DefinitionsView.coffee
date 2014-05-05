@@ -71,7 +71,7 @@ R.create "DefinitionView",
           plots: [
             {
               exprString: @fn.getExprString("x")
-              color: [0.2, 0.2, 0.2, 1]
+              color: config.color.main
             }
           ]
         }

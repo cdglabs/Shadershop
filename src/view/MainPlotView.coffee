@@ -86,20 +86,20 @@ R.create "MainPlotView",
     for childFn in @fn.childFns
       plots.push {
         exprString: childFn.getExprString("x")
-        color: [0.8, 0.8, 0.8, 1]
+        color: config.color.child
       }
 
     # Main
     plots.push {
       exprString: @fn.getExprString("x")
-      color: [0.2, 0.2, 0.2, 1]
+      color: config.color.main
     }
 
     # Selected
     if UI.selectedChildFn
       plots.push {
         exprString: UI.selectedChildFn.getExprString("x")
-        color: [0, 0.6, 0.8, 1]
+        color: config.color.selected
       }
 
 

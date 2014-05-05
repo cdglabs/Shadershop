@@ -81,6 +81,7 @@ canvas,
   width: 100%;
   height: 100%;
   background-color: #faf8f2;
+  overflow: hidden;
 }
 .PointControl {
   position: absolute;
@@ -91,6 +92,7 @@ canvas,
   border-radius: 6px;
   background-color: #09c;
   opacity: 0.25;
+  z-index: 20;
 }
 .PointControl:hover {
   opacity: 1;
