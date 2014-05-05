@@ -12,9 +12,6 @@ R.create "ShaderOverlayView",
 
     @programs = {}
 
-    # TODO
-    createCartesianProgram(@glod, "test", "sin(x*x)")
-
   sizeCanvas: ->
     canvas = @getDOMNode()
     rect = canvas.getBoundingClientRect()
@@ -111,11 +108,11 @@ createCartesianProgram = (glod, name, expr) ->
   void main() {
     float s = sample / numSamples;
 
-    float x = lerp(s, 0., 1., xMin, xMax);
-    float y = #{expr};
+    vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);
+    vec4 y = #{expr};
 
-    float px = lerp(x, xMin, xMax, -1., 1.);
-    float py = lerp(y, yMin, yMax, -1., 1.);
+    float px = lerp(x.x, xMin, xMax, -1., 1.);
+    float py = lerp(y.x, yMin, yMax, -1., 1.);
 
     gl_Position = vec4(px, py, 0., 1.);
   }

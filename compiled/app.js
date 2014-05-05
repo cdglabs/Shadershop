@@ -577,13 +577,13 @@
         reducer = function(result, childFn) {
           return numeric.add(result, childFn.evaluate(x));
         };
-        return _.reduce(this.childFns, reducer, 0);
+        return _.reduce(this.childFns, reducer, [0, 0, 0, 0]);
       }
       if (this.combiner === "product") {
         reducer = function(result, childFn) {
           return numeric.mul(result, childFn.evaluate(x));
         };
-        return _.reduce(this.childFns, reducer, 1);
+        return _.reduce(this.childFns, reducer, [1, 1, 1, 1]);
       }
     };
 
@@ -604,11 +604,11 @@
         };
       })(this));
       if (this.combiner === "sum") {
-        childExprStrings.unshift("0.");
+        childExprStrings.unshift(util.glslString([0, 0, 0, 0]));
         return "(" + childExprStrings.join(" + ") + ")";
       }
       if (this.combiner === "product") {
-        childExprStrings.unshift("1.");
+        childExprStrings.unshift(util.glslString([1, 1, 1, 1]));
         return "(" + childExprStrings.join(" * ") + ")";
       }
     };
@@ -629,19 +629,27 @@
     }
 
     ChildFn.prototype.getDomainTranslate = function() {
-      return [this.domainTranslate.getValue()];
+      var v;
+      v = this.domainTranslate.getValue();
+      return [v, 0, 0, 0];
     };
 
     ChildFn.prototype.getDomainTransform = function() {
-      return [[this.domainScale.getValue()]];
+      var v;
+      v = this.domainScale.getValue();
+      return [[v, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
     };
 
     ChildFn.prototype.getRangeTranslate = function() {
-      return [this.rangeTranslate.getValue()];
+      var v;
+      v = this.rangeTranslate.getValue();
+      return [v, 0, 0, 0];
     };
 
     ChildFn.prototype.getRangeTransform = function() {
-      return [[this.rangeScale.getValue()]];
+      var v;
+      v = this.rangeScale.getValue();
+      return [[v, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
     };
 
     ChildFn.prototype.evaluate = function(x) {
@@ -1450,7 +1458,7 @@
       _ref1 = this.fn.childFns;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
-        evaluated = childFn.evaluate([x]);
+        evaluated = childFn.evaluate([x, 0, 0, 0]);
         distance = Math.abs(y - evaluated[0]);
         if (distance < config.hitTolerance * pixelWidth) {
           found = childFn;
@@ -1960,8 +1968,7 @@
         antialias: true
       });
       bufferCartesianSamples(this.glod, 20000);
-      this.programs = {};
-      return createCartesianProgram(this.glod, "test", "sin(x*x)");
+      return this.programs = {};
     },
     sizeCanvas: function() {
       var canvas, rect;
@@ -2041,7 +2048,7 @@
 
   createCartesianProgram = function(glod, name, expr) {
     var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  float x = lerp(s, 0., 1., xMin, xMax);\n  float y = " + expr + ";\n\n  float px = lerp(x, xMin, xMax, -1., 1.);\n  float py = lerp(y, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);\n  vec4 y = " + expr + ";\n\n  float px = lerp(x.x, xMin, xMax, -1., 1.);\n  float py = lerp(y.x, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
@@ -2519,6 +2526,7 @@ Glod.prototype.createProgram = function(name) {
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
       var log = gl.getShaderInfoLog(s);
       console.log(log);
+      console.log(source);
       die('Glod.createProgram: compilation failed', log);
     }
 

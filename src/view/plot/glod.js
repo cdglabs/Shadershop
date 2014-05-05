@@ -339,6 +339,7 @@ Glod.prototype.createProgram = function(name) {
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
       var log = gl.getShaderInfoLog(s);
       console.log(log);
+      console.log(source);
       die('Glod.createProgram: compilation failed', log);
     }
 

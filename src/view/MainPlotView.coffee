@@ -18,7 +18,7 @@ R.create "MainPlotView",
 
     found = null
     for childFn in @fn.childFns
-      evaluated = childFn.evaluate([x])
+      evaluated = childFn.evaluate([x, 0, 0, 0])
 
       distance = Math.abs(y - evaluated[0])
       if distance < config.hitTolerance * pixelWidth

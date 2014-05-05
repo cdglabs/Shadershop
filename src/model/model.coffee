@@ -53,12 +53,12 @@ class C.CompoundFn extends C.Fn
     if @combiner == "sum"
       reducer = (result, childFn) ->
         numeric.add(result, childFn.evaluate(x))
-      return _.reduce(@childFns, reducer, 0)
+      return _.reduce(@childFns, reducer, [0,0,0,0])
 
     if @combiner == "product"
       reducer = (result, childFn) ->
         numeric.mul(result, childFn.evaluate(x))
-      return _.reduce(@childFns, reducer, 1)
+      return _.reduce(@childFns, reducer, [1,1,1,1])
 
 
   getExprString: (parameter) ->
@@ -72,11 +72,11 @@ class C.CompoundFn extends C.Fn
       childFn.getExprString(parameter)
 
     if @combiner == "sum"
-      childExprStrings.unshift("0.")
+      childExprStrings.unshift(util.glslString([0,0,0,0]))
       return "(" + childExprStrings.join(" + ") + ")"
 
     if @combiner == "product"
-      childExprStrings.unshift("1.")
+      childExprStrings.unshift(util.glslString([1,1,1,1]))
       return "(" + childExprStrings.join(" * ") + ")"
 
 
@@ -90,16 +90,20 @@ class C.ChildFn extends C.Fn
     @rangeScale = new C.Variable("1")
 
   getDomainTranslate: ->
-    [@domainTranslate.getValue()]
+    v = @domainTranslate.getValue()
+    [v, 0, 0, 0]
 
   getDomainTransform: ->
-    [[@domainScale.getValue()]]
+    v = @domainScale.getValue()
+    [[v, 0, 0, 0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
 
   getRangeTranslate: ->
-    [@rangeTranslate.getValue()]
+    v = @rangeTranslate.getValue()
+    [v, 0, 0, 0]
 
   getRangeTransform: ->
-    [[@rangeScale.getValue()]]
+    v = @rangeScale.getValue()
+    [[v, 0, 0, 0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
 
   evaluate: (x) ->
     domainTranslate    = @getDomainTranslate()
