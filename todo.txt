@@ -63,9 +63,6 @@ Adding dimensionality
     getRangeTranslate  -> [..4..]
     getRangeTransform  -> [[..4..]]
 
-  Fn.evaluate
-    we want to remove dependency of js on exprString since it will be glsl specific
-
 
 
 

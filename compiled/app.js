@@ -540,6 +540,10 @@
       return "" + this.fnName + "(" + parameter + ")";
     };
 
+    BuiltInFn.prototype.evaluate = function(x) {
+      return builtIn.fnEvaluators[this.fnName](x);
+    };
+
     return BuiltInFn;
 
   })(C.Fn);
@@ -558,6 +562,30 @@
         yMax: 6
       };
     }
+
+    CompoundFn.prototype.evaluate = function(x) {
+      var childFn, reducer, _i, _len, _ref;
+      if (this.combiner === "composition") {
+        _ref = this.childFns;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          childFn = _ref[_i];
+          x = childFn.evaluate(x);
+        }
+        return x;
+      }
+      if (this.combiner === "sum") {
+        reducer = function(result, childFn) {
+          return numeric.add(result, childFn.evaluate(x));
+        };
+        return _.reduce(this.childFns, reducer, 0);
+      }
+      if (this.combiner === "product") {
+        reducer = function(result, childFn) {
+          return numeric.mul(result, childFn.evaluate(x));
+        };
+        return _.reduce(this.childFns, reducer, 1);
+      }
+    };
 
     CompoundFn.prototype.getExprString = function(parameter) {
       var childExprStrings, childFn, exprString, _i, _len, _ref;
@@ -616,15 +644,27 @@
       return [[this.rangeScale.getValue()]];
     };
 
+    ChildFn.prototype.evaluate = function(x) {
+      var domainTransformInv, domainTranslate, rangeTransform, rangeTranslate;
+      domainTranslate = this.getDomainTranslate();
+      domainTransformInv = numeric.inv(this.getDomainTransform());
+      rangeTranslate = this.getRangeTranslate();
+      rangeTransform = this.getRangeTransform();
+      x = numeric.dot(domainTransformInv, numeric.sub(x, domainTranslate));
+      x = this.fn.evaluate(x);
+      x = numeric.add(numeric.dot(rangeTransform, x), rangeTranslate);
+      return x;
+    };
+
     ChildFn.prototype.getExprString = function(parameter) {
       var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
       domainTranslate = util.glslString(this.getDomainTranslate());
       domainTransformInv = util.glslString(numeric.inv(this.getDomainTransform()));
       rangeTranslate = util.glslString(this.getRangeTranslate());
       rangeTransform = util.glslString(this.getRangeTransform());
-      exprString = "((" + parameter + " - " + domainTranslate + ") * " + domainTransformInv + ")";
+      exprString = "(" + domainTransformInv + " * (" + parameter + " - " + domainTranslate + "))";
       exprString = this.fn.getExprString(exprString);
-      exprString = "(" + exprString + " * " + rangeTransform + " + " + rangeTranslate + ")";
+      exprString = "(" + rangeTransform + " * " + exprString + " + " + rangeTranslate + ")";
       return exprString;
     };
 
@@ -644,6 +684,18 @@
   window.builtIn = builtIn = {};
 
   builtIn.fns = [new C.BuiltInFn("identity", "Line"), new C.BuiltInFn("abs", "Abs"), new C.BuiltInFn("fract", "Fract"), new C.BuiltInFn("floor", "Floor"), new C.BuiltInFn("sin", "Sine")];
+
+  builtIn.fnEvaluators = {
+    identity: function(x) {
+      return x;
+    },
+    abs: numeric.abs,
+    fract: function(x) {
+      return numeric.sub(x, numeric.floor(x));
+    },
+    floor: numeric.floor,
+    sin: numeric.sin
+  };
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
@@ -1389,7 +1441,7 @@
       };
     },
     changeSelection: function() {
-      var bounds, childFn, distance, exprString, fn, fnString, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
+      var bounds, childFn, distance, evaluated, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       rect = this.getDOMNode().getBoundingClientRect();
       bounds = this.fn.bounds;
@@ -1398,10 +1450,8 @@
       _ref1 = this.fn.childFns;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
-        exprString = childFn.getExprString("x");
-        fnString = "(function (x) { return " + exprString + "; })";
-        fn = util.evaluate(fnString);
-        distance = Math.abs(y - fn(x));
+        evaluated = childFn.evaluate([x]);
+        distance = Math.abs(y - evaluated[0]);
         if (distance < config.hitTolerance * pixelWidth) {
           found = childFn;
         }

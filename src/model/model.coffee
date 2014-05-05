@@ -28,6 +28,9 @@ class C.BuiltInFn extends C.Fn
 
     return "#{@fnName}(#{parameter})"
 
+  evaluate: (x) ->
+    return builtIn.fnEvaluators[@fnName](x)
+
 
 class C.CompoundFn extends C.Fn
   constructor: ->
@@ -40,6 +43,23 @@ class C.CompoundFn extends C.Fn
       yMin: -6
       yMax: 6
     }
+
+  evaluate: (x) ->
+    if @combiner == "composition"
+      for childFn in @childFns
+        x = childFn.evaluate(x)
+      return x
+
+    if @combiner == "sum"
+      reducer = (result, childFn) ->
+        numeric.add(result, childFn.evaluate(x))
+      return _.reduce(@childFns, reducer, 0)
+
+    if @combiner == "product"
+      reducer = (result, childFn) ->
+        numeric.mul(result, childFn.evaluate(x))
+      return _.reduce(@childFns, reducer, 1)
+
 
   getExprString: (parameter) ->
     if @combiner == "composition"
@@ -81,15 +101,26 @@ class C.ChildFn extends C.Fn
   getRangeTransform: ->
     [[@rangeScale.getValue()]]
 
+  evaluate: (x) ->
+    domainTranslate    = @getDomainTranslate()
+    domainTransformInv = numeric.inv(@getDomainTransform())
+    rangeTranslate     = @getRangeTranslate()
+    rangeTransform     = @getRangeTransform()
+
+    x = numeric.dot(domainTransformInv, numeric.sub(x, domainTranslate))
+    x = @fn.evaluate(x)
+    x = numeric.add(numeric.dot(rangeTransform, x), rangeTranslate)
+    return x
+
   getExprString: (parameter) ->
     domainTranslate    = util.glslString(@getDomainTranslate())
     domainTransformInv = util.glslString(numeric.inv(@getDomainTransform()))
     rangeTranslate     = util.glslString(@getRangeTranslate())
     rangeTransform     = util.glslString(@getRangeTransform())
 
-    exprString = "((#{parameter} - #{domainTranslate}) * #{domainTransformInv})"
+    exprString = "(#{domainTransformInv} * (#{parameter} - #{domainTranslate}))"
     exprString = @fn.getExprString(exprString)
-    exprString = "(#{exprString} * #{rangeTransform} + #{rangeTranslate})"
+    exprString = "(#{rangeTransform} * #{exprString} + #{rangeTranslate})"
 
     return exprString
 
@@ -115,3 +146,10 @@ builtIn.fns = [
   new C.BuiltInFn("sin", "Sine")
 ]
 
+builtIn.fnEvaluators = {
+  identity: (x) -> x
+  abs: numeric.abs
+  fract: (x) -> numeric.sub(x, numeric.floor(x))
+  floor: numeric.floor
+  sin: numeric.sin
+}

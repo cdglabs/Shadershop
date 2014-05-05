@@ -18,12 +18,9 @@ R.create "MainPlotView",
 
     found = null
     for childFn in @fn.childFns
-      exprString = childFn.getExprString("x")
-      fnString = "(function (x) { return #{exprString}; })"
+      evaluated = childFn.evaluate([x])
 
-      fn = util.evaluate(fnString)
-
-      distance = Math.abs(y - fn(x))
+      distance = Math.abs(y - evaluated[0])
       if distance < config.hitTolerance * pixelWidth
         found = childFn
 
