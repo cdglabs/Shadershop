@@ -602,10 +602,10 @@
 
     ChildFn.prototype.getExprString = function(parameter) {
       var domainScale, domainTranslate, exprString, rangeScale, rangeTranslate;
-      domainTranslate = util.glslFloatToString(this.domainTranslate.getValue());
-      domainScale = util.glslFloatToString(this.domainScale.getValue());
-      rangeTranslate = util.glslFloatToString(this.rangeTranslate.getValue());
-      rangeScale = util.glslFloatToString(this.rangeScale.getValue());
+      domainTranslate = util.glslString(this.domainTranslate.getValue());
+      domainScale = util.glslString(this.domainScale.getValue());
+      rangeTranslate = util.glslString(this.rangeTranslate.getValue());
+      rangeScale = util.glslString(this.rangeScale.getValue());
       exprString = "((" + parameter + " - " + domainTranslate + ") / " + domainScale + ")";
       exprString = this.fn.getExprString(exprString);
       exprString = "(" + exprString + " * " + rangeScale + " + " + rangeTranslate + ")";
@@ -1148,13 +1148,38 @@
     return string;
   };
 
-  util.glslFloatToString = function(value) {
-    var string;
-    string = "" + value;
-    if (!/\./.test(string)) {
-      string = string + ".";
+  util.glslString = function(value) {
+    var col, length, row, string, strings, _i, _j;
+    if (_.isNumber(value)) {
+      string = value.toString();
+      if (!/\./.test(string)) {
+        string = string + ".";
+      }
+      return string;
     }
-    return string;
+    if (_.isArray(value) && _.isNumber(value[0])) {
+      length = value.length;
+      if (length === 1) {
+        return util.glslString(value[0]);
+      }
+      strings = value.map(util.glslString);
+      string = "vec" + length + "(" + (strings.join(',')) + ")";
+      return string;
+    }
+    if (_.isArray(value) && _.isArray(value[0])) {
+      length = value.length;
+      if (length === 1) {
+        return util.glslString(value[0][0]);
+      }
+      strings = [];
+      for (col = _i = 0; 0 <= length ? _i < length : _i > length; col = 0 <= length ? ++_i : --_i) {
+        for (row = _j = 0; 0 <= length ? _j < length : _j > length; row = 0 <= length ? ++_j : --_j) {
+          strings.push(util.glslString(value[row][col]));
+        }
+      }
+      string = "mat" + length + "(" + (strings.join(',')) + ")";
+      return string;
+    }
   };
 
   util.onceDragConsummated = function(downEvent, callback, notConsummatedCallback) {

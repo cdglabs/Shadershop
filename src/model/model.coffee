@@ -70,10 +70,10 @@ class C.ChildFn extends C.Fn
     @rangeScale = new C.Variable("1")
 
   getExprString: (parameter) ->
-    domainTranslate = util.glslFloatToString(@domainTranslate.getValue())
-    domainScale     = util.glslFloatToString(@domainScale.getValue())
-    rangeTranslate  = util.glslFloatToString(@rangeTranslate.getValue())
-    rangeScale      = util.glslFloatToString(@rangeScale.getValue())
+    domainTranslate = util.glslString(@domainTranslate.getValue())
+    domainScale     = util.glslString(@domainScale.getValue())
+    rangeTranslate  = util.glslString(@rangeTranslate.getValue())
+    rangeScale      = util.glslString(@rangeScale.getValue())
 
     exprString = "((#{parameter} - #{domainTranslate}) / #{domainScale})"
     exprString = @fn.getExprString(exprString)

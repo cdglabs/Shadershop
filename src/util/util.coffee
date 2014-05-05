@@ -78,11 +78,38 @@ util.floatToString = (value, precision = 0.1, removeExtraZeros = false) ->
   return string
 
 
-util.glslFloatToString = (value) ->
-  string = "" + value
-  unless /\./.test(string)
-    string = string + "."
-  return string
+util.glslString = (value) ->
+  if _.isNumber(value)
+    # Float.
+    string = value.toString()
+    unless /\./.test(string)
+      string = string + "."
+    return string
+
+  if _.isArray(value) and _.isNumber(value[0])
+    # Vector.
+    length = value.length
+    if length == 1
+      return util.glslString(value[0])
+    strings = value.map(util.glslString)
+    string = "vec#{length}(#{strings.join(',')})"
+    return string
+
+  if _.isArray(value) and _.isArray(value[0])
+    # Matrix. Note: Numeric stores matrices as an array of arrays in row major
+    # order, but glsl needs values in column major order.
+    length = value.length # assume square matrix
+    if length == 1
+      return util.glslString(value[0][0])
+    strings = []
+    for col in [0...length]
+      for row in [0...length]
+        strings.push(util.glslString(value[row][col]))
+    string = "mat#{length}(#{strings.join(',')})"
+    return string
+
+
+
 
 
 util.onceDragConsummated = (downEvent, callback, notConsummatedCallback=null) ->

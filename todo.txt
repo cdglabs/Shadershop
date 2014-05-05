@@ -63,13 +63,39 @@ Adding dimensionality
     getRangeTranslate  -> [..4..]
     getRangeTransform  -> [[..4..]]
 
-  util.glsl.
-    numberToString
-    vectorToString
-    matrixToString - note: needs to transpose because glsl is column major order
-
   Fn.evaluate
     we want to remove dependency of js on exprString since it will be glsl specific
+
+
+
+
+
+
+
+getDomainTranslate
+  [@domainTranslate.getValue(), 0, 0, 0]
+
+getDomainTransform
+  [[@domainScale.getValue(),0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+
+
+
+
+((v - domainTranslate) * domainTransformInv)
+expr
+(v * rangeTransform + rangeTranslate)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
