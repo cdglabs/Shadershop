@@ -113,10 +113,10 @@ R.create "MainPlotView",
           plots: plots
         }
 
-        if UI.selectedChildFn
-          R.ChildFnControlsView {
-            childFn: UI.selectedChildFn
-          }
+        # if UI.selectedChildFn
+        #   R.ChildFnControlsView {
+        #     childFn: UI.selectedChildFn
+        #   }
 
 
 R.create "ChildFnControlsView",

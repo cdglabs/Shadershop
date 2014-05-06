@@ -502,6 +502,7 @@
   C.Variable = (function() {
     function Variable(valueString) {
       this.valueString = valueString != null ? valueString : "0";
+      this.valueString = this.valueString.toString();
       this.getValue();
     }
 
@@ -627,34 +628,50 @@
 
     function ChildFn() {
       this.fn = null;
-      this.domainTranslate = new C.Variable("0");
-      this.domainScale = new C.Variable("1");
-      this.rangeTranslate = new C.Variable("0");
-      this.rangeScale = new C.Variable("1");
+      this.domainTranslate = [0, 0, 0, 0].map(function(v) {
+        return new C.Variable(v);
+      });
+      this.domainTransform = numeric.identity(4).map(function(row) {
+        return row.map(function(v) {
+          return new C.Variable(v);
+        });
+      });
+      this.rangeTranslate = [0, 0, 0, 0].map(function(v) {
+        return new C.Variable(v);
+      });
+      this.rangeTransform = numeric.identity(4).map(function(row) {
+        return row.map(function(v) {
+          return new C.Variable(v);
+        });
+      });
     }
 
     ChildFn.prototype.getDomainTranslate = function() {
-      var v;
-      v = this.domainTranslate.getValue();
-      return [v, 0, 0, 0];
+      return this.domainTranslate.map(function(v) {
+        return v.getValue();
+      });
     };
 
     ChildFn.prototype.getDomainTransform = function() {
-      var v;
-      v = this.domainScale.getValue();
-      return [[v, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+      return this.domainTransform.map(function(row) {
+        return row.map(function(v) {
+          return v.getValue();
+        });
+      });
     };
 
     ChildFn.prototype.getRangeTranslate = function() {
-      var v;
-      v = this.rangeTranslate.getValue();
-      return [v, 0, 0, 0];
+      return this.rangeTranslate.map(function(v) {
+        return v.getValue();
+      });
     };
 
     ChildFn.prototype.getRangeTransform = function() {
-      var v;
-      v = this.rangeScale.getValue();
-      return [[v, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+      return this.rangeTransform.map(function(row) {
+        return row.map(function(v) {
+          return v.getValue();
+        });
+      });
     };
 
     ChildFn.prototype.evaluate = function(x) {
@@ -1567,9 +1584,7 @@
       }), R.ShaderCartesianView({
         bounds: this.fn.bounds,
         plots: plots
-      }), UI.selectedChildFn ? R.ChildFnControlsView({
-        childFn: UI.selectedChildFn
-      }) : void 0));
+      })));
     }
   });
 
@@ -1708,7 +1723,9 @@
         className: "Outline"
       }, R.table({
         className: "OutlineContainer"
-      }, nodeViews));
+      }, nodeViews), UI.selectedChildFn ? R.OutlineControlsView({
+        fn: UI.selectedChildFn
+      }) : void 0);
     }
   });
 
@@ -1733,22 +1750,14 @@
         onMouseDown: this.select
       }, R.tr({}, R.td({
         className: "OutlineNodeMain",
-        rowSpan: 2,
+        rowSpan: 1,
         style: {
           paddingLeft: indentLevel * config.outlineIndent
         }
       }, R.OutlineMainView({
         fn: this.fn,
         path: this.path
-      })), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
-        variable: this.fn.domainTranslate
-      }) : void 0), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
-        variable: this.fn.rangeTranslate
-      }) : void 0)), R.tr({}, R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
-        variable: this.fn.domainScale
-      }) : void 0), R.td({}, this.fn instanceof C.ChildFn ? R.VariableView({
-        variable: this.fn.rangeScale
-      }) : void 0)));
+      }))));
     }
   });
 
@@ -1820,6 +1829,39 @@
       }, "Multiply"), R.option({
         value: "composition"
       }, "Compose")));
+    }
+  });
+
+  R.create("OutlineControlsView", {
+    propTypes: {
+      fn: C.ChildFn
+    },
+    render: function() {
+      return R.table({}, R.tr({}, this.fn.domainTranslate.map((function(_this) {
+        return function(variable) {
+          return R.td({}, R.VariableView({
+            variable: variable
+          }));
+        };
+      })(this)), this.fn.rangeTranslate.map((function(_this) {
+        return function(variable) {
+          return R.td({}, R.VariableView({
+            variable: variable
+          }));
+        };
+      })(this))), this.fn.domainTransform.map((function(_this) {
+        return function(row, rowIndex) {
+          return R.tr({}, _this.fn.domainTransform[rowIndex].map(function(variable) {
+            return R.td({}, R.VariableView({
+              variable: variable
+            }));
+          }), _this.fn.rangeTransform[rowIndex].map(function(variable) {
+            return R.td({}, R.VariableView({
+              variable: variable
+            }));
+          }));
+        };
+      })(this)));
     }
   });
 
@@ -2016,11 +2058,11 @@
           plot = plots[_j];
           name = plot.exprString;
           if (!this.programs[name]) {
-            createCartesianProgram(this.glod, name, name);
+            createColorMapProgram(this.glod, name, name);
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
-          drawCartesianProgram(this.glod, name, numSamples, plot.color, bounds);
+          drawColorMapProgram(this.glod, name, bounds);
         }
       }
       _ref = this.programs;

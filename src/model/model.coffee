@@ -1,6 +1,7 @@
 
 class C.Variable
   constructor: (@valueString = "0") ->
+    @valueString = @valueString.toString()
     @getValue() # to initialize @_lastWorkingValue
 
   getValue: ->
@@ -84,26 +85,34 @@ class C.CompoundFn extends C.Fn
 class C.ChildFn extends C.Fn
   constructor: ->
     @fn = null
-    @domainTranslate = new C.Variable("0")
-    @domainScale = new C.Variable("1")
-    @rangeTranslate = new C.Variable("0")
-    @rangeScale = new C.Variable("1")
+
+    @domainTranslate = [0, 0, 0, 0].map (v) ->
+      new C.Variable(v)
+    @domainTransform = numeric.identity(4).map (row) ->
+      row.map (v) ->
+        new C.Variable(v)
+
+    @rangeTranslate = [0, 0, 0, 0].map (v) ->
+      new C.Variable(v)
+    @rangeTransform = numeric.identity(4).map (row) ->
+      row.map (v) ->
+        new C.Variable(v)
 
   getDomainTranslate: ->
-    v = @domainTranslate.getValue()
-    [v, 0, 0, 0]
+    @domainTranslate.map (v) -> v.getValue()
 
   getDomainTransform: ->
-    v = @domainScale.getValue()
-    [[v, 0, 0, 0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+    @domainTransform.map (row) ->
+      row.map (v) ->
+        v.getValue()
 
   getRangeTranslate: ->
-    v = @rangeTranslate.getValue()
-    [v, 0, 0, 0]
+    @rangeTranslate.map (v) -> v.getValue()
 
   getRangeTransform: ->
-    v = @rangeScale.getValue()
-    [[v, 0, 0, 0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+    @rangeTransform.map (row) ->
+      row.map (v) ->
+        v.getValue()
 
   evaluate: (x) ->
     domainTranslate    = @getDomainTranslate()

@@ -24,6 +24,8 @@ R.create "OutlineView",
     R.div {className: "Outline"},
       R.table {className: "OutlineContainer"},
         nodeViews
+      if UI.selectedChildFn
+        R.OutlineControlsView {fn: UI.selectedChildFn}
 
 
 # =============================================================================
@@ -44,21 +46,8 @@ R.create "OutlineNodeView",
     }
     R.tbody {className: className, onMouseDown: @select},
       R.tr {},
-        R.td {className: "OutlineNodeMain", rowSpan: 2, style: {paddingLeft: indentLevel * config.outlineIndent}},
+        R.td {className: "OutlineNodeMain", rowSpan: 1, style: {paddingLeft: indentLevel * config.outlineIndent}},
           R.OutlineMainView {fn: @fn, path: @path}
-        R.td {},
-          if @fn instanceof C.ChildFn
-            R.VariableView {variable: @fn.domainTranslate}
-        R.td {},
-          if @fn instanceof C.ChildFn
-            R.VariableView {variable: @fn.rangeTranslate}
-      R.tr {},
-        R.td {},
-          if @fn instanceof C.ChildFn
-            R.VariableView {variable: @fn.domainScale}
-        R.td {},
-          if @fn instanceof C.ChildFn
-            R.VariableView {variable: @fn.rangeScale}
 
 
 # =============================================================================
@@ -119,3 +108,27 @@ R.create "CombinerView",
         R.option {value: "sum"}, "Add"
         R.option {value: "product"}, "Multiply"
         R.option {value: "composition"}, "Compose"
+
+# =============================================================================
+
+R.create "OutlineControlsView",
+  propTypes:
+    fn: C.ChildFn
+
+  render: ->
+    R.table {},
+      R.tr {},
+        @fn.domainTranslate.map (variable) =>
+          R.td {},
+            R.VariableView {variable}
+        @fn.rangeTranslate.map (variable) =>
+          R.td {},
+            R.VariableView {variable}
+      @fn.domainTransform.map (row, rowIndex) =>
+        R.tr {},
+          @fn.domainTransform[rowIndex].map (variable) =>
+            R.td {},
+              R.VariableView {variable}
+          @fn.rangeTransform[rowIndex].map (variable) =>
+            R.td {},
+              R.VariableView {variable}
