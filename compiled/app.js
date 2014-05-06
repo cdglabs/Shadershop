@@ -1837,6 +1837,7 @@
       fn: C.ChildFn
     },
     render: function() {
+      var coordIndex, rowIndex;
       return R.table({}, R.tr({}, this.fn.domainTranslate.map((function(_this) {
         return function(variable) {
           return R.td({}, R.VariableView({
@@ -1849,19 +1850,32 @@
             variable: variable
           }));
         };
-      })(this))), this.fn.domainTransform.map((function(_this) {
-        return function(row, rowIndex) {
-          return R.tr({}, _this.fn.domainTransform[rowIndex].map(function(variable) {
-            return R.td({}, R.VariableView({
-              variable: variable
-            }));
-          }), _this.fn.rangeTransform[rowIndex].map(function(variable) {
-            return R.td({}, R.VariableView({
-              variable: variable
-            }));
-          }));
-        };
-      })(this)));
+      })(this))), (function() {
+        var _i, _results;
+        _results = [];
+        for (coordIndex = _i = 0; _i < 4; coordIndex = ++_i) {
+          _results.push(R.tr({}, (function() {
+            var _j, _results1;
+            _results1 = [];
+            for (rowIndex = _j = 0; _j < 4; rowIndex = ++_j) {
+              _results1.push(R.td({}, R.VariableView({
+                variable: this.fn.domainTransform[rowIndex][coordIndex]
+              })));
+            }
+            return _results1;
+          }).call(this), (function() {
+            var _j, _results1;
+            _results1 = [];
+            for (rowIndex = _j = 0; _j < 4; rowIndex = ++_j) {
+              _results1.push(R.td({}, R.VariableView({
+                variable: this.fn.rangeTransform[rowIndex][coordIndex]
+              })));
+            }
+            return _results1;
+          }).call(this)));
+        }
+        return _results;
+      }).call(this));
     }
   });
 

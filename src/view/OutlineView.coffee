@@ -124,11 +124,12 @@ R.create "OutlineControlsView",
         @fn.rangeTranslate.map (variable) =>
           R.td {},
             R.VariableView {variable}
-      @fn.domainTransform.map (row, rowIndex) =>
+
+      for coordIndex in [0...4]
         R.tr {},
-          @fn.domainTransform[rowIndex].map (variable) =>
+          for rowIndex in [0...4]
             R.td {},
-              R.VariableView {variable}
-          @fn.rangeTransform[rowIndex].map (variable) =>
+              R.VariableView {variable: @fn.domainTransform[rowIndex][coordIndex]}
+          for rowIndex in [0...4]
             R.td {},
-              R.VariableView {variable}
+              R.VariableView {variable: @fn.rangeTransform[rowIndex][coordIndex]}
