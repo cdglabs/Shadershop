@@ -15,5 +15,5 @@ R.create "AppRootView",
     R.div {},
       R.DefinitionsView {appRoot: @appRoot}
       R.MainPlotView {fn: UI.selectedFn}
-      R.OutlineView {compoundFn: UI.selectedFn}
+      R.OutlineView {definedFn: UI.selectedFn}
       R.ShaderOverlayView {ref: "shaderOverlay"}

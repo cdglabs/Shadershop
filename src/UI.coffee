@@ -62,7 +62,7 @@ window.UI = UI = new class
   # ===========================================================================
 
   selectFn: (fn) ->
-    return unless fn instanceof C.CompoundFn
+    return unless fn instanceof C.DefinedFn
     @selectedFn = fn
     @selectedChildFn = null
 
@@ -70,13 +70,12 @@ window.UI = UI = new class
     @selectedChildFn = childFn
 
   addFn: (appRoot) ->
-    fn = new C.CompoundFn()
+    fn = new C.DefinedFn()
     appRoot.fns.push(fn)
     @selectFn(fn)
 
   addChildFn: (fn) ->
-    childFn = new C.ChildFn()
-    childFn.fn = fn
+    childFn = new C.ChildFn(fn)
     @selectedFn.childFns.push(childFn)
     @selectChildFn(childFn)
 
@@ -92,6 +91,8 @@ window.UI = UI = new class
 
   isPathExpanded: (path) ->
     pathString = @getPathString(path)
+    if !@expandedPaths[pathString]?
+      return true
     return @expandedPaths[pathString]
 
   setPathExpanded: (path, expanded) ->

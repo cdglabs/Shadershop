@@ -120,7 +120,7 @@
     };
 
     _Class.prototype.selectFn = function(fn) {
-      if (!(fn instanceof C.CompoundFn)) {
+      if (!(fn instanceof C.DefinedFn)) {
         return;
       }
       this.selectedFn = fn;
@@ -133,15 +133,14 @@
 
     _Class.prototype.addFn = function(appRoot) {
       var fn;
-      fn = new C.CompoundFn();
+      fn = new C.DefinedFn();
       appRoot.fns.push(fn);
       return this.selectFn(fn);
     };
 
     _Class.prototype.addChildFn = function(fn) {
       var childFn;
-      childFn = new C.ChildFn();
-      childFn.fn = fn;
+      childFn = new C.ChildFn(fn);
       this.selectedFn.childFns.push(childFn);
       return this.selectChildFn(childFn);
     };
@@ -165,6 +164,9 @@
     _Class.prototype.isPathExpanded = function(path) {
       var pathString;
       pathString = this.getPathString(path);
+      if (this.expandedPaths[pathString] == null) {
+        return true;
+      }
       return this.expandedPaths[pathString];
     };
 
@@ -527,6 +529,14 @@
   C.Fn = (function() {
     function Fn() {}
 
+    Fn.prototype.getExprString = function(parameter) {
+      throw "Not implemented";
+    };
+
+    Fn.prototype.evaluate = function(x) {
+      throw "Not implemented";
+    };
+
     return Fn;
 
   })();
@@ -558,19 +568,19 @@
     __extends(CompoundFn, _super);
 
     function CompoundFn() {
-      this.label = "";
       this.combiner = "sum";
       this.childFns = [];
-      this.bounds = {
-        xMin: -6,
-        xMax: 6,
-        yMin: -6,
-        yMax: 6
-      };
     }
 
     CompoundFn.prototype.evaluate = function(x) {
       var childFn, reducer, _i, _len, _ref;
+      if (this.combiner === "last") {
+        if (this.childFns.length > 0) {
+          return _.last(this.childFns).evaluate(x);
+        } else {
+          return [0, 0, 0, 0];
+        }
+      }
       if (this.combiner === "composition") {
         _ref = this.childFns;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -595,6 +605,13 @@
 
     CompoundFn.prototype.getExprString = function(parameter) {
       var childExprStrings, childFn, exprString, _i, _len, _ref;
+      if (this.combiner === "last") {
+        if (this.childFns.length > 0) {
+          return _.last(this.childFns).getExprString(parameter);
+        } else {
+          return util.glslString([0, 0, 0, 0]);
+        }
+      }
       if (this.combiner === "composition") {
         exprString = parameter;
         _ref = this.childFns;
@@ -623,11 +640,29 @@
 
   })(C.Fn);
 
+  C.DefinedFn = (function(_super) {
+    __extends(DefinedFn, _super);
+
+    function DefinedFn() {
+      DefinedFn.__super__.constructor.call(this);
+      this.combiner = "last";
+      this.bounds = {
+        xMin: -5,
+        xMax: 5,
+        yMin: -5,
+        yMax: 5
+      };
+    }
+
+    return DefinedFn;
+
+  })(C.CompoundFn);
+
   C.ChildFn = (function(_super) {
     __extends(ChildFn, _super);
 
-    function ChildFn() {
-      this.fn = null;
+    function ChildFn(fn) {
+      this.fn = fn;
       this.domainTranslate = [0, 0, 0, 0].map(function(v) {
         return new C.Variable(v);
       });
@@ -704,7 +739,7 @@
 
   C.AppRoot = (function() {
     function AppRoot() {
-      this.fns = [new C.CompoundFn()];
+      this.fns = [new C.DefinedFn()];
     }
 
     return AppRoot;
@@ -1350,7 +1385,7 @@
       }), R.MainPlotView({
         fn: UI.selectedFn
       }), R.OutlineView({
-        compoundFn: UI.selectedFn
+        definedFn: UI.selectedFn
       }), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
@@ -1465,7 +1500,7 @@
 }, "view/MainPlotView": function(exports, require, module) {(function() {
   R.create("MainPlotView", {
     propTypes: {
-      fn: C.Fn
+      fn: C.DefinedFn
     },
     getLocalMouseCoords: function() {
       var bounds, rect, x, y;
@@ -1694,78 +1729,48 @@
 }, "view/OutlineView": function(exports, require, module) {(function() {
   R.create("OutlineView", {
     propTypes: {
-      compoundFn: C.CompoundFn
+      definedFn: C.DefinedFn
     },
     render: function() {
-      var nodeViews, recurse;
-      nodeViews = [];
-      recurse = function(fn, path) {
-        var childFn, nodeView, _i, _len, _ref, _ref1, _results;
-        nodeView = R.OutlineNodeView({
-          fn: fn,
-          path: path,
-          key: UI.getPathString(path)
-        });
-        nodeViews.push(nodeView);
-        if (UI.isPathExpanded(path)) {
-          fn = (_ref = fn.fn) != null ? _ref : fn;
-          if (fn instanceof C.CompoundFn) {
-            _ref1 = fn.childFns;
-            _results = [];
-            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-              childFn = _ref1[_i];
-              _results.push(recurse(childFn, path.concat(childFn)));
-            }
-            return _results;
-          }
-        }
-      };
-      recurse(this.compoundFn, []);
       return R.div({
         className: "Outline"
-      }, R.table({
-        className: "OutlineContainer"
-      }, nodeViews), UI.selectedChildFn ? R.OutlineControlsView({
+      }, R.OutlineChildrenView({
+        compoundFn: this.definedFn,
+        path: []
+      }), UI.selectedChildFn ? R.OutlineControlsView({
         fn: UI.selectedChildFn
       }) : void 0);
     }
   });
 
-  R.create("OutlineNodeView", {
+  R.create("OutlineChildrenView", {
     propTypes: {
-      fn: C.Fn,
+      compoundFn: C.CompoundFn,
       path: Array
     },
-    select: function() {
-      if (this.path.length === 1) {
-        return UI.selectChildFn(this.fn);
-      }
-    },
     render: function() {
-      var className, indentLevel;
-      indentLevel = this.path.length;
-      className = R.cx({
-        Selected: this.fn === UI.selectedChildFn
-      });
-      return R.tbody({
-        className: className,
-        onMouseDown: this.select
-      }, R.tr({}, R.td({
-        className: "OutlineNodeMain",
-        rowSpan: 1,
-        style: {
-          paddingLeft: indentLevel * config.outlineIndent
+      var childFn;
+      return R.div({
+        className: "OutlineChildren"
+      }, (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.compoundFn.childFns;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          childFn = _ref[_i];
+          _results.push(R.OutlineItemView({
+            childFn: childFn,
+            path: this.path.concat(childFn)
+          }));
         }
-      }, R.OutlineMainView({
-        fn: this.fn,
-        path: this.path
-      }))));
+        return _results;
+      }).call(this));
     }
   });
 
-  R.create("OutlineMainView", {
+  R.create("OutlineItemView", {
     propTypes: {
-      fn: C.Fn,
+      childFn: C.ChildFn,
       path: Array
     },
     toggleExpanded: function() {
@@ -1774,24 +1779,47 @@
       return UI.setPathExpanded(this.path, !expanded);
     },
     render: function() {
-      var disclosureClassName, expanded, fn, _ref;
-      fn = (_ref = this.fn.fn) != null ? _ref : this.fn;
+      var canHaveChildren, className, disclosureClassName, expanded, selected;
+      canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
       expanded = UI.isPathExpanded(this.path);
+      selected = this.childFn === UI.selectedChildFn;
+      className = R.cx({
+        OutlineItem: true,
+        Selected: selected
+      });
       disclosureClassName = R.cx({
         DisclosureTriangle: true,
         Expanded: expanded,
-        Hidden: fn instanceof C.BuiltInFn
+        Hidden: !canHaveChildren
       });
-      return R.div({}, R.div({
+      return R.div({
+        className: className
+      }, R.div({}, R.div({
         className: disclosureClassName,
         onClick: this.toggleExpanded
-      }), R.div({
-        className: "OutlineMainContent"
-      }, R.LabelView({
-        fn: fn
-      }), fn instanceof C.CompoundFn && expanded ? R.CombinerView({
-        compoundFn: fn
-      }) : void 0));
+      }), R.OutlineInternalsView({
+        fn: this.childFn.fn
+      })), canHaveChildren && expanded ? R.OutlineChildrenView({
+        compoundFn: this.childFn.fn,
+        path: this.path
+      }) : void 0);
+    }
+  });
+
+  R.create("OutlineInternalsView", {
+    propTypes: {
+      fn: C.Fn
+    },
+    render: function() {
+      return R.div({
+        className: "OutlineInternals"
+      }, this.fn instanceof C.BuiltInFn ? R.LabelView({
+        fn: this.fn
+      }) : this.fn instanceof C.DefinedFn ? R.LabelView({
+        fn: this.fn
+      }) : this.fn instanceof C.CompoundFn ? R.CombinerView({
+        compoundFn: this.fn
+      }) : void 0);
     }
   });
 
@@ -1804,7 +1832,7 @@
     },
     render: function() {
       return R.TextFieldView({
-        className: "OutlineNodeLabel",
+        className: "OutlineLabel",
         value: this.fn.label,
         onInput: this.handleInput
       });

@@ -1,60 +1,38 @@
 R.create "OutlineView",
   propTypes:
-    compoundFn: C.CompoundFn
+    definedFn: C.DefinedFn
 
   render: ->
-    nodeViews = []
-
-    recurse = (fn, path) ->
-      nodeView = R.OutlineNodeView {
-        fn: fn
-        path: path
-        key: UI.getPathString(path)
-      }
-      nodeViews.push(nodeView)
-
-      if UI.isPathExpanded(path)
-        fn = fn.fn ? fn
-        if fn instanceof C.CompoundFn
-          for childFn in fn.childFns
-            recurse(childFn, path.concat(childFn))
-
-    recurse(@compoundFn, [])
-
     R.div {className: "Outline"},
-      R.table {className: "OutlineContainer"},
-        nodeViews
+      R.OutlineChildrenView {
+        compoundFn: @definedFn
+        path: []
+      }
       if UI.selectedChildFn
         R.OutlineControlsView {fn: UI.selectedChildFn}
 
 
 # =============================================================================
 
-R.create "OutlineNodeView",
+R.create "OutlineChildrenView",
   propTypes:
-    fn: C.Fn
+    compoundFn: C.CompoundFn
     path: Array
 
-  select: ->
-    if @path.length == 1
-      UI.selectChildFn(@fn)
-
   render: ->
-    indentLevel = @path.length
-    className = R.cx {
-      Selected: @fn == UI.selectedChildFn
-    }
-    R.tbody {className: className, onMouseDown: @select},
-      R.tr {},
-        R.td {className: "OutlineNodeMain", rowSpan: 1, style: {paddingLeft: indentLevel * config.outlineIndent}},
-          R.OutlineMainView {fn: @fn, path: @path}
+    R.div {className: "OutlineChildren"},
+      for childFn in @compoundFn.childFns
+        R.OutlineItemView {
+          childFn: childFn
+          path: @path.concat(childFn)
+        }
 
 
 # =============================================================================
 
-R.create "OutlineMainView",
+R.create "OutlineItemView",
   propTypes:
-    fn: C.Fn
+    childFn: C.ChildFn
     path: Array
 
   toggleExpanded: ->
@@ -62,22 +40,52 @@ R.create "OutlineMainView",
     UI.setPathExpanded(@path, !expanded)
 
   render: ->
-    fn = @fn.fn ? @fn
+    canHaveChildren = @childFn.fn instanceof C.CompoundFn
     expanded = UI.isPathExpanded(@path)
+    selected = (@childFn == UI.selectedChildFn)
+
+    className = R.cx {
+      OutlineItem: true
+      Selected: selected
+    }
 
     disclosureClassName = R.cx {
       DisclosureTriangle: true
       Expanded: expanded
-      Hidden: fn instanceof C.BuiltInFn
+      Hidden: !canHaveChildren
     }
 
-    R.div {},
-      R.div {className: disclosureClassName, onClick: @toggleExpanded}
-      R.div {className: "OutlineMainContent"},
-        R.LabelView {fn}
-        if fn instanceof C.CompoundFn and expanded
-          R.CombinerView {compoundFn: fn}
+    R.div {className: className},
+      R.div {},
+        R.div {className: disclosureClassName, onClick: @toggleExpanded}
+        R.OutlineInternalsView {fn: @childFn.fn}
 
+      if canHaveChildren and expanded
+        R.OutlineChildrenView {
+          compoundFn: @childFn.fn
+          path: @path
+        }
+
+
+# =============================================================================
+
+R.create "OutlineInternalsView",
+  propTypes:
+    fn: C.Fn
+
+  render: ->
+    R.div {className: "OutlineInternals"},
+      if @fn instanceof C.BuiltInFn
+        R.LabelView {fn: @fn} # TODO but not editable
+
+      else if @fn instanceof C.DefinedFn
+        R.LabelView {fn: @fn}
+
+      else if @fn instanceof C.CompoundFn
+        R.CombinerView {compoundFn: @fn}
+
+
+# =============================================================================
 
 R.create "LabelView",
   propTypes:
@@ -88,11 +96,13 @@ R.create "LabelView",
 
   render: ->
     R.TextFieldView {
-      className: "OutlineNodeLabel"
+      className: "OutlineLabel"
       value: @fn.label
       onInput: @handleInput
     }
 
+
+# =============================================================================
 
 R.create "CombinerView",
   propTypes:
@@ -108,6 +118,17 @@ R.create "CombinerView",
         R.option {value: "sum"}, "Add"
         R.option {value: "product"}, "Multiply"
         R.option {value: "composition"}, "Compose"
+
+
+
+
+
+
+
+
+
+
+
 
 # =============================================================================
 

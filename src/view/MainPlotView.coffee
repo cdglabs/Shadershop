@@ -1,6 +1,6 @@
 R.create "MainPlotView",
   propTypes:
-    fn: C.Fn
+    fn: C.DefinedFn
 
   getLocalMouseCoords: ->
     bounds = @fn.bounds

@@ -97,37 +97,28 @@ canvas,
 .PointControl:hover {
   opacity: 1;
 }
-.OutlineContainer {
-  margin: 24px;
-  border-collapse: collapse;
-}
-.OutlineContainer td {
-  vertical-align: top;
-  border-right: 1px solid #eee;
-  height: 1em;
-}
-.OutlineContainer tbody {
-  border: 1px solid #eee;
-}
-.OutlineContainer tbody.Selected {
+.OutlineItem.Selected > :first-child .OutlineInternals {
   background-color: #e5f4f9;
 }
-.OutlineContainer .OutlineNodeMain {
-  padding: 4px 24px 4px 6px;
+.OutlineChildren {
+  margin-left: 18px;
+}
+.OutlineInternals {
+  border-bottom: 1px solid #ccc;
+  margin-left: 18px;
 }
 .Variable {
   padding: 2px 6px;
   text-align: center;
 }
 .DisclosureTriangle {
-  display: inline-block;
-  vertical-align: top;
+  float: left;
   width: 0;
   height: 0;
   margin-top: 1px;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 10.392px solid #ccc;
+  border-left: 10.392px solid #ddd;
   transition: -webkit-transform 0.05s;
 }
 .DisclosureTriangle.Expanded {
@@ -135,11 +126,6 @@ canvas,
 }
 .DisclosureTriangle.Hidden {
   visibility: hidden;
-}
-.OutlineMainContent {
-  margin-left: 6px;
-  display: inline-block;
-  vertical-align: top;
 }
 .TextButton {
   cursor: pointer;

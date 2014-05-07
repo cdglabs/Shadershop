@@ -18,6 +18,8 @@ class C.Variable
 
 class C.Fn
   constructor: ->
+  getExprString: (parameter) -> throw "Not implemented"
+  evaluate: (x) -> throw "Not implemented"
 
 
 class C.BuiltInFn extends C.Fn
@@ -35,17 +37,16 @@ class C.BuiltInFn extends C.Fn
 
 class C.CompoundFn extends C.Fn
   constructor: ->
-    @label = ""
     @combiner = "sum"
     @childFns = []
-    @bounds = {
-      xMin: -6
-      xMax: 6
-      yMin: -6
-      yMax: 6
-    }
 
   evaluate: (x) ->
+    if @combiner == "last"
+      if @childFns.length > 0
+        return _.last(@childFns).evaluate(x)
+      else
+        return [0,0,0,0]
+
     if @combiner == "composition"
       for childFn in @childFns
         x = childFn.evaluate(x)
@@ -61,8 +62,13 @@ class C.CompoundFn extends C.Fn
         numeric.mul(result, childFn.evaluate(x))
       return _.reduce(@childFns, reducer, [1,1,1,1])
 
-
   getExprString: (parameter) ->
+    if @combiner == "last"
+      if @childFns.length > 0
+        return _.last(@childFns).getExprString(parameter)
+      else
+        return util.glslString([0,0,0,0])
+
     if @combiner == "composition"
       exprString = parameter
       for childFn in @childFns
@@ -81,11 +87,21 @@ class C.CompoundFn extends C.Fn
       return "(" + childExprStrings.join(" * ") + ")"
 
 
+class C.DefinedFn extends C.CompoundFn
+  constructor: ->
+    super()
+    @combiner = "last"
+    @bounds = {
+      xMin: -5
+      xMax: 5
+      yMin: -5
+      yMax: 5
+    }
+
+
 
 class C.ChildFn extends C.Fn
-  constructor: ->
-    @fn = null
-
+  constructor: (@fn) ->
     @domainTranslate = [0, 0, 0, 0].map (v) ->
       new C.Variable(v)
     @domainTransform = numeric.identity(4).map (row) ->
@@ -144,7 +160,7 @@ class C.ChildFn extends C.Fn
 class C.AppRoot
   constructor: ->
     @fns = [
-      new C.CompoundFn()
+      new C.DefinedFn()
     ]
 
 

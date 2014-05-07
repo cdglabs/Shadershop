@@ -4,6 +4,7 @@ plotBackgroundColor = #FAF8F2
 PlusButtonSize = 18px
 
 DisclosureTriangleSize = 12px
+SpacingSize = 6px
 
 
 pointControlSize = 12px
@@ -144,43 +145,36 @@ canvas, .Shader
 // Outline
 // ============================================================================
 
-.OutlineContainer
-  margin 24px
-  border-collapse collapse
-  td
-    vertical-align top
-    border-right 1px solid #eee
-    height 1em
-  tbody
-    border 1px solid #eee
-    &.Selected
+.OutlineItem
+  &.Selected
+    > :first-child .OutlineInternals
       background-color tint(highlightColor, 90%)
 
-  .OutlineNodeMain
-    // vertical-align middle
-    padding 4px 24px 4px 6px
+
+.OutlineChildren
+  margin-left DisclosureTriangleSize + SpacingSize
+
+.OutlineInternals
+  border-bottom 1px solid #ccc
+  margin-left DisclosureTriangleSize + SpacingSize
 
 .Variable
   padding 2px 6px
   text-align center
 
 .DisclosureTriangle
-  inline top
+  float left
   width 0
   height 0
   margin-top 1px
   border-top: 0.5*DisclosureTriangleSize solid transparent
   border-bottom: 0.5*DisclosureTriangleSize solid transparent
-  border-left: 0.866*DisclosureTriangleSize solid #ccc
+  border-left: 0.866*DisclosureTriangleSize solid #ddd
   transition -webkit-transform 0.05s
   &.Expanded
     -webkit-transform: rotate(90deg)
   &.Hidden
     visibility hidden
-
-.OutlineMainContent
-  margin-left 6px
-  inline top
 
 // ============================================================================
 // Buttons
