@@ -40,14 +40,14 @@ R.create "ShaderOverlayView",
         name = plot.exprString
         unless @programs[name]
 
-          # createCartesianProgram(@glod, name, name)
-          createColorMapProgram(@glod, name, name)
+          createCartesianProgram(@glod, name, name)
+          # createColorMapProgram(@glod, name, name)
 
           @programs[name] = true
         usedPrograms[name] = true
 
-        # drawCartesianProgram(@glod, name, numSamples, plot.color, bounds)
-        drawColorMapProgram(@glod, name, bounds)
+        drawCartesianProgram(@glod, name, numSamples, plot.color, bounds)
+        # drawColorMapProgram(@glod, name, bounds)
 
     # Delete unused programs
     for own name, junk of @programs

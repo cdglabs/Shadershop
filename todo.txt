@@ -37,11 +37,8 @@ Do something better than util.safeInv
 
 
 
-In model ChildFn
-  Make transform a matrix of Variables
-
-Show entire matrix in outline view
-
+We want control points on the plot
+  Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
 
 
 

@@ -1584,7 +1584,9 @@
       }), R.ShaderCartesianView({
         bounds: this.fn.bounds,
         plots: plots
-      })));
+      }), UI.selectedChildFn ? R.ChildFnControlsView({
+        childFn: UI.selectedChildFn
+      }) : void 0));
     }
   });
 
@@ -1619,21 +1621,21 @@
       return util.floatToString(value, precision);
     },
     handleTranslateChange: function(x, y) {
-      this.childFn.domainTranslate.valueString = this.snap(x);
-      return this.childFn.rangeTranslate.valueString = this.snap(y);
+      this.childFn.domainTranslate[0].valueString = this.snap(x);
+      return this.childFn.rangeTranslate[0].valueString = this.snap(y);
     },
     handleScaleChange: function(x, y) {
-      this.childFn.domainScale.valueString = this.snap(x - this.childFn.domainTranslate.getValue());
-      return this.childFn.rangeScale.valueString = this.snap(y - this.childFn.rangeTranslate.getValue());
+      this.childFn.domainTransform[0][0].valueString = this.snap(x - this.childFn.domainTranslate[0].getValue());
+      return this.childFn.rangeTransform[0][0].valueString = this.snap(y - this.childFn.rangeTranslate[0].getValue());
     },
     render: function() {
       return R.span({}, R.PointControlView({
-        x: this.childFn.domainTranslate.getValue(),
-        y: this.childFn.rangeTranslate.getValue(),
+        x: this.childFn.domainTranslate[0].getValue(),
+        y: this.childFn.rangeTranslate[0].getValue(),
         onChange: this.handleTranslateChange
       }), R.PointControlView({
-        x: this.childFn.domainTranslate.getValue() + this.childFn.domainScale.getValue(),
-        y: this.childFn.rangeTranslate.getValue() + this.childFn.rangeScale.getValue(),
+        x: this.childFn.domainTranslate[0].getValue() + this.childFn.domainTransform[0][0].getValue(),
+        y: this.childFn.rangeTranslate[0].getValue() + this.childFn.rangeTransform[0][0].getValue(),
         onChange: this.handleScaleChange
       }));
     }
@@ -2072,11 +2074,11 @@
           plot = plots[_j];
           name = plot.exprString;
           if (!this.programs[name]) {
-            createColorMapProgram(this.glod, name, name);
+            createCartesianProgram(this.glod, name, name);
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
-          drawColorMapProgram(this.glod, name, bounds);
+          drawCartesianProgram(this.glod, name, numSamples, plot.color, bounds);
         }
       }
       _ref = this.programs;

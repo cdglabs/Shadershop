@@ -113,10 +113,10 @@ R.create "MainPlotView",
           plots: plots
         }
 
-        # if UI.selectedChildFn
-        #   R.ChildFnControlsView {
-        #     childFn: UI.selectedChildFn
-        #   }
+        if UI.selectedChildFn
+          R.ChildFnControlsView {
+            childFn: UI.selectedChildFn
+          }
 
 
 R.create "ChildFnControlsView",
@@ -155,23 +155,23 @@ R.create "ChildFnControlsView",
     return util.floatToString(value, precision)
 
   handleTranslateChange: (x, y) ->
-    @childFn.domainTranslate.valueString = @snap(x)
-    @childFn.rangeTranslate.valueString  = @snap(y)
+    @childFn.domainTranslate[0].valueString = @snap(x)
+    @childFn.rangeTranslate[0].valueString  = @snap(y)
 
   handleScaleChange: (x, y) ->
-    @childFn.domainScale.valueString = @snap(x - @childFn.domainTranslate.getValue())
-    @childFn.rangeScale.valueString  = @snap(y - @childFn.rangeTranslate.getValue())
+    @childFn.domainTransform[0][0].valueString = @snap(x - @childFn.domainTranslate[0].getValue())
+    @childFn.rangeTransform[0][0].valueString  = @snap(y - @childFn.rangeTranslate[0].getValue())
 
   render: ->
     R.span {},
       R.PointControlView {
-        x: @childFn.domainTranslate.getValue()
-        y: @childFn.rangeTranslate.getValue()
+        x: @childFn.domainTranslate[0].getValue()
+        y: @childFn.rangeTranslate[0].getValue()
         onChange: @handleTranslateChange
       }
       R.PointControlView {
-        x: @childFn.domainTranslate.getValue() + @childFn.domainScale.getValue()
-        y: @childFn.rangeTranslate.getValue()  + @childFn.rangeScale.getValue()
+        x: @childFn.domainTranslate[0].getValue() + @childFn.domainTransform[0][0].getValue()
+        y: @childFn.rangeTranslate[0].getValue()  + @childFn.rangeTransform[0][0].getValue()
         onChange: @handleScaleChange
       }
 
