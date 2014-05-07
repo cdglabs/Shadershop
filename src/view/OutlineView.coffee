@@ -2,12 +2,19 @@ R.create "OutlineView",
   propTypes:
     definedFn: C.DefinedFn
 
+  addCompoundFn: ->
+    fn = new C.CompoundFn()
+    UI.addChildFn(fn)
+
   render: ->
     R.div {className: "Outline"},
       R.OutlineChildrenView {
         compoundFn: @definedFn
         path: []
       }
+
+      R.div {className: "TextButton", onClick: @addCompoundFn}, "Add"
+
       if UI.selectedChildFn
         R.OutlineControlsView {fn: UI.selectedChildFn}
 

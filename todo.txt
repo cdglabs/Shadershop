@@ -44,6 +44,11 @@ We want control points on the plot
 
 
 
+Outline Stuff
+  Break out "Inspector"
+  Give it a width
+  Reorder / Remove !
+  Thumbnails
 
 
 

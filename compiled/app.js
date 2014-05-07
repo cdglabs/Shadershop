@@ -1731,13 +1731,21 @@
     propTypes: {
       definedFn: C.DefinedFn
     },
+    addCompoundFn: function() {
+      var fn;
+      fn = new C.CompoundFn();
+      return UI.addChildFn(fn);
+    },
     render: function() {
       return R.div({
         className: "Outline"
       }, R.OutlineChildrenView({
         compoundFn: this.definedFn,
         path: []
-      }), UI.selectedChildFn ? R.OutlineControlsView({
+      }), R.div({
+        className: "TextButton",
+        onClick: this.addCompoundFn
+      }, "Add"), UI.selectedChildFn ? R.OutlineControlsView({
         fn: UI.selectedChildFn
       }) : void 0);
     }
