@@ -9,12 +9,12 @@ R.create "DefinitionsView",
     R.div {className: "Definitions"},
 
       builtIn.fns.map (fn) =>
-        R.DefinitionView {fn}
+        R.DefinitionView {fn, key: C.id(fn)}
 
       R.div {className: "Divider"}
 
       @appRoot.fns.map (fn) =>
-        R.DefinitionView {fn}
+        R.DefinitionView {fn, key: C.id(fn)}
 
       R.div {className: "AddDefinition"},
         R.button {className: "AddButton", onClick: @addFn}

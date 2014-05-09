@@ -31,6 +31,8 @@ R.create "ShaderOverlayView",
 
     shaderEls = document.querySelectorAll(".Shader")
     for shaderEl in shaderEls
+      continue unless shaderEl.isOnScreen()
+
       rect = shaderEl.getBoundingClientRect()
       setViewport(@glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height)
 

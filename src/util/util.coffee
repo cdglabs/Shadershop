@@ -9,16 +9,6 @@ _.concatMap = (array, fn) ->
   _.flatten(_.map(array, fn), true)
 
 
-_.isShallowEqual = (a, b) ->
-  return true if a == b
-
-  if _.isArray(a) and _.isArray(b) and a.length == b.length
-    return _.all a, (aValue, index) ->
-      b[index] == aValue
-
-  return false
-
-
 # =============================================================================
 # DOM Addons
 # =============================================================================

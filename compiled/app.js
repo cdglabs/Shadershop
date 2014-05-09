@@ -1250,18 +1250,6 @@
     return _.flatten(_.map(array, fn), true);
   };
 
-  _.isShallowEqual = function(a, b) {
-    if (a === b) {
-      return true;
-    }
-    if (_.isArray(a) && _.isArray(b) && a.length === b.length) {
-      return _.all(a, function(aValue, index) {
-        return b[index] === aValue;
-      });
-    }
-    return false;
-  };
-
   if ((_base = Element.prototype).matches == null) {
     _base.matches = (_ref = (_ref1 = Element.prototype.webkitMatchesSelector) != null ? _ref1 : Element.prototype.mozMatchesSelector) != null ? _ref : Element.prototype.oMatchesSelector;
   }
@@ -1484,7 +1472,8 @@
       }, builtIn.fns.map((function(_this) {
         return function(fn) {
           return R.DefinitionView({
-            fn: fn
+            fn: fn,
+            key: C.id(fn)
           });
         };
       })(this)), R.div({
@@ -1492,7 +1481,8 @@
       }), this.appRoot.fns.map((function(_this) {
         return function(fn) {
           return R.DefinitionView({
-            fn: fn
+            fn: fn,
+            key: C.id(fn)
           });
         };
       })(this)), R.div({
@@ -2318,6 +2308,9 @@
       shaderEls = document.querySelectorAll(".Shader");
       for (_i = 0, _len = shaderEls.length; _i < _len; _i++) {
         shaderEl = shaderEls[_i];
+        if (!shaderEl.isOnScreen()) {
+          continue;
+        }
         rect = shaderEl.getBoundingClientRect();
         setViewport(this.glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height);
         shaderView = shaderEl.dataFor;
