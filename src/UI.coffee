@@ -75,9 +75,29 @@ window.UI = UI = new class
     @selectFn(fn)
 
   addChildFn: (fn) ->
+    if @selectedChildFn
+      if @selectedChildFn.fn instanceof C.CompoundFn and @isChildFnExpanded(@selectedChildFn)
+        parent = @selectedChildFn.fn
+      else
+        parent = @findParentOf(@selectedChildFn)
+
+    parent ?= @selectedFn
     childFn = new C.ChildFn(fn)
-    @selectedFn.childFns.push(childFn)
+    parent.childFns.push(childFn)
     @selectChildFn(childFn)
+
+  findParentOf: (childFnTarget) ->
+    recurse = (compoundFn) ->
+      if _.contains(compoundFn.childFns, childFnTarget)
+        return compoundFn
+
+      for childFn in compoundFn.childFns
+        if childFn.fn instanceof C.CompoundFn
+          if recurse(childFn.fn)
+            return childFn.fn
+
+      return null
+    recurse(@selectedFn)
 
   removeChildFn: (fn, childFnIndex) ->
     [removedChildFn] = fn.childFns.splice(childFnIndex, 1)

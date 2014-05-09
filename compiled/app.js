@@ -139,10 +139,41 @@
     };
 
     _Class.prototype.addChildFn = function(fn) {
-      var childFn;
+      var childFn, parent;
+      if (this.selectedChildFn) {
+        if (this.selectedChildFn.fn instanceof C.CompoundFn && this.isChildFnExpanded(this.selectedChildFn)) {
+          parent = this.selectedChildFn.fn;
+        } else {
+          parent = this.findParentOf(this.selectedChildFn);
+        }
+      }
+      if (parent == null) {
+        parent = this.selectedFn;
+      }
       childFn = new C.ChildFn(fn);
-      this.selectedFn.childFns.push(childFn);
+      parent.childFns.push(childFn);
       return this.selectChildFn(childFn);
+    };
+
+    _Class.prototype.findParentOf = function(childFnTarget) {
+      var recurse;
+      recurse = function(compoundFn) {
+        var childFn, _i, _len, _ref;
+        if (_.contains(compoundFn.childFns, childFnTarget)) {
+          return compoundFn;
+        }
+        _ref = compoundFn.childFns;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          childFn = _ref[_i];
+          if (childFn.fn instanceof C.CompoundFn) {
+            if (recurse(childFn.fn)) {
+              return childFn.fn;
+            }
+          }
+        }
+        return null;
+      };
+      return recurse(this.selectedFn);
     };
 
     _Class.prototype.removeChildFn = function(fn, childFnIndex) {
