@@ -1202,6 +1202,18 @@
     return _.flatten(_.map(array, fn), true);
   };
 
+  _.isShallowEqual = function(a, b) {
+    if (a === b) {
+      return true;
+    }
+    if (_.isArray(a) && _.isArray(b) && a.length === b.length) {
+      return _.all(a, function(aValue, index) {
+        return b[index] === aValue;
+      });
+    }
+    return false;
+  };
+
   if ((_base = Element.prototype).matches == null) {
     _base.matches = (_ref = (_ref1 = Element.prototype.webkitMatchesSelector) != null ? _ref1 : Element.prototype.mozMatchesSelector) != null ? _ref : Element.prototype.oMatchesSelector;
   }
@@ -1386,9 +1398,24 @@
         fn: UI.selectedFn
       }), R.OutlineView({
         definedFn: UI.selectedFn
-      }), R.ShaderOverlayView({
+      }), R.DraggingView({}), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
+    }
+  });
+
+  R.create("DraggingView", {
+    render: function() {
+      var _ref;
+      return R.div({}, ((_ref = UI.dragging) != null ? _ref.render : void 0) ? R.div({
+        className: "DraggingObject",
+        style: {
+          left: UI.mousePosition.x - UI.dragging.offset.x,
+          top: UI.mousePosition.y - UI.dragging.offset.y
+        }
+      }, UI.dragging.render()) : void 0, UI.dragging ? R.div({
+        className: "DraggingOverlay"
+      }) : void 0);
     }
   });
 
@@ -1786,8 +1813,121 @@
       expanded = UI.isPathExpanded(this.path);
       return UI.setPathExpanded(this.path, !expanded);
     },
+    handleMouseDown: function(e) {
+      var childFn, el, myHeight, myWidth, offset, parentCompoundFn, path, rect;
+      if (!e.target.classList.contains("OutlineRow")) {
+        return;
+      }
+      UI.preventDefault(e);
+      el = this.getDOMNode();
+      rect = el.getMarginRect();
+      myWidth = rect.width;
+      myHeight = rect.height;
+      offset = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      UI.dragging = {
+        cursor: "-webkit-grabbing"
+      };
+      childFn = this.childFn;
+      path = this.path;
+      parentCompoundFn = this.lookup("compoundFn");
+      return util.onceDragConsummated(e, (function(_this) {
+        return function() {
+          return UI.dragging = {
+            cursor: "-webkit-grabbing",
+            offset: offset,
+            placeholderHeight: myHeight,
+            childFn: childFn,
+            render: function() {
+              return R.div({
+                style: {
+                  width: myWidth,
+                  height: myHeight,
+                  overflow: "hidden",
+                  "background-color": "#fff"
+                }
+              }, R.OutlineItemView({
+                childFn: childFn,
+                path: path,
+                isDraggingCopy: true
+              }));
+            },
+            onMove: function() {
+              var bestDrop, bestQuadrance, checkFit, draggingPosition, droppedPosition, index, outlineChildrenEl, outlineChildrenEls, outlineItemEl, outlineItemEls, placeholderEl, _i, _j, _len, _len1;
+              draggingPosition = {
+                x: UI.mousePosition.x - offset.x,
+                y: UI.mousePosition.y - offset.y
+              };
+              placeholderEl = document.querySelector(".Placeholder");
+              if (placeholderEl != null) {
+                placeholderEl.style.display = "none";
+              }
+              bestQuadrance = 40 * 40;
+              bestDrop = null;
+              checkFit = function(droppedPosition, outlineChildrenEl, index) {
+                var dx, dy, quadrance;
+                dx = draggingPosition.x - droppedPosition.x;
+                dy = draggingPosition.y - droppedPosition.y;
+                quadrance = dx * dx + dy * dy;
+                if (quadrance < bestQuadrance) {
+                  bestQuadrance = quadrance;
+                  return bestDrop = {
+                    outlineChildrenEl: outlineChildrenEl,
+                    index: index
+                  };
+                }
+              };
+              outlineChildrenEls = document.querySelectorAll(".Outline .OutlineChildren");
+              for (_i = 0, _len = outlineChildrenEls.length; _i < _len; _i++) {
+                outlineChildrenEl = outlineChildrenEls[_i];
+                outlineItemEls = _.filter(outlineChildrenEl.childNodes, function(el) {
+                  return el.classList.contains("OutlineItem");
+                });
+                for (index = _j = 0, _len1 = outlineItemEls.length; _j < _len1; index = ++_j) {
+                  outlineItemEl = outlineItemEls[index];
+                  rect = outlineItemEl.getBoundingClientRect();
+                  droppedPosition = {
+                    x: rect.left,
+                    y: rect.top
+                  };
+                  checkFit(droppedPosition, outlineChildrenEl, index);
+                }
+                rect = outlineChildrenEl.getBoundingClientRect();
+                droppedPosition = {
+                  x: rect.left,
+                  y: rect.bottom
+                };
+                checkFit(droppedPosition, outlineChildrenEl, index);
+              }
+              if (placeholderEl != null) {
+                placeholderEl.style.display = "";
+              }
+              if (parentCompoundFn) {
+                index = parentCompoundFn.childFns.indexOf(childFn);
+                parentCompoundFn.childFns.splice(index, 1);
+                parentCompoundFn = null;
+              }
+              if (bestDrop) {
+                parentCompoundFn = bestDrop.outlineChildrenEl.dataFor.compoundFn;
+                return parentCompoundFn.childFns.splice(bestDrop.index, 0, childFn);
+              }
+            }
+          };
+        };
+      })(this));
+    },
     render: function() {
-      var canHaveChildren, className, disclosureClassName, expanded, selected;
+      var canHaveChildren, className, disclosureClassName, expanded, selected, _ref;
+      if (!this.isDraggingCopy && this.childFn === ((_ref = UI.dragging) != null ? _ref.childFn : void 0)) {
+        return R.div({
+          className: "Placeholder",
+          style: {
+            height: UI.dragging.placeholderHeight
+          }
+        });
+      }
       canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
       expanded = UI.isPathExpanded(this.path);
       selected = this.childFn === UI.selectedChildFn;
@@ -1797,15 +1937,19 @@
       });
       disclosureClassName = R.cx({
         DisclosureTriangle: true,
-        Expanded: expanded,
-        Hidden: !canHaveChildren
+        Expanded: expanded
       });
       return R.div({
         className: className
-      }, R.div({}, R.div({
+      }, R.div({
+        className: "OutlineRow",
+        onMouseDown: this.handleMouseDown
+      }, canHaveChildren ? R.div({
+        className: "OutlineDisclosure"
+      }, R.div({
         className: disclosureClassName,
         onClick: this.toggleExpanded
-      }), R.OutlineInternalsView({
+      })) : void 0, R.OutlineInternalsView({
         fn: this.childFn.fn
       })), canHaveChildren && expanded ? R.OutlineChildrenView({
         compoundFn: this.childFn.fn,

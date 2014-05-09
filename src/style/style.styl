@@ -65,20 +65,43 @@ canvas, .Shader
   pointer-events none
 
 .Definitions
-  inline top
+  position absolute
+  top 0px
+  left 0px
+  width 96px
   height 100vh
   overflow-x hidden
   overflow-y auto
 
 .MainPlot
-  inline top
-  position relative
+  position absolute
+  top 0px
+  left 96px
   width 100vh
   height 100vh
 
 .Outline
-  inline top
+  position absolute
+  top 30px
+  right 30px
+  width 240px
   height 100vh
+
+
+// ============================================================================
+// Dragging
+// ============================================================================
+
+.DraggingObject
+  position: fixed
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+
+.DraggingOverlay
+  position: fixed
+  top: 0; left: 0; bottom: 0; right: 0;
+  z-index: 200
 
 
 // ============================================================================
@@ -145,25 +168,39 @@ canvas, .Shader
 // Outline
 // ============================================================================
 
+.Outline > .OutlineChildren
+  margin-left 0px
+
 .OutlineItem
   &.Selected
-    > :first-child .OutlineInternals
+    > .OutlineRow
       background-color tint(highlightColor, 90%)
+
+.OutlineRow
+  // border-bottom 1px solid #eee
+
 
 
 .OutlineChildren
-  margin-left DisclosureTriangleSize + SpacingSize
+  margin-left DisclosureTriangleSize + SpacingSize*2
+
+.OutlineDisclosure
+  inline middle
+  padding 0px SpacingSize
 
 .OutlineInternals
-  border-bottom 1px solid #ccc
-  margin-left DisclosureTriangleSize + SpacingSize
+  inline middle
+  padding 6px 0px
+
+.Placeholder
+  background-color #bbb
+  box-shadow inset 0px 1px 3px rgba(0,0,0,0.5)
 
 .Variable
   padding 2px 6px
   text-align center
 
 .DisclosureTriangle
-  float left
   width 0
   height 0
   margin-top 1px
@@ -174,7 +211,8 @@ canvas, .Shader
   &.Expanded
     -webkit-transform: rotate(90deg)
   &.Hidden
-    visibility hidden
+    // visibility hidden
+    display none
 
 // ============================================================================
 // Buttons

@@ -29,23 +29,41 @@ canvas,
   pointer-events: none;
 }
 .Definitions {
-  display: inline-block;
-  vertical-align: top;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 96px;
   height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
 }
 .MainPlot {
-  display: inline-block;
-  vertical-align: top;
-  position: relative;
+  position: absolute;
+  top: 0px;
+  left: 96px;
   width: 100vh;
   height: 100vh;
 }
 .Outline {
-  display: inline-block;
-  vertical-align: top;
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 240px;
   height: 100vh;
+}
+.DraggingObject {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+}
+.DraggingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 200;
 }
 .Definition {
   margin: 12px;
@@ -97,22 +115,34 @@ canvas,
 .PointControl:hover {
   opacity: 1;
 }
-.OutlineItem.Selected > :first-child .OutlineInternals {
+.Outline > .OutlineChildren {
+  margin-left: 0px;
+}
+.OutlineItem.Selected > .OutlineRow {
   background-color: #e5f4f9;
 }
 .OutlineChildren {
-  margin-left: 18px;
+  margin-left: 24px;
+}
+.OutlineDisclosure {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0px 6px;
 }
 .OutlineInternals {
-  border-bottom: 1px solid #ccc;
-  margin-left: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 6px 0px;
+}
+.Placeholder {
+  background-color: #bbb;
+  box-shadow: inset 0px 1px 3px rgba(0,0,0,0.5);
 }
 .Variable {
   padding: 2px 6px;
   text-align: center;
 }
 .DisclosureTriangle {
-  float: left;
   width: 0;
   height: 0;
   margin-top: 1px;
@@ -125,7 +155,7 @@ canvas,
   -webkit-transform: rotate(90deg);
 }
 .DisclosureTriangle.Hidden {
-  visibility: hidden;
+  display: none;
 }
 .TextButton {
   cursor: pointer;
