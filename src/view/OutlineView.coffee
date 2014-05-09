@@ -10,7 +10,6 @@ R.create "OutlineView",
     R.div {className: "Outline"},
       R.OutlineChildrenView {
         compoundFn: @definedFn
-        path: []
       }
 
       R.div {className: "TextButton", onClick: @addCompoundFn}, "Add"
@@ -24,14 +23,12 @@ R.create "OutlineView",
 R.create "OutlineChildrenView",
   propTypes:
     compoundFn: C.CompoundFn
-    path: Array
 
   render: ->
     R.div {className: "OutlineChildren"},
       for childFn in @compoundFn.childFns
         R.OutlineItemView {
           childFn: childFn
-          path: @path.concat(childFn)
         }
 
 
@@ -40,16 +37,17 @@ R.create "OutlineChildrenView",
 R.create "OutlineItemView",
   propTypes:
     childFn: C.ChildFn
-    path: Array
 
   toggleExpanded: ->
-    expanded = UI.isPathExpanded(@path)
-    UI.setPathExpanded(@path, !expanded)
+    expanded = UI.isChildFnExpanded(@childFn)
+    UI.setChildFnExpanded(@childFn, !expanded)
 
   handleMouseDown: (e) ->
     return unless e.target.classList.contains("OutlineRow")
 
     UI.preventDefault(e)
+
+    UI.selectChildFn(@childFn)
 
     el = @getDOMNode()
     rect = el.getMarginRect()
@@ -65,8 +63,6 @@ R.create "OutlineItemView",
     }
 
     childFn = @childFn
-    path = @path
-
     parentCompoundFn = @lookup("compoundFn")
 
     util.onceDragConsummated e, =>
@@ -77,7 +73,7 @@ R.create "OutlineItemView",
         childFn: childFn
         render: =>
           R.div {style: {width: myWidth, height: myHeight, overflow: "hidden", "background-color": "#fff"}},
-            R.OutlineItemView {childFn, path, isDraggingCopy: true}
+            R.OutlineItemView {childFn, isDraggingCopy: true}
         onMove: =>
           draggingPosition = {
             x: UI.mousePosition.x - offset.x
@@ -142,7 +138,7 @@ R.create "OutlineItemView",
       return R.div {className: "Placeholder", style: {height: UI.dragging.placeholderHeight}}
 
     canHaveChildren = @childFn.fn instanceof C.CompoundFn
-    expanded = UI.isPathExpanded(@path)
+    expanded = UI.isChildFnExpanded(@childFn)
     selected = (@childFn == UI.selectedChildFn)
 
     className = R.cx {
@@ -165,7 +161,6 @@ R.create "OutlineItemView",
       if canHaveChildren and expanded
         R.OutlineChildrenView {
           compoundFn: @childFn.fn
-          path: @path
         }
 
 

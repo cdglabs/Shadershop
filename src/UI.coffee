@@ -7,7 +7,7 @@ window.UI = UI = new class
 
     @selectedChildFn = null
 
-    @expandedPaths = {}
+    @expandedChildFns = {}
 
 
     @registerEvents()
@@ -85,19 +85,19 @@ window.UI = UI = new class
       @selectChildFn(null)
 
 
-  getPathString: (path) ->
-    pathIds = path.map (childFn) -> C.id(childFn)
-    return pathString = pathIds.join(",")
+  isChildFnExpanded: (childFn) ->
+    id = C.id(childFn)
+    expanded = @expandedChildFns[id]
+    if !expanded?
+      if childFn.fn instanceof C.DefinedFn
+        return false
+      else
+        return true
+    return expanded
 
-  isPathExpanded: (path) ->
-    pathString = @getPathString(path)
-    if !@expandedPaths[pathString]?
-      return true
-    return @expandedPaths[pathString]
-
-  setPathExpanded: (path, expanded) ->
-    pathString = @getPathString(path)
-    @expandedPaths[pathString] = expanded
+  setChildFnExpanded: (childFn, expanded) ->
+    id = C.id(childFn)
+    @expandedChildFns[id] = expanded
 
 
   # ===========================================================================

@@ -60,7 +60,7 @@
       this.autofocus = null;
       this.selectedFn = _.last(appRoot.fns);
       this.selectedChildFn = null;
-      this.expandedPaths = {};
+      this.expandedChildFns = {};
       this.registerEvents();
     }
 
@@ -153,27 +153,24 @@
       }
     };
 
-    _Class.prototype.getPathString = function(path) {
-      var pathIds, pathString;
-      pathIds = path.map(function(childFn) {
-        return C.id(childFn);
-      });
-      return pathString = pathIds.join(",");
-    };
-
-    _Class.prototype.isPathExpanded = function(path) {
-      var pathString;
-      pathString = this.getPathString(path);
-      if (this.expandedPaths[pathString] == null) {
-        return true;
+    _Class.prototype.isChildFnExpanded = function(childFn) {
+      var expanded, id;
+      id = C.id(childFn);
+      expanded = this.expandedChildFns[id];
+      if (expanded == null) {
+        if (childFn.fn instanceof C.DefinedFn) {
+          return false;
+        } else {
+          return true;
+        }
       }
-      return this.expandedPaths[pathString];
+      return expanded;
     };
 
-    _Class.prototype.setPathExpanded = function(path, expanded) {
-      var pathString;
-      pathString = this.getPathString(path);
-      return this.expandedPaths[pathString] = expanded;
+    _Class.prototype.setChildFnExpanded = function(childFn, expanded) {
+      var id;
+      id = C.id(childFn);
+      return this.expandedChildFns[id] = expanded;
     };
 
     _Class.prototype.startVariableScrub = function(opts) {
@@ -1767,8 +1764,7 @@
       return R.div({
         className: "Outline"
       }, R.OutlineChildrenView({
-        compoundFn: this.definedFn,
-        path: []
+        compoundFn: this.definedFn
       }), R.div({
         className: "TextButton",
         onClick: this.addCompoundFn
@@ -1780,8 +1776,7 @@
 
   R.create("OutlineChildrenView", {
     propTypes: {
-      compoundFn: C.CompoundFn,
-      path: Array
+      compoundFn: C.CompoundFn
     },
     render: function() {
       var childFn;
@@ -1794,8 +1789,7 @@
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           childFn = _ref[_i];
           _results.push(R.OutlineItemView({
-            childFn: childFn,
-            path: this.path.concat(childFn)
+            childFn: childFn
           }));
         }
         return _results;
@@ -1805,20 +1799,20 @@
 
   R.create("OutlineItemView", {
     propTypes: {
-      childFn: C.ChildFn,
-      path: Array
+      childFn: C.ChildFn
     },
     toggleExpanded: function() {
       var expanded;
-      expanded = UI.isPathExpanded(this.path);
-      return UI.setPathExpanded(this.path, !expanded);
+      expanded = UI.isChildFnExpanded(this.childFn);
+      return UI.setChildFnExpanded(this.childFn, !expanded);
     },
     handleMouseDown: function(e) {
-      var childFn, el, myHeight, myWidth, offset, parentCompoundFn, path, rect;
+      var childFn, el, myHeight, myWidth, offset, parentCompoundFn, rect;
       if (!e.target.classList.contains("OutlineRow")) {
         return;
       }
       UI.preventDefault(e);
+      UI.selectChildFn(this.childFn);
       el = this.getDOMNode();
       rect = el.getMarginRect();
       myWidth = rect.width;
@@ -1831,7 +1825,6 @@
         cursor: "-webkit-grabbing"
       };
       childFn = this.childFn;
-      path = this.path;
       parentCompoundFn = this.lookup("compoundFn");
       return util.onceDragConsummated(e, (function(_this) {
         return function() {
@@ -1850,7 +1843,6 @@
                 }
               }, R.OutlineItemView({
                 childFn: childFn,
-                path: path,
                 isDraggingCopy: true
               }));
             },
@@ -1929,7 +1921,7 @@
         });
       }
       canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
-      expanded = UI.isPathExpanded(this.path);
+      expanded = UI.isChildFnExpanded(this.childFn);
       selected = this.childFn === UI.selectedChildFn;
       className = R.cx({
         OutlineItem: true,
@@ -1952,8 +1944,7 @@
       })) : void 0, R.OutlineInternalsView({
         fn: this.childFn.fn
       })), canHaveChildren && expanded ? R.OutlineChildrenView({
-        compoundFn: this.childFn.fn,
-        path: this.path
+        compoundFn: this.childFn.fn
       }) : void 0);
     }
   });
