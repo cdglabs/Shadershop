@@ -2258,12 +2258,15 @@
 
   R.create("ShaderOverlayView", {
     initializeGlod: function() {
-      var canvas;
+      var canvas, gl;
       this.glod = new Glod();
       canvas = this.getDOMNode();
       this.glod.canvas(canvas, {
         antialias: true
       });
+      gl = this.glod.gl();
+      gl.enable(gl.SCISSOR_TEST);
+      gl.lineWidth(1.25);
       bufferQuad(this.glod);
       bufferCartesianSamples(this.glod, 20000);
       return this.programs = {};
@@ -2378,9 +2381,6 @@
   };
 
   drawCartesianProgram = function(glod, name, numSamples, color, bounds) {
-    var gl;
-    gl = glod.gl();
-    gl.lineWidth(1.25);
     glod.begin(name);
     glod.pack("samples", "sample");
     glod.valuev("color", color);

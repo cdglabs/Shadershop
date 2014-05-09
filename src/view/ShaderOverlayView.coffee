@@ -8,6 +8,10 @@ R.create "ShaderOverlayView",
     canvas = @getDOMNode()
     @glod.canvas(canvas, {antialias: true})
 
+    gl = @glod.gl()
+    gl.enable(gl.SCISSOR_TEST)
+    gl.lineWidth(1.25)
+
     bufferQuad(@glod)
     bufferCartesianSamples(@glod, 20000)
 
@@ -174,9 +178,6 @@ createCartesianProgram = (glod, name, expr) ->
   createProgramFromSrc(glod, name, vertex, fragment)
 
 drawCartesianProgram = (glod, name, numSamples, color, bounds) ->
-  gl = glod.gl()
-  gl.lineWidth(1.25)
-
   glod.begin(name)
 
   glod.pack("samples", "sample")
