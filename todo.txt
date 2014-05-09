@@ -1,36 +1,15 @@
-Plot
-  Tune mousewheel scrolling
-
 Architecture
   Move "builtIn" into its own file.
   Move "combiners" into their own thing. Think of better name.
-
-
-
-
-
-Wishlist
-  Hide and show children
-
+  Make config.dimensions = 4 adjustable
 
 
 Misc
   Figure out how React context works
-  Profile and redo so we don't have to relayout all the time
+  Do something better than util.safeInv
+  Tune mousewheel zooming
 
 
-
-
-selectedChildFn -> selectedPath
-
-
-Do appropriate nested transformation of child fns on main plot
-
-
-Transform numbers shouldn't show when they're the default value
-Highlight transform numbers when hovering the control point
-
-Do something better than util.safeInv
 
 
 
@@ -45,6 +24,15 @@ We want control points on the plot
 Outline Stuff
   Break out "Inspector"
   Thumbnails
+  "Visible"
+  Make definition
+  Show transform numbers when they're not identity?
+
+
+Inspector
+  Highlight transform numbers when hovering the control point
+  Show transform numbers next to control point
+  Scrub transform numbers in inspector?
 
 
 
