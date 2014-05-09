@@ -624,12 +624,18 @@
         };
       })(this));
       if (this.combiner === "sum") {
-        childExprStrings.unshift(util.glslString([0, 0, 0, 0]));
-        return "(" + childExprStrings.join(" + ") + ")";
+        if (childExprStrings.length === 0) {
+          return util.glslString([0, 0, 0, 0]);
+        } else {
+          return "(" + childExprStrings.join(" + ") + ")";
+        }
       }
       if (this.combiner === "product") {
-        childExprStrings.unshift(util.glslString([1, 1, 1, 1]));
-        return "(" + childExprStrings.join(" * ") + ")";
+        if (childExprStrings.length === 0) {
+          return util.glslString([1, 1, 1, 1]);
+        } else {
+          return "(" + childExprStrings.join(" * ") + ")";
+        }
       }
     };
 
@@ -724,9 +730,20 @@
       domainTransformInv = util.glslString(util.safeInv(this.getDomainTransform()));
       rangeTranslate = util.glslString(this.getRangeTranslate());
       rangeTransform = util.glslString(this.getRangeTransform());
-      exprString = "(" + domainTransformInv + " * (" + parameter + " - " + domainTranslate + "))";
+      exprString = parameter;
+      if (domainTranslate !== util.glslString([0, 0, 0, 0])) {
+        exprString = "(" + exprString + " - " + domainTranslate + ")";
+      }
+      if (domainTransformInv !== util.glslString(numeric.identity(4))) {
+        exprString = "(" + domainTransformInv + " * " + exprString + ")";
+      }
       exprString = this.fn.getExprString(exprString);
-      exprString = "(" + rangeTransform + " * " + exprString + " + " + rangeTranslate + ")";
+      if (rangeTransform !== util.glslString(numeric.identity(4))) {
+        exprString = "(" + rangeTransform + " * " + exprString + ")";
+      }
+      if (rangeTranslate !== util.glslString([0, 0, 0, 0])) {
+        exprString = "(" + exprString + " + " + rangeTranslate + ")";
+      }
       return exprString;
     };
 
