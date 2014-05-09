@@ -1564,7 +1564,7 @@
       bounds = this.fn.bounds;
       pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
       found = null;
-      _ref1 = this.fn.childFns;
+      _ref1 = this.getExpandedChildFns();
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
         evaluated = childFn.evaluate([x, 0, 0, 0]);
@@ -1631,10 +1631,30 @@
         yMax: (bounds.yMax - y) * scale + y
       };
     },
+    getExpandedChildFns: function() {
+      var recurse, result;
+      result = [];
+      recurse = function(childFns) {
+        var childFn, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = childFns.length; _i < _len; _i++) {
+          childFn = childFns[_i];
+          result.push(childFn);
+          if (UI.isChildFnExpanded(childFn) && childFn.fn instanceof C.CompoundFn) {
+            _results.push(recurse(childFn.fn.childFns));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+      recurse(this.fn.childFns);
+      return result;
+    },
     render: function() {
       var childFn, plots, _i, _len, _ref;
       plots = [];
-      _ref = this.fn.childFns;
+      _ref = this.getExpandedChildFns();
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         childFn = _ref[_i];
         plots.push({
@@ -1652,6 +1672,15 @@
           color: config.color.selected
         });
       }
+      plots = _.reject(plots, function(plot, plotIndex) {
+        var i, _j, _ref1, _ref2;
+        for (i = _j = _ref1 = plotIndex + 1, _ref2 = plots.length; _ref1 <= _ref2 ? _j < _ref2 : _j > _ref2; i = _ref1 <= _ref2 ? ++_j : --_j) {
+          if (plots[i].exprString === plot.exprString) {
+            return true;
+          }
+        }
+        return false;
+      });
       return R.div({
         className: "MainPlot",
         onMouseDown: this.handleMouseDown,

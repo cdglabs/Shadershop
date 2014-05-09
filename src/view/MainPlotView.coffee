@@ -17,7 +17,7 @@ R.create "MainPlotView",
     pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
 
     found = null
-    for childFn in @fn.childFns
+    for childFn in @getExpandedChildFns()
       evaluated = childFn.evaluate([x, 0, 0, 0])
 
       distance = Math.abs(y - evaluated[0])
@@ -78,12 +78,22 @@ R.create "MainPlotView",
       yMax: (bounds.yMax - y) * scale + y
     }
 
+  getExpandedChildFns: ->
+    result = []
+    recurse = (childFns) ->
+      for childFn in childFns
+        result.push(childFn)
+        if UI.isChildFnExpanded(childFn) and childFn.fn instanceof C.CompoundFn
+          recurse(childFn.fn.childFns)
+    recurse(@fn.childFns)
+    return result
+
 
   render: ->
     plots = []
 
     # Child Fns
-    for childFn in @fn.childFns
+    for childFn in @getExpandedChildFns()
       plots.push {
         exprString: childFn.getExprString("x")
         color: config.color.child
@@ -102,6 +112,12 @@ R.create "MainPlotView",
         color: config.color.selected
       }
 
+    # Remove redundant plots
+    plots = _.reject plots, (plot, plotIndex) ->
+      for i in [plotIndex+1 ... plots.length]
+        if plots[i].exprString == plot.exprString
+          return true
+      return false
 
     R.div {className: "MainPlot", onMouseDown: @handleMouseDown, onWheel: @handleWheel},
       R.div {className: "PlotContainer"},
