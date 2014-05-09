@@ -11,6 +11,8 @@ class C.Variable
         value = parseFloat(@valueString)
       else
         value = util.evaluate(@valueString)
+    value = @_lastWorkingValue unless _.isFinite(value)
+
     @_lastWorkingValue = value
     return value
 

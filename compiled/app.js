@@ -515,6 +515,9 @@
           value = util.evaluate(this.valueString);
         }
       } catch (_error) {}
+      if (!_.isFinite(value)) {
+        value = this._lastWorkingValue;
+      }
       this._lastWorkingValue = value;
       return value;
     };
