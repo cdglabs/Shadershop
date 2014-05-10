@@ -24,7 +24,6 @@ We want control points on the plot
 Outline Stuff
   Break out "Inspector"
   Thumbnails
-  "Visible"
   Make definition
   Show transform numbers when they're not identity?
 

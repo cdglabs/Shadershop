@@ -65,19 +65,21 @@ class C.CompoundFn extends C.Fn
       return _.reduce(@childFns, reducer, [1,1,1,1])
 
   getExprString: (parameter) ->
+    visibleChildFns = _.filter @childFns, (childFn) -> childFn.visible
+
     if @combiner == "last"
-      if @childFns.length > 0
-        return _.last(@childFns).getExprString(parameter)
+      if visibleChildFns.length > 0
+        return _.last(visibleChildFns).getExprString(parameter)
       else
         return util.glslString([0,0,0,0])
 
     if @combiner == "composition"
       exprString = parameter
-      for childFn in @childFns
+      for childFn in visibleChildFns
         exprString = childFn.getExprString(exprString)
       return exprString
 
-    childExprStrings = @childFns.map (childFn) =>
+    childExprStrings = visibleChildFns.map (childFn) =>
       childFn.getExprString(parameter)
 
     if @combiner == "sum"
@@ -108,6 +110,7 @@ class C.DefinedFn extends C.CompoundFn
 
 class C.ChildFn extends C.Fn
   constructor: (@fn) ->
+    @visible = true
     @domainTranslate = [0, 0, 0, 0].map (v) ->
       new C.Variable(v)
     @domainTransform = numeric.identity(4).map (row) ->

@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg">
+<metadata>Copyright (C) 2014 by original authors @ fontello.com</metadata>
+<defs>
+<font id="shadershopfont" horiz-adv-x="1000" >
+<font-face font-family="shadershopfont" font-weight="400" font-stretch="normal" units-per-em="1000" ascent="850" descent="-150" />
+<missing-glyph horiz-adv-x="1000" />
+<glyph glyph-name="eye" unicode="&#x65;" d="m750 850c-496 0-751-500-751-500 0 0 192-500 751-500 506 0 751 498 751 498 0 0-247 502-751 502l0 0z m1-812c-181 0-312 136-312 312 0 176 131 313 312 313 182 0 313-137 313-313 0-176-131-312-313-312l0 0z m0 437c-69 0-125-58-125-125 0-67 56-125 125-125 69 0 125 58 125 125 0 67-56 125-125 125l0 0z" horiz-adv-x="1500" />
+</font>
+</defs>
+</svg>

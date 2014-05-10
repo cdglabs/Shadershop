@@ -176,18 +176,28 @@ canvas, .Shader
   &.Selected
     > .OutlineRow
       background-color tint(highlightColor, 90%)
+  &.Invisible
+    opacity 0.25
 
 .OutlineRow
-  // border-bottom 1px solid #eee
+  position relative
 
-
+.OutlineVisible
+  position absolute
+  right 9px
+  top 6px
+  color #999
+  opacity 0
+.OutlineRow:hover
+  .OutlineVisible
+    opacity 1
 
 .OutlineChildren
   margin-left DisclosureTriangleSize + SpacingSize*2
 
 .OutlineDisclosure
   inline middle
-  padding 0px SpacingSize
+  padding SpacingSize
 
 .OutlineInternals
   inline middle

@@ -1,0 +1,13 @@
+[class^="icon-"], [class*=" icon-"] {
+  font-family: 'shadershopfont';
+  font-style: normal;
+  font-weight: normal;
+ 
+  /* fix buttons height */
+  line-height: 1em;
+ 
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+}
+ 
+.icon-eye { *zoom: expression( this.runtimeStyle['zoom'] = '1', this.innerHTML = '&#x65;&nbsp;'); }

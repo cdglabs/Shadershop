@@ -82,6 +82,7 @@ R.create "MainPlotView",
     result = []
     recurse = (childFns) ->
       for childFn in childFns
+        continue unless childFn.visible
         result.push(childFn)
         if UI.isChildFnExpanded(childFn) and childFn.fn instanceof C.CompoundFn
           recurse(childFn.fn.childFns)

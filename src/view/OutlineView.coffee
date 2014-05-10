@@ -42,6 +42,9 @@ R.create "OutlineItemView",
     expanded = UI.isChildFnExpanded(@childFn)
     UI.setChildFnExpanded(@childFn, !expanded)
 
+  toggleVisible: ->
+    @childFn.visible = !@childFn.visible
+
   handleMouseDown: (e) ->
     return unless e.target.classList.contains("OutlineRow")
 
@@ -126,7 +129,6 @@ R.create "OutlineItemView",
 
           # Add self
           if bestDrop
-            # console.log "here", bestDrop.outlineChildrenEl, bestDrop.outlineChildrenEl.dataFor
             parentCompoundFn = bestDrop.outlineChildrenEl.dataFor.compoundFn
             parentCompoundFn.childFns.splice(bestDrop.index, 0, childFn)
 
@@ -144,6 +146,7 @@ R.create "OutlineItemView",
     className = R.cx {
       OutlineItem: true
       Selected: selected
+      Invisible: !@childFn.visible
     }
 
     disclosureClassName = R.cx {
@@ -153,9 +156,11 @@ R.create "OutlineItemView",
 
     R.div {className: className},
       R.div {className: "OutlineRow", onMouseDown: @handleMouseDown},
+        R.div {className: "OutlineVisible", onClick: @toggleVisible},
+          R.div {className: "icon-eye"}
         if canHaveChildren
-          R.div {className: "OutlineDisclosure"},
-            R.div {className: disclosureClassName, onClick: @toggleExpanded}
+          R.div {className: "OutlineDisclosure", onClick: @toggleExpanded},
+            R.div {className: disclosureClassName}
         R.OutlineInternalsView {fn: @childFn.fn}
 
       if canHaveChildren and expanded

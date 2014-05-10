@@ -390,7 +390,9 @@
   refresh();
 
   if (location.protocol === "file:" && navigator.userAgent.indexOf("Firefox") === -1) {
-    document.styleSheets.start_autoreload(1000);
+    setInterval(function() {
+      return document.styleSheets[0].reload();
+    }, 1000);
   }
 
 }).call(this);
@@ -635,24 +637,26 @@
     };
 
     CompoundFn.prototype.getExprString = function(parameter) {
-      var childExprStrings, childFn, exprString, _i, _len, _ref;
+      var childExprStrings, childFn, exprString, visibleChildFns, _i, _len;
+      visibleChildFns = _.filter(this.childFns, function(childFn) {
+        return childFn.visible;
+      });
       if (this.combiner === "last") {
-        if (this.childFns.length > 0) {
-          return _.last(this.childFns).getExprString(parameter);
+        if (visibleChildFns.length > 0) {
+          return _.last(visibleChildFns).getExprString(parameter);
         } else {
           return util.glslString([0, 0, 0, 0]);
         }
       }
       if (this.combiner === "composition") {
         exprString = parameter;
-        _ref = this.childFns;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          childFn = _ref[_i];
+        for (_i = 0, _len = visibleChildFns.length; _i < _len; _i++) {
+          childFn = visibleChildFns[_i];
           exprString = childFn.getExprString(exprString);
         }
         return exprString;
       }
-      childExprStrings = this.childFns.map((function(_this) {
+      childExprStrings = visibleChildFns.map((function(_this) {
         return function(childFn) {
           return childFn.getExprString(parameter);
         };
@@ -700,6 +704,7 @@
 
     function ChildFn(fn) {
       this.fn = fn;
+      this.visible = true;
       this.domainTranslate = [0, 0, 0, 0].map(function(v) {
         return new C.Variable(v);
       });
@@ -1660,6 +1665,9 @@
         _results = [];
         for (_i = 0, _len = childFns.length; _i < _len; _i++) {
           childFn = childFns[_i];
+          if (!childFn.visible) {
+            continue;
+          }
           result.push(childFn);
           if (UI.isChildFnExpanded(childFn) && childFn.fn instanceof C.CompoundFn) {
             _results.push(recurse(childFn.fn.childFns));
@@ -1876,6 +1884,9 @@
       expanded = UI.isChildFnExpanded(this.childFn);
       return UI.setChildFnExpanded(this.childFn, !expanded);
     },
+    toggleVisible: function() {
+      return this.childFn.visible = !this.childFn.visible;
+    },
     handleMouseDown: function(e) {
       var childFn, el, myHeight, myWidth, offset, parentCompoundFn, rect;
       if (!e.target.classList.contains("OutlineRow")) {
@@ -1995,7 +2006,8 @@
       selected = this.childFn === UI.selectedChildFn;
       className = R.cx({
         OutlineItem: true,
-        Selected: selected
+        Selected: selected,
+        Invisible: !this.childFn.visible
       });
       disclosureClassName = R.cx({
         DisclosureTriangle: true,
@@ -2006,11 +2018,16 @@
       }, R.div({
         className: "OutlineRow",
         onMouseDown: this.handleMouseDown
-      }, canHaveChildren ? R.div({
-        className: "OutlineDisclosure"
       }, R.div({
-        className: disclosureClassName,
+        className: "OutlineVisible",
+        onClick: this.toggleVisible
+      }, R.div({
+        className: "icon-eye"
+      })), canHaveChildren ? R.div({
+        className: "OutlineDisclosure",
         onClick: this.toggleExpanded
+      }, R.div({
+        className: disclosureClassName
       })) : void 0, R.OutlineInternalsView({
         fn: this.childFn.fn
       })), canHaveChildren && expanded ? R.OutlineChildrenView({

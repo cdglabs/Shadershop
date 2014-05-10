@@ -122,13 +122,29 @@ canvas,
 .OutlineItem.Selected > .OutlineRow {
   background-color: #e5f4f9;
 }
+.OutlineItem.Invisible {
+  opacity: 0.25;
+}
+.OutlineRow {
+  position: relative;
+}
+.OutlineVisible {
+  position: absolute;
+  right: 9px;
+  top: 6px;
+  color: #999;
+  opacity: 0;
+}
+.OutlineRow:hover .OutlineVisible {
+  opacity: 1;
+}
 .OutlineChildren {
   margin-left: 24px;
 }
 .OutlineDisclosure {
   display: inline-block;
   vertical-align: middle;
-  padding: 0px 6px;
+  padding: 6px;
 }
 .OutlineInternals {
   display: inline-block;

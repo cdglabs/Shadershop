@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <title>eye icon</title>
+    <description>Created with Sketch (http://www.bohemiancoding.com/sketch)</description>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="1399698823_eye-24" sketch:type="MSLayerGroup" transform="translate(0.000000, 4.000000)" fill="#000000">
+            <path d="M12,0 C4.063,0 -0.012,8 -0.012,8 C-0.012,8 3.063,16 12,16 C20.093,16 24.011,8.031 24.011,8.031 C24.011,8.031 20.062,0 12,0 L12,0 Z M12.018,13 C9.116,13 7.018,10.812 7.018,8 C7.018,5.187 9.116,3 12.018,3 C14.92,3 17.018,5.187 17.018,8 C17.018,10.812 14.92,13 12.018,13 L12.018,13 Z M12.0180054,6.00000322 C10.912672,6.00200322 10.0180054,6.9286703 10.0180054,8.00000411 C10.0180054,9.07067125 10.912672,10.000005 12.0180054,10.000005 C13.1233387,10.000005 14.0180054,9.07000459 14.0180054,8.00000411 C14.0180054,6.92800363 13.1233387,5.99800322 12.0180054,6.00000322 L12.0180054,6.00000322 Z" id="Shape" sketch:type="MSShapeGroup"></path>
+        </g>
+    </g>
+</svg>
