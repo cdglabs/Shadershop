@@ -248,11 +248,11 @@ R.create "OutlineControlsView",
           R.td {},
             R.VariableView {variable}
 
-      for coordIndex in [0...4]
+      for coordIndex in [0...config.dimensions]
         R.tr {},
-          for rowIndex in [0...4]
+          for rowIndex in [0...config.dimensions]
             R.td {},
               R.VariableView {variable: @fn.domainTransform[rowIndex][coordIndex]}
-          for rowIndex in [0...4]
+          for rowIndex in [0...config.dimensions]
             R.td {},
               R.VariableView {variable: @fn.rangeTransform[rowIndex][coordIndex]}

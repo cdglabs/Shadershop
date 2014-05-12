@@ -92,7 +92,7 @@ util.glslString = (value) ->
     if length == 1
       return util.glslString(value[0])
     strings = value.map(util.glslString)
-    string = "vec#{length}(#{strings.join(',')})"
+    string = util.glslVectorType(length) + "(" + strings.join(",") + ")"
     return string
 
   if _.isArray(value) and _.isArray(value[0])
@@ -105,12 +105,38 @@ util.glslString = (value) ->
     for col in [0...length]
       for row in [0...length]
         strings.push(util.glslString(value[row][col]))
-    string = "mat#{length}(#{strings.join(',')})"
+    string = util.glslMatrixType(length) + "(" + strings.join(",") + ")"
     return string
 
 
+util.glslVectorType = (dimensions) ->
+  return "float" if dimensions == 1
+  return "vec"+dimensions
+
+
+util.glslMatrixType = (dimensions) ->
+  return "float" if dimensions == 1
+  return "mat"+dimensions
+
+
+util.glslGetComponent = (expr, dimensions, component) ->
+  return expr if dimensions == 1
+  return expr + "[" + component + "]"
+
+
+util.glslSetComponent = (expr, dimensions, component, value) ->
+  return expr + " = " + value if dimensions == 1
+  return expr + "[" + component + "]" + " = " + value
+
+
+util.constructVector = (dimensions, value = 0) ->
+  return [0...dimensions].map -> value
+
 
 util.safeInv = (m) ->
+  if m.length == 1 and m[0][0] == 0
+    return numeric.identity(1)
+
   try
     return numeric.inv(m)
   catch

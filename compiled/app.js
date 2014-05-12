@@ -278,6 +278,7 @@
   window.config = config = {
     storageName: "sinewaves",
     resolution: 0.5,
+    dimensions: 4,
     mainLineWidth: 1.25,
     minGridSpacing: 90,
     hitTolerance: 10,
@@ -611,7 +612,7 @@
         if (this.childFns.length > 0) {
           return _.last(this.childFns).evaluate(x);
         } else {
-          return [0, 0, 0, 0];
+          return util.constructVector(config.dimensions, 0);
         }
       }
       if (this.combiner === "composition") {
@@ -626,13 +627,13 @@
         reducer = function(result, childFn) {
           return numeric.add(result, childFn.evaluate(x));
         };
-        return _.reduce(this.childFns, reducer, [0, 0, 0, 0]);
+        return _.reduce(this.childFns, reducer, util.constructVector(config.dimensions, 0));
       }
       if (this.combiner === "product") {
         reducer = function(result, childFn) {
           return numeric.mul(result, childFn.evaluate(x));
         };
-        return _.reduce(this.childFns, reducer, [1, 1, 1, 1]);
+        return _.reduce(this.childFns, reducer, util.constructVector(config.dimensions, 1));
       }
     };
 
@@ -645,7 +646,7 @@
         if (visibleChildFns.length > 0) {
           return _.last(visibleChildFns).getExprString(parameter);
         } else {
-          return util.glslString([0, 0, 0, 0]);
+          return util.glslString(util.constructVector(config.dimensions, 0));
         }
       }
       if (this.combiner === "composition") {
@@ -663,14 +664,14 @@
       })(this));
       if (this.combiner === "sum") {
         if (childExprStrings.length === 0) {
-          return util.glslString([0, 0, 0, 0]);
+          return util.glslString(util.constructVector(config.dimensions, 0));
         } else {
           return "(" + childExprStrings.join(" + ") + ")";
         }
       }
       if (this.combiner === "product") {
         if (childExprStrings.length === 0) {
-          return util.glslString([1, 1, 1, 1]);
+          return util.glslString(util.constructVector(config.dimensions, 1));
         } else {
           return "(" + childExprStrings.join(" * ") + ")";
         }
@@ -705,18 +706,18 @@
     function ChildFn(fn) {
       this.fn = fn;
       this.visible = true;
-      this.domainTranslate = [0, 0, 0, 0].map(function(v) {
+      this.domainTranslate = util.constructVector(config.dimensions, 0).map(function(v) {
         return new C.Variable(v);
       });
-      this.domainTransform = numeric.identity(4).map(function(row) {
+      this.domainTransform = numeric.identity(config.dimensions).map(function(row) {
         return row.map(function(v) {
           return new C.Variable(v);
         });
       });
-      this.rangeTranslate = [0, 0, 0, 0].map(function(v) {
+      this.rangeTranslate = util.constructVector(config.dimensions, 0).map(function(v) {
         return new C.Variable(v);
       });
-      this.rangeTransform = numeric.identity(4).map(function(row) {
+      this.rangeTransform = numeric.identity(config.dimensions).map(function(row) {
         return row.map(function(v) {
           return new C.Variable(v);
         });
@@ -764,23 +765,25 @@
     };
 
     ChildFn.prototype.getExprString = function(parameter) {
-      var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
+      var domainTransformInv, domainTranslate, exprString, identityMatrixString, rangeTransform, rangeTranslate, zeroVectorString;
       domainTranslate = util.glslString(this.getDomainTranslate());
       domainTransformInv = util.glslString(util.safeInv(this.getDomainTransform()));
       rangeTranslate = util.glslString(this.getRangeTranslate());
       rangeTransform = util.glslString(this.getRangeTransform());
       exprString = parameter;
-      if (domainTranslate !== util.glslString([0, 0, 0, 0])) {
+      zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
+      identityMatrixString = util.glslString(numeric.identity(config.dimensions));
+      if (domainTranslate !== zeroVectorString) {
         exprString = "(" + exprString + " - " + domainTranslate + ")";
       }
-      if (domainTransformInv !== util.glslString(numeric.identity(4))) {
+      if (domainTransformInv !== identityMatrixString) {
         exprString = "(" + domainTransformInv + " * " + exprString + ")";
       }
       exprString = this.fn.getExprString(exprString);
-      if (rangeTransform !== util.glslString(numeric.identity(4))) {
+      if (rangeTransform !== identityMatrixString) {
         exprString = "(" + rangeTransform + " * " + exprString + ")";
       }
-      if (rangeTranslate !== util.glslString([0, 0, 0, 0])) {
+      if (rangeTranslate !== zeroVectorString) {
         exprString = "(" + exprString + " + " + rangeTranslate + ")";
       }
       return exprString;
@@ -1349,7 +1352,7 @@
         return util.glslString(value[0]);
       }
       strings = value.map(util.glslString);
-      string = "vec" + length + "(" + (strings.join(',')) + ")";
+      string = util.glslVectorType(length) + "(" + strings.join(",") + ")";
       return string;
     }
     if (_.isArray(value) && _.isArray(value[0])) {
@@ -1363,12 +1366,57 @@
           strings.push(util.glslString(value[row][col]));
         }
       }
-      string = "mat" + length + "(" + (strings.join(',')) + ")";
+      string = util.glslMatrixType(length) + "(" + strings.join(",") + ")";
       return string;
     }
   };
 
+  util.glslVectorType = function(dimensions) {
+    if (dimensions === 1) {
+      return "float";
+    }
+    return "vec" + dimensions;
+  };
+
+  util.glslMatrixType = function(dimensions) {
+    if (dimensions === 1) {
+      return "float";
+    }
+    return "mat" + dimensions;
+  };
+
+  util.glslGetComponent = function(expr, dimensions, component) {
+    if (dimensions === 1) {
+      return expr;
+    }
+    return expr + "[" + component + "]";
+  };
+
+  util.glslSetComponent = function(expr, dimensions, component, value) {
+    if (dimensions === 1) {
+      return expr + " = " + value;
+    }
+    return expr + "[" + component + "]" + " = " + value;
+  };
+
+  util.constructVector = function(dimensions, value) {
+    var _i, _results;
+    if (value == null) {
+      value = 0;
+    }
+    return (function() {
+      _results = [];
+      for (var _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; 0 <= dimensions ? _i++ : _i--){ _results.push(_i); }
+      return _results;
+    }).apply(this).map(function() {
+      return value;
+    });
+  };
+
   util.safeInv = function(m) {
+    if (m.length === 1 && m[0][0] === 0) {
+      return numeric.identity(1);
+    }
     try {
       return numeric.inv(m);
     } catch (_error) {
@@ -2111,22 +2159,22 @@
           }));
         };
       })(this))), (function() {
-        var _i, _results;
+        var _i, _ref, _results;
         _results = [];
-        for (coordIndex = _i = 0; _i < 4; coordIndex = ++_i) {
+        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
           _results.push(R.tr({}, (function() {
-            var _j, _results1;
+            var _j, _ref1, _results1;
             _results1 = [];
-            for (rowIndex = _j = 0; _j < 4; rowIndex = ++_j) {
+            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
               _results1.push(R.td({}, R.VariableView({
                 variable: this.fn.domainTransform[rowIndex][coordIndex]
               })));
             }
             return _results1;
           }).call(this), (function() {
-            var _j, _results1;
+            var _j, _ref1, _results1;
             _results1 = [];
-            for (rowIndex = _j = 0; _j < 4; rowIndex = ++_j) {
+            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
               _results1.push(R.td({}, R.VariableView({
                 variable: this.fn.rangeTransform[rowIndex][coordIndex]
               })));
@@ -2416,7 +2464,7 @@
 
   createCartesianProgram = function(glod, name, expr) {
     var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);\n  vec4 y = " + expr + ";\n\n  float px = lerp(x.x, xMin, xMax, -1., 1.);\n  float py = lerp(y.x, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  " + (util.glslVectorType(config.dimensions)) + " x, y;\n  x = " + (util.glslString(util.constructVector(config.dimensions, 0))) + ";\n\n  " + (util.glslSetComponent("x", config.dimensions, 0, "lerp(s, 0., 1., xMin, xMax)")) + ";\n  y = " + expr + ";\n\n  float px, py;\n  px = " + (util.glslGetComponent("x", config.dimensions, 0)) + ";\n  py = " + (util.glslGetComponent("y", config.dimensions, 0)) + ";\n\n  px = lerp(px, xMin, xMax, -1., 1.);\n  py = lerp(py, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };

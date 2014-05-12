@@ -156,11 +156,18 @@ createCartesianProgram = (glod, name, expr) ->
   void main() {
     float s = sample / numSamples;
 
-    vec4 x = vec4(lerp(s, 0., 1., xMin, xMax), 0., 0., 0.);
-    vec4 y = #{expr};
+    #{util.glslVectorType(config.dimensions)} x, y;
+    x = #{util.glslString(util.constructVector(config.dimensions, 0))};
 
-    float px = lerp(x.x, xMin, xMax, -1., 1.);
-    float py = lerp(y.x, yMin, yMax, -1., 1.);
+    #{util.glslSetComponent("x", config.dimensions, 0, "lerp(s, 0., 1., xMin, xMax)")};
+    y = #{expr};
+
+    float px, py;
+    px = #{util.glslGetComponent("x", config.dimensions, 0)};
+    py = #{util.glslGetComponent("y", config.dimensions, 0)};
+
+    px = lerp(px, xMin, xMax, -1., 1.);
+    py = lerp(py, yMin, yMax, -1., 1.);
 
     gl_Position = vec4(px, py, 0., 1.);
   }
@@ -211,6 +218,7 @@ createColorMapProgram = (glod, name, expr) ->
   }
   """
 
+  # TODO: Needs proper support for config.dimensions
   fragment = """
   precision highp float;
   precision highp int;

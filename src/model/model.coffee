@@ -47,7 +47,7 @@ class C.CompoundFn extends C.Fn
       if @childFns.length > 0
         return _.last(@childFns).evaluate(x)
       else
-        return [0,0,0,0]
+        return util.constructVector(config.dimensions, 0)
 
     if @combiner == "composition"
       for childFn in @childFns
@@ -57,12 +57,12 @@ class C.CompoundFn extends C.Fn
     if @combiner == "sum"
       reducer = (result, childFn) ->
         numeric.add(result, childFn.evaluate(x))
-      return _.reduce(@childFns, reducer, [0,0,0,0])
+      return _.reduce(@childFns, reducer, util.constructVector(config.dimensions, 0))
 
     if @combiner == "product"
       reducer = (result, childFn) ->
         numeric.mul(result, childFn.evaluate(x))
-      return _.reduce(@childFns, reducer, [1,1,1,1])
+      return _.reduce(@childFns, reducer, util.constructVector(config.dimensions, 1))
 
   getExprString: (parameter) ->
     visibleChildFns = _.filter @childFns, (childFn) -> childFn.visible
@@ -71,7 +71,7 @@ class C.CompoundFn extends C.Fn
       if visibleChildFns.length > 0
         return _.last(visibleChildFns).getExprString(parameter)
       else
-        return util.glslString([0,0,0,0])
+        return util.glslString(util.constructVector(config.dimensions, 0))
 
     if @combiner == "composition"
       exprString = parameter
@@ -84,13 +84,13 @@ class C.CompoundFn extends C.Fn
 
     if @combiner == "sum"
       if childExprStrings.length == 0
-        return util.glslString([0,0,0,0])
+        return util.glslString(util.constructVector(config.dimensions, 0))
       else
         return "(" + childExprStrings.join(" + ") + ")"
 
     if @combiner == "product"
       if childExprStrings.length == 0
-        return util.glslString([1,1,1,1])
+        return util.glslString(util.constructVector(config.dimensions, 1))
       else
         return "(" + childExprStrings.join(" * ") + ")"
 
@@ -111,15 +111,15 @@ class C.DefinedFn extends C.CompoundFn
 class C.ChildFn extends C.Fn
   constructor: (@fn) ->
     @visible = true
-    @domainTranslate = [0, 0, 0, 0].map (v) ->
+    @domainTranslate = util.constructVector(config.dimensions, 0).map (v) ->
       new C.Variable(v)
-    @domainTransform = numeric.identity(4).map (row) ->
+    @domainTransform = numeric.identity(config.dimensions).map (row) ->
       row.map (v) ->
         new C.Variable(v)
 
-    @rangeTranslate = [0, 0, 0, 0].map (v) ->
+    @rangeTranslate = util.constructVector(config.dimensions, 0).map (v) ->
       new C.Variable(v)
-    @rangeTransform = numeric.identity(4).map (row) ->
+    @rangeTransform = numeric.identity(config.dimensions).map (row) ->
       row.map (v) ->
         new C.Variable(v)
 
@@ -158,18 +158,21 @@ class C.ChildFn extends C.Fn
 
     exprString = parameter
 
-    if domainTranslate != util.glslString([0,0,0,0])
+    zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0))
+    identityMatrixString = util.glslString(numeric.identity(config.dimensions))
+
+    if domainTranslate != zeroVectorString
       exprString = "(#{exprString} - #{domainTranslate})"
 
-    if domainTransformInv != util.glslString(numeric.identity(4))
+    if domainTransformInv != identityMatrixString
       exprString = "(#{domainTransformInv} * #{exprString})"
 
     exprString = @fn.getExprString(exprString)
 
-    if rangeTransform != util.glslString(numeric.identity(4))
+    if rangeTransform != identityMatrixString
       exprString = "(#{rangeTransform} * #{exprString})"
 
-    if rangeTranslate != util.glslString([0,0,0,0])
+    if rangeTranslate != zeroVectorString
       exprString = "(#{exprString} + #{rangeTranslate})"
 
     return exprString

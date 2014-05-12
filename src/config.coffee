@@ -5,6 +5,7 @@ window.config = config = {
   storageName: "sinewaves"
 
   resolution: 0.5
+  dimensions: 4
 
   mainLineWidth: 1.25
 
