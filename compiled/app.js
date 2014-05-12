@@ -60,6 +60,7 @@
       this.autofocus = null;
       this.selectedFn = _.last(appRoot.fns);
       this.selectedChildFn = null;
+      this.hoveredChildFn = null;
       this.expandedChildFns = {};
       this.registerEvents();
     }
