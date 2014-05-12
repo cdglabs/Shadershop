@@ -1,7 +1,6 @@
 Architecture
   Move "builtIn" into its own file.
   Move "combiners" into their own thing. Think of better name.
-  Make config.dimensions = 4 adjustable
 
 
 Misc
@@ -13,9 +12,10 @@ Misc
 
 
 
-
-We want control points on the plot
-  Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
+Make a Plot object in model
+  Allow for non-square plots
+  We want control points on the plot
+    Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
 
 
 
@@ -23,8 +23,10 @@ We want control points on the plot
 
 Outline Stuff
   Break out "Inspector"
+  Hovered ChildFn
+  Editable labels on DefinedFn
+  Create definition button / right click item - create by abstracting
   Thumbnails
-  Make definition
   Show transform numbers when they're not identity?
 
 
@@ -34,7 +36,11 @@ Inspector
   Scrub transform numbers in inspector?
 
 
-
+Palette
+  CompoundFns get added "around" what's in the current DefinedFn
+  BuiltInFns and DefinedFns get added within the selected ChildFn if it's compound, otherwise after the selected ChildFn
+  Anything added gets selected
+  Anything can also be dragged into the outline to put it in a specific place
 
 
 
