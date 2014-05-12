@@ -175,12 +175,14 @@ canvas, .Shader
 .OutlineItem
   &.Selected
     > .OutlineRow
-      background-color tint(highlightColor, 90%)
+      background-color tint(highlightColor, 85%)
   &.Invisible
     opacity 0.25
 
 .OutlineRow
   position relative
+  &:hover
+    background-color tint(highlightColor, 95%)
 
 .OutlineVisible
   position absolute
@@ -197,11 +199,11 @@ canvas, .Shader
 
 .OutlineDisclosure
   inline middle
-  padding SpacingSize
+  padding SpacingSize 0px SpacingSize SpacingSize
 
 .OutlineInternals
   inline middle
-  padding 6px 0px
+  padding 6px
 
 .Placeholder
   background-color #bbb

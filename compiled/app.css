@@ -120,13 +120,16 @@ canvas,
   margin-left: 0px;
 }
 .OutlineItem.Selected > .OutlineRow {
-  background-color: #e5f4f9;
+  background-color: #d8eff7;
 }
 .OutlineItem.Invisible {
   opacity: 0.25;
 }
 .OutlineRow {
   position: relative;
+}
+.OutlineRow:hover {
+  background-color: #f2f9fc;
 }
 .OutlineVisible {
   position: absolute;
@@ -144,12 +147,12 @@ canvas,
 .OutlineDisclosure {
   display: inline-block;
   vertical-align: middle;
-  padding: 6px;
+  padding: 6px 0px 6px 6px;
 }
 .OutlineInternals {
   display: inline-block;
   vertical-align: middle;
-  padding: 6px 0px;
+  padding: 6px;
 }
 .Placeholder {
   background-color: #bbb;
