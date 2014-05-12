@@ -1647,7 +1647,7 @@
         y: y
       };
     },
-    changeSelection: function() {
+    findHitTarget: function() {
       var bounds, childFn, distance, evaluated, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       rect = this.getDOMNode().getBoundingClientRect();
@@ -1663,7 +1663,16 @@
           found = childFn;
         }
       }
-      return UI.selectChildFn(found);
+      return found;
+    },
+    changeSelection: function() {
+      return UI.selectChildFn(this.findHitTarget());
+    },
+    handleMouseMove: function() {
+      return UI.hoveredChildFn = this.findHitTarget();
+    },
+    handleMouseLeave: function() {
+      return UI.hoveredChildFn = null;
     },
     startPan: function(e) {
       var originalBounds, originalX, originalY, rect, xScale, yScale;
@@ -1783,7 +1792,9 @@
       return R.div({
         className: "MainPlot",
         onMouseDown: this.handleMouseDown,
-        onWheel: this.handleWheel
+        onWheel: this.handleWheel,
+        onMouseMove: this.handleMouseMove,
+        onMouseLeave: this.handleMouseLeave
       }, R.div({
         className: "PlotContainer"
       }, R.GridView({

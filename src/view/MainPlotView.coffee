@@ -9,7 +9,7 @@ R.create "MainPlotView",
     y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
     return {x, y}
 
-  changeSelection: ->
+  findHitTarget: ->
     {x, y} = @getLocalMouseCoords()
 
     rect = @getDOMNode().getBoundingClientRect()
@@ -24,7 +24,16 @@ R.create "MainPlotView",
       if distance < config.hitTolerance * pixelWidth
         found = childFn
 
-    UI.selectChildFn(found)
+    return found
+
+  changeSelection: ->
+    UI.selectChildFn(@findHitTarget())
+
+  handleMouseMove: ->
+    UI.hoveredChildFn = @findHitTarget()
+
+  handleMouseLeave: ->
+    UI.hoveredChildFn = null
 
   startPan: (e) ->
     originalX = e.clientX
@@ -127,7 +136,13 @@ R.create "MainPlotView",
           return true
       return false
 
-    R.div {className: "MainPlot", onMouseDown: @handleMouseDown, onWheel: @handleWheel},
+    R.div {
+      className: "MainPlot",
+      onMouseDown: @handleMouseDown,
+      onWheel: @handleWheel,
+      onMouseMove: @handleMouseMove,
+      onMouseLeave: @handleMouseLeave
+    },
       R.div {className: "PlotContainer"},
         # Grid
         R.GridView {bounds: @fn.bounds}

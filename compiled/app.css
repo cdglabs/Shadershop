@@ -138,7 +138,7 @@ canvas,
   color: #999;
   opacity: 0;
 }
-.OutlineRow.Hovered .OutlineVisible {
+.OutlineRow:hover .OutlineVisible {
   opacity: 1;
 }
 .OutlineChildren {
@@ -152,7 +152,7 @@ canvas,
 .OutlineInternals {
   display: inline-block;
   vertical-align: middle;
-  padding: 6px;
+  margin: 6px;
 }
 .OutlineLabel {
   min-width: 30px;
