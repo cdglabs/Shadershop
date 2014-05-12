@@ -178,7 +178,7 @@ R.create "OutlineInternalsView",
   render: ->
     R.div {className: "OutlineInternals"},
       if @fn instanceof C.BuiltInFn
-        R.LabelView {fn: @fn} # TODO but not editable
+        R.LabelView {fn: @fn}
 
       else if @fn instanceof C.DefinedFn
         R.LabelView {fn: @fn}

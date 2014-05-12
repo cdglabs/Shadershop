@@ -24,7 +24,6 @@ Make a Plot object in model
 Outline Stuff
   Break out "Inspector"
   Hovered ChildFn
-  Editable labels on DefinedFn
   Create definition button / right click item - create by abstracting
   Thumbnails
   Show transform numbers when they're not identity?
