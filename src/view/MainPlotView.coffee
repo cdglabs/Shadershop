@@ -100,6 +100,13 @@ R.create "MainPlotView",
         color: config.color.child
       }
 
+    # Hovered
+    if UI.hoveredChildFn
+      plots.push {
+        exprString: UI.hoveredChildFn.getExprString("x")
+        color: config.color.hovered
+      }
+
     # Main
     plots.push {
       exprString: @fn.getExprString("x")

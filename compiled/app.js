@@ -273,7 +273,22 @@
 
 }).call(this);
 }, "config": function(exports, require, module) {(function() {
-  var config;
+  var childColor, config, hoveredColor, mainColor, mixColors, selectedColor;
+
+  mixColors = function(c1, c2, amount) {
+    var amount1, amount2;
+    amount1 = 1 - amount;
+    amount2 = amount;
+    return numeric.add(numeric.mul(amount1, c1), numeric.mul(amount2, c2));
+  };
+
+  mainColor = [0.2, 0.2, 0.2, 1];
+
+  childColor = [0.8, 0.8, 0.8, 1];
+
+  selectedColor = [0, 0.6, 0.8, 1];
+
+  hoveredColor = mixColors(childColor, selectedColor, 0.3);
 
   window.config = config = {
     storageName: "sinewaves",
@@ -300,9 +315,10 @@
       }
     },
     color: {
-      main: [0.2, 0.2, 0.2, 1],
-      child: [0.8, 0.8, 0.8, 1],
-      selected: [0, 0.6, 0.8, 1]
+      main: mainColor,
+      child: childColor,
+      selected: selectedColor,
+      hovered: hoveredColor
     },
     cursor: {
       text: "text",
@@ -1739,6 +1755,12 @@
           color: config.color.child
         });
       }
+      if (UI.hoveredChildFn) {
+        plots.push({
+          exprString: UI.hoveredChildFn.getExprString("x"),
+          color: config.color.hovered
+        });
+      }
       plots.push({
         exprString: this.fn.getExprString("x"),
         color: config.color.main
@@ -2039,8 +2061,14 @@
         };
       })(this));
     },
+    handleMouseEnter: function() {
+      return UI.hoveredChildFn = this.childFn;
+    },
+    handleMouseLeave: function() {
+      return UI.hoveredChildFn = null;
+    },
     render: function() {
-      var canHaveChildren, className, disclosureClassName, expanded, selected, _ref;
+      var canHaveChildren, disclosureClassName, expanded, hovered, itemClassName, rowClassName, selected, _ref;
       if (!this.isDraggingCopy && this.childFn === ((_ref = UI.dragging) != null ? _ref.childFn : void 0)) {
         return R.div({
           className: "Placeholder",
@@ -2052,20 +2080,27 @@
       canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
       expanded = UI.isChildFnExpanded(this.childFn);
       selected = this.childFn === UI.selectedChildFn;
-      className = R.cx({
+      hovered = this.childFn === UI.hoveredChildFn;
+      itemClassName = R.cx({
         OutlineItem: true,
-        Selected: selected,
         Invisible: !this.childFn.visible
+      });
+      rowClassName = R.cx({
+        OutlineRow: true,
+        Selected: selected,
+        Hovered: hovered
       });
       disclosureClassName = R.cx({
         DisclosureTriangle: true,
         Expanded: expanded
       });
       return R.div({
-        className: className
+        className: itemClassName
       }, R.div({
-        className: "OutlineRow",
-        onMouseDown: this.handleMouseDown
+        className: rowClassName,
+        onMouseDown: this.handleMouseDown,
+        onMouseEnter: this.handleMouseEnter,
+        onMouseLeave: this.handleMouseLeave
       }, R.div({
         className: "OutlineVisible",
         onClick: this.toggleVisible

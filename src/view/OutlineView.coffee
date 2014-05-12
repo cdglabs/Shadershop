@@ -135,6 +135,12 @@ R.create "OutlineItemView",
 
       }
 
+  handleMouseEnter: ->
+    UI.hoveredChildFn = @childFn
+
+  handleMouseLeave: ->
+    UI.hoveredChildFn = null
+
   render: ->
     if !@isDraggingCopy and @childFn == UI.dragging?.childFn
       return R.div {className: "Placeholder", style: {height: UI.dragging.placeholderHeight}}
@@ -142,11 +148,17 @@ R.create "OutlineItemView",
     canHaveChildren = @childFn.fn instanceof C.CompoundFn
     expanded = UI.isChildFnExpanded(@childFn)
     selected = (@childFn == UI.selectedChildFn)
+    hovered = (@childFn == UI.hoveredChildFn)
 
-    className = R.cx {
+    itemClassName = R.cx {
       OutlineItem: true
-      Selected: selected
       Invisible: !@childFn.visible
+    }
+
+    rowClassName = R.cx {
+      OutlineRow: true
+      Selected: selected
+      Hovered: hovered
     }
 
     disclosureClassName = R.cx {
@@ -154,8 +166,8 @@ R.create "OutlineItemView",
       Expanded: expanded
     }
 
-    R.div {className: className},
-      R.div {className: "OutlineRow", onMouseDown: @handleMouseDown},
+    R.div {className: itemClassName},
+      R.div {className: rowClassName, onMouseDown: @handleMouseDown, onMouseEnter: @handleMouseEnter, onMouseLeave: @handleMouseLeave},
         R.div {className: "OutlineVisible", onClick: @toggleVisible},
           R.div {className: "icon-eye"}
         if canHaveChildren

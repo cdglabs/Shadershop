@@ -119,17 +119,17 @@ canvas,
 .Outline > .OutlineChildren {
   margin-left: 0px;
 }
-.OutlineItem.Selected > .OutlineRow {
-  background-color: #d8eff7;
-}
 .OutlineItem.Invisible {
   opacity: 0.25;
 }
 .OutlineRow {
   position: relative;
 }
-.OutlineRow:hover {
+.OutlineRow.Hovered {
   background-color: #f2f9fc;
+}
+.OutlineRow.Selected {
+  background-color: #d8eff7;
 }
 .OutlineVisible {
   position: absolute;
@@ -138,7 +138,7 @@ canvas,
   color: #999;
   opacity: 0;
 }
-.OutlineRow:hover .OutlineVisible {
+.OutlineRow.Hovered .OutlineVisible {
   opacity: 1;
 }
 .OutlineChildren {

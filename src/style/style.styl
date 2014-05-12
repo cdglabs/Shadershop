@@ -173,16 +173,15 @@ canvas, .Shader
   margin-left 0px
 
 .OutlineItem
-  &.Selected
-    > .OutlineRow
-      background-color tint(highlightColor, 85%)
   &.Invisible
     opacity 0.25
 
 .OutlineRow
   position relative
-  &:hover
+  &.Hovered
     background-color tint(highlightColor, 95%)
+  &.Selected
+    background-color tint(highlightColor, 85%)
 
 .OutlineVisible
   position absolute
@@ -190,7 +189,7 @@ canvas, .Shader
   top 6px
   color #999
   opacity 0
-.OutlineRow:hover
+.OutlineRow.Hovered
   .OutlineVisible
     opacity 1
 

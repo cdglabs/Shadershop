@@ -1,5 +1,17 @@
 
 
+mixColors = (c1, c2, amount) ->
+  amount1 = 1 - amount
+  amount2 = amount
+  numeric.add(numeric.mul(amount1, c1), numeric.mul(amount2, c2))
+
+mainColor = [0.2, 0.2, 0.2, 1]
+childColor = [0.8, 0.8, 0.8, 1]
+selectedColor = [0, 0.6, 0.8, 1]
+hoveredColor = mixColors(childColor, selectedColor, 0.3)
+
+
+
 window.config = config = {
 
   storageName: "sinewaves"
@@ -35,9 +47,10 @@ window.config = config = {
   }
 
   color: {
-    main: [0.2, 0.2, 0.2, 1]
-    child: [0.8, 0.8, 0.8, 1]
-    selected: [0, 0.6, 0.8, 1]
+    main: mainColor
+    child: childColor
+    selected: selectedColor
+    hovered: hoveredColor
   }
 
 
