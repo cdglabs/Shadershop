@@ -1,6 +1,7 @@
 window.UI = UI = new class
   constructor: ->
     @dragging = null
+    @mousePosition = {x: 0, y: 0}
     @autofocus = null
 
     @selectedFn = _.last(appRoot.fns)
@@ -9,7 +10,6 @@ window.UI = UI = new class
     @hoveredChildFn = null
 
     @expandedChildFns = {}
-
 
     @registerEvents()
 

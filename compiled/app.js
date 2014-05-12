@@ -57,6 +57,10 @@
       this.handleWindowMouseUp = __bind(this.handleWindowMouseUp, this);
       this.handleWindowMouseMove = __bind(this.handleWindowMouseMove, this);
       this.dragging = null;
+      this.mousePosition = {
+        x: 0,
+        y: 0
+      };
       this.autofocus = null;
       this.selectedFn = _.last(appRoot.fns);
       this.selectedChildFn = null;
@@ -1755,17 +1759,17 @@
       return result;
     },
     render: function() {
-      var childFn, plots, _i, _len, _ref;
+      var childFn, expandedChildFns, plots, _i, _len;
       plots = [];
-      _ref = this.getExpandedChildFns();
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        childFn = _ref[_i];
+      expandedChildFns = this.getExpandedChildFns();
+      for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
+        childFn = expandedChildFns[_i];
         plots.push({
           exprString: childFn.getExprString("x"),
           color: config.color.child
         });
       }
-      if (UI.hoveredChildFn) {
+      if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
         plots.push({
           exprString: UI.hoveredChildFn.getExprString("x"),
           color: config.color.hovered
@@ -1775,15 +1779,15 @@
         exprString: this.fn.getExprString("x"),
         color: config.color.main
       });
-      if (UI.selectedChildFn) {
+      if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
         plots.push({
           exprString: UI.selectedChildFn.getExprString("x"),
           color: config.color.selected
         });
       }
       plots = _.reject(plots, function(plot, plotIndex) {
-        var i, _j, _ref1, _ref2;
-        for (i = _j = _ref1 = plotIndex + 1, _ref2 = plots.length; _ref1 <= _ref2 ? _j < _ref2 : _j > _ref2; i = _ref1 <= _ref2 ? ++_j : --_j) {
+        var i, _j, _ref, _ref1;
+        for (i = _j = _ref = plotIndex + 1, _ref1 = plots.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
           if (plots[i].exprString === plot.exprString) {
             return true;
           }

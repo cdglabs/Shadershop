@@ -102,15 +102,17 @@ R.create "MainPlotView",
   render: ->
     plots = []
 
+    expandedChildFns = @getExpandedChildFns()
+
     # Child Fns
-    for childFn in @getExpandedChildFns()
+    for childFn in expandedChildFns
       plots.push {
         exprString: childFn.getExprString("x")
         color: config.color.child
       }
 
     # Hovered
-    if UI.hoveredChildFn
+    if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
       plots.push {
         exprString: UI.hoveredChildFn.getExprString("x")
         color: config.color.hovered
@@ -123,7 +125,7 @@ R.create "MainPlotView",
     }
 
     # Selected
-    if UI.selectedChildFn
+    if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
       plots.push {
         exprString: UI.selectedChildFn.getExprString("x")
         color: config.color.selected
