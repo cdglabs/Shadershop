@@ -1953,7 +1953,8 @@
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           childFn = _ref[_i];
           _results.push(R.OutlineItemView({
-            childFn: childFn
+            childFn: childFn,
+            key: C.id(childFn)
           }));
         }
         return _results;
@@ -2196,16 +2197,20 @@
       fn: C.ChildFn
     },
     render: function() {
-      var coordIndex, rowIndex;
+      var coordIndex, rowIndex, variable;
       return R.table({}, R.tr({}, this.fn.domainTranslate.map((function(_this) {
         return function(variable) {
-          return R.td({}, R.VariableView({
+          return R.td({
+            key: C.id(variable)
+          }, R.VariableView({
             variable: variable
           }));
         };
       })(this)), this.fn.rangeTranslate.map((function(_this) {
         return function(variable) {
-          return R.td({}, R.VariableView({
+          return R.td({
+            key: C.id(variable)
+          }, R.VariableView({
             variable: variable
           }));
         };
@@ -2213,12 +2218,17 @@
         var _i, _ref, _results;
         _results = [];
         for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
-          _results.push(R.tr({}, (function() {
+          _results.push(R.tr({
+            key: coordIndex
+          }, (function() {
             var _j, _ref1, _results1;
             _results1 = [];
             for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
-              _results1.push(R.td({}, R.VariableView({
-                variable: this.fn.domainTransform[rowIndex][coordIndex]
+              variable = this.fn.domainTransform[rowIndex][coordIndex];
+              _results1.push(R.td({
+                key: C.id(variable)
+              }, R.VariableView({
+                variable: variable
               })));
             }
             return _results1;
@@ -2226,8 +2236,11 @@
             var _j, _ref1, _results1;
             _results1 = [];
             for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
-              _results1.push(R.td({}, R.VariableView({
-                variable: this.fn.rangeTransform[rowIndex][coordIndex]
+              variable = this.fn.rangeTransform[rowIndex][coordIndex];
+              _results1.push(R.td({
+                key: C.id(variable)
+              }, R.VariableView({
+                variable: variable
               })));
             }
             return _results1;

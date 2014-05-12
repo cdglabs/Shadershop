@@ -29,6 +29,7 @@ R.create "OutlineChildrenView",
       for childFn in @compoundFn.childFns
         R.OutlineItemView {
           childFn: childFn
+          key: C.id(childFn)
         }
 
 
@@ -254,17 +255,19 @@ R.create "OutlineControlsView",
     R.table {},
       R.tr {},
         @fn.domainTranslate.map (variable) =>
-          R.td {},
+          R.td {key: C.id(variable)},
             R.VariableView {variable}
         @fn.rangeTranslate.map (variable) =>
-          R.td {},
+          R.td {key: C.id(variable)},
             R.VariableView {variable}
 
       for coordIndex in [0...config.dimensions]
-        R.tr {},
+        R.tr {key: coordIndex},
           for rowIndex in [0...config.dimensions]
-            R.td {},
-              R.VariableView {variable: @fn.domainTransform[rowIndex][coordIndex]}
+            variable = @fn.domainTransform[rowIndex][coordIndex]
+            R.td {key: C.id(variable)},
+              R.VariableView {variable}
           for rowIndex in [0...config.dimensions]
-            R.td {},
-              R.VariableView {variable: @fn.rangeTransform[rowIndex][coordIndex]}
+            variable = @fn.rangeTransform[rowIndex][coordIndex]
+            R.td {key: C.id(variable)},
+              R.VariableView {variable}
