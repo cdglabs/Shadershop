@@ -1653,19 +1653,21 @@
       };
     },
     findHitTarget: function() {
-      var bounds, childFn, distance, evaluated, found, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
+      var bounds, childFn, distance, evaluated, found, foundDistance, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
       _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       rect = this.getDOMNode().getBoundingClientRect();
       bounds = this.fn.bounds;
       pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
       found = null;
+      foundDistance = config.hitTolerance * pixelWidth;
       _ref1 = this.getExpandedChildFns();
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
         evaluated = childFn.evaluate([x, 0, 0, 0]);
         distance = Math.abs(y - evaluated[0]);
-        if (distance < config.hitTolerance * pixelWidth) {
+        if (distance < foundDistance) {
           found = childFn;
+          foundDistance = distance;
         }
       }
       return found;

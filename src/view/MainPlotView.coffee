@@ -17,12 +17,15 @@ R.create "MainPlotView",
     pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
 
     found = null
+    foundDistance = config.hitTolerance * pixelWidth
+
     for childFn in @getExpandedChildFns()
       evaluated = childFn.evaluate([x, 0, 0, 0])
 
       distance = Math.abs(y - evaluated[0])
-      if distance < config.hitTolerance * pixelWidth
+      if distance < foundDistance
         found = childFn
+        foundDistance = distance
 
     return found
 
