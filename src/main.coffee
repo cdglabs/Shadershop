@@ -47,27 +47,29 @@ require("./UI")
 
 
 
-
+# =============================================================================
+# Animate Loop
+# =============================================================================
 
 debouncedSaveState = _.debounce(saveState, 400)
 
-willRefreshNextFrame = false
-refresh = ->
-  return if willRefreshNextFrame
-  willRefreshNextFrame = true
-  requestAnimationFrame ->
+dirty = true
+
+animateLoop = ->
+  requestAnimationFrame(animateLoop)
+  if dirty
     refreshView()
-    # saveState()
     debouncedSaveState()
-    willRefreshNextFrame = false
+    dirty = false
+
+setDirty = ->
+  dirty = true
 
 refreshView = ->
   appRootEl = document.querySelector("#AppRoot")
   React.renderComponent(R.AppRootView({appRoot}), appRootEl)
 
-
-
-refreshEventNames = [
+dirtyEventNames = [
   "mousedown"
   "mousemove"
   "mouseup"
@@ -78,16 +80,18 @@ refreshEventNames = [
   "mousewheel"
 ]
 
-for eventName in refreshEventNames
-  window.addEventListener(eventName, refresh)
+for eventName in dirtyEventNames
+  window.addEventListener(eventName, setDirty)
 
-refresh()
+animateLoop()
 
 
+# =============================================================================
+# Auto-reload stylesheet
+# =============================================================================
 
 # Firefox crashes when the stylesheet reloads.
 if location.protocol == "file:" and navigator.userAgent.indexOf("Firefox") == -1
   setInterval(->
     document.styleSheets[0].reload()
   , 1000)
-
