@@ -2636,15 +2636,15 @@
     propTypes: {
       variable: C.Variable
     },
-    handleInput: function(newValue) {
-      return this.variable.valueString = newValue;
-    },
     render: function() {
       return R.TextFieldView({
         className: "Variable",
         value: this.variable.valueString,
-        onInput: this.handleInput
+        onInput: this._onInput
       });
+    },
+    _onInput: function(newValue) {
+      return Actions.setVariableValueString(this.variable, newValue);
     }
   });
 
