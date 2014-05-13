@@ -102,10 +102,11 @@ util.glslString = (value) ->
     length = value.length
     if length == 1
       return util.glslString(value[0])
-    strings = []
-    for component in value
-      strings.push(util.glslString(component))
-    string = util.glslVectorType(length) + "(" + strings.join(",") + ")"
+    string = ""
+    for component, index in value
+      string += util.glslString(component)
+      string += "," if index < length - 1
+    string = util.glslVectorType(length) + "(" + string + ")"
     return string
 
   if _.isArray(value) and _.isArray(value[0])
@@ -115,10 +116,12 @@ util.glslString = (value) ->
     if length == 1
       return util.glslString(value[0][0])
     strings = []
+    string = ""
     for col in [0...length]
       for row in [0...length]
-        strings.push(util.glslString(value[row][col]))
-    string = util.glslMatrixType(length) + "(" + strings.join(",") + ")"
+        string += util.glslString(value[row][col])
+        string += "," if row < length - 1 or col < length - 1
+    string = util.glslMatrixType(length) + "(" + string + ")"
     return string
 
 

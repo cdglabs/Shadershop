@@ -1362,7 +1362,7 @@
   };
 
   util.glslString = function(value) {
-    var col, component, length, row, string, strings, _i, _j, _k, _len;
+    var col, component, index, length, row, string, strings, _i, _j, _k, _len;
     if (value === 0) {
       return "0.";
     }
@@ -1381,12 +1381,15 @@
       if (length === 1) {
         return util.glslString(value[0]);
       }
-      strings = [];
-      for (_i = 0, _len = value.length; _i < _len; _i++) {
-        component = value[_i];
-        strings.push(util.glslString(component));
+      string = "";
+      for (index = _i = 0, _len = value.length; _i < _len; index = ++_i) {
+        component = value[index];
+        string += util.glslString(component);
+        if (index < length - 1) {
+          string += ",";
+        }
       }
-      string = util.glslVectorType(length) + "(" + strings.join(",") + ")";
+      string = util.glslVectorType(length) + "(" + string + ")";
       return string;
     }
     if (_.isArray(value) && _.isArray(value[0])) {
@@ -1395,12 +1398,16 @@
         return util.glslString(value[0][0]);
       }
       strings = [];
+      string = "";
       for (col = _j = 0; 0 <= length ? _j < length : _j > length; col = 0 <= length ? ++_j : --_j) {
         for (row = _k = 0; 0 <= length ? _k < length : _k > length; row = 0 <= length ? ++_k : --_k) {
-          strings.push(util.glslString(value[row][col]));
+          string += util.glslString(value[row][col]);
+          if (row < length - 1 || col < length - 1) {
+            string += ",";
+          }
         }
       }
-      string = util.glslMatrixType(length) + "(" + strings.join(",") + ")";
+      string = util.glslMatrixType(length) + "(" + string + ")";
       return string;
     }
   };
