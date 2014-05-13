@@ -336,7 +336,7 @@
 
 }).call(this);
 }, "main": function(exports, require, module) {(function() {
-  var eventName, json, refresh, refreshEventNames, refreshView, saveState, storageName, willRefreshNextFrame, _i, _len;
+  var debouncedSaveState, eventName, json, refresh, refreshEventNames, refreshView, saveState, storageName, willRefreshNextFrame, _i, _len;
 
   require("./config");
 
@@ -380,6 +380,8 @@
 
   require("./UI");
 
+  debouncedSaveState = _.debounce(saveState, 400);
+
   willRefreshNextFrame = false;
 
   refresh = function() {
@@ -389,7 +391,7 @@
     willRefreshNextFrame = true;
     return requestAnimationFrame(function() {
       refreshView();
-      saveState();
+      debouncedSaveState();
       return willRefreshNextFrame = false;
     });
   };
@@ -557,11 +559,16 @@
     function Variable(valueString) {
       this.valueString = valueString != null ? valueString : "0";
       this.valueString = this.valueString.toString();
+      this._lastValueString = null;
+      this._lastWorkingValue = null;
       this.getValue();
     }
 
     Variable.prototype.getValue = function() {
       var value;
+      if (this.valueString === this._lastValueString) {
+        return this._lastWorkingValue;
+      }
       value = this._lastWorkingValue;
       try {
         if (/^[-+]?[0-9]*\.?[0-9]+$/.test(this.valueString)) {
@@ -574,6 +581,7 @@
         value = this._lastWorkingValue;
       }
       this._lastWorkingValue = value;
+      this._lastValueString = this.valueString;
       return value;
     };
 
@@ -786,29 +794,31 @@
     };
 
     ChildFn.prototype.getExprString = function(parameter) {
-      var domainTransformInv, domainTranslate, exprString, identityMatrixString, rangeTransform, rangeTranslate, zeroVectorString;
+      var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
       domainTranslate = util.glslString(this.getDomainTranslate());
       domainTransformInv = util.glslString(util.safeInv(this.getDomainTransform()));
       rangeTranslate = util.glslString(this.getRangeTranslate());
       rangeTransform = util.glslString(this.getRangeTransform());
       exprString = parameter;
-      zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
-      identityMatrixString = util.glslString(numeric.identity(config.dimensions));
-      if (domainTranslate !== zeroVectorString) {
+      if (domainTranslate !== this._zeroVectorString) {
         exprString = "(" + exprString + " - " + domainTranslate + ")";
       }
-      if (domainTransformInv !== identityMatrixString) {
+      if (domainTransformInv !== this._identityMatrixString) {
         exprString = "(" + domainTransformInv + " * " + exprString + ")";
       }
       exprString = this.fn.getExprString(exprString);
-      if (rangeTransform !== identityMatrixString) {
+      if (rangeTransform !== this._identityMatrixString) {
         exprString = "(" + rangeTransform + " * " + exprString + ")";
       }
-      if (rangeTranslate !== zeroVectorString) {
+      if (rangeTranslate !== this._zeroVectorString) {
         exprString = "(" + exprString + " + " + rangeTranslate + ")";
       }
       return exprString;
     };
+
+    ChildFn.prototype._zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
+
+    ChildFn.prototype._identityMatrixString = util.glslString(numeric.identity(config.dimensions));
 
     return ChildFn;
 
@@ -1359,7 +1369,13 @@
   };
 
   util.glslString = function(value) {
-    var col, length, row, string, strings, _i, _j;
+    var col, component, length, row, string, strings, _i, _j, _k, _len;
+    if (value === 0) {
+      return "0.";
+    }
+    if (value === 1) {
+      return "1.";
+    }
     if (_.isNumber(value)) {
       string = value.toString();
       if (!/\./.test(string)) {
@@ -1372,7 +1388,11 @@
       if (length === 1) {
         return util.glslString(value[0]);
       }
-      strings = value.map(util.glslString);
+      strings = [];
+      for (_i = 0, _len = value.length; _i < _len; _i++) {
+        component = value[_i];
+        strings.push(util.glslString(component));
+      }
       string = util.glslVectorType(length) + "(" + strings.join(",") + ")";
       return string;
     }
@@ -1382,8 +1402,8 @@
         return util.glslString(value[0][0]);
       }
       strings = [];
-      for (col = _i = 0; 0 <= length ? _i < length : _i > length; col = 0 <= length ? ++_i : --_i) {
-        for (row = _j = 0; 0 <= length ? _j < length : _j > length; row = 0 <= length ? ++_j : --_j) {
+      for (col = _j = 0; 0 <= length ? _j < length : _j > length; col = 0 <= length ? ++_j : --_j) {
+        for (row = _k = 0; 0 <= length ? _k < length : _k > length; row = 0 <= length ? ++_k : --_k) {
           strings.push(util.glslString(value[row][col]));
         }
       }
@@ -2130,7 +2150,9 @@
         onClick: this.toggleExpanded
       }, R.div({
         className: disclosureClassName
-      })) : void 0, R.OutlineInternalsView({
+      })) : void 0, R.OutlineThumbnailView({
+        childFn: this.childFn
+      }), R.OutlineInternalsView({
         fn: this.childFn.fn
       })), canHaveChildren && expanded ? R.OutlineChildrenView({
         compoundFn: this.childFn.fn
@@ -2152,6 +2174,31 @@
       }) : this.fn instanceof C.CompoundFn ? R.CombinerView({
         compoundFn: this.fn
       }) : void 0);
+    }
+  });
+
+  R.create("OutlineThumbnailView", {
+    propTypes: {
+      childFn: C.ChildFn
+    },
+    render: function() {
+      var bounds;
+      bounds = UI.selectedFn.bounds;
+      return R.div({
+        className: "OutlineThumbnail"
+      }, R.div({
+        className: "PlotContainer"
+      }, R.GridView({
+        bounds: bounds
+      }), R.ShaderCartesianView({
+        bounds: bounds,
+        plots: [
+          {
+            exprString: this.childFn.getExprString("x"),
+            color: config.color.main
+          }
+        ]
+      })));
     }
   });
 
@@ -2181,7 +2228,7 @@
       return this.compoundFn.combiner = value;
     },
     render: function() {
-      return R.div({}, R.select({
+      return R.select({
         value: this.compoundFn.combiner,
         onChange: this.handleChange
       }, R.option({
@@ -2190,7 +2237,7 @@
         value: "product"
       }, "Multiply"), R.option({
         value: "composition"
-      }, "Compose")));
+      }, "Compose"));
     }
   });
 

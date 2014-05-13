@@ -79,6 +79,12 @@ util.floatToString = (value, precision = 0.1, removeExtraZeros = false) ->
 
 
 util.glslString = (value) ->
+  # Hard-coded optimizations
+  if value == 0
+    return "0."
+  if value == 1
+    return "1."
+
   if _.isNumber(value)
     # Float.
     string = value.toString()
@@ -91,7 +97,9 @@ util.glslString = (value) ->
     length = value.length
     if length == 1
       return util.glslString(value[0])
-    strings = value.map(util.glslString)
+    strings = []
+    for component in value
+      strings.push(util.glslString(component))
     string = util.glslVectorType(length) + "(" + strings.join(",") + ")"
     return string
 

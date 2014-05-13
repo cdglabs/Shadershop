@@ -171,9 +171,13 @@ R.create "OutlineItemView",
       R.div {className: rowClassName, onMouseDown: @handleMouseDown, onMouseEnter: @handleMouseEnter, onMouseLeave: @handleMouseLeave},
         R.div {className: "OutlineVisible", onClick: @toggleVisible},
           R.div {className: "icon-eye"}
+
         if canHaveChildren
           R.div {className: "OutlineDisclosure", onClick: @toggleExpanded},
             R.div {className: disclosureClassName}
+
+        R.OutlineThumbnailView {childFn: @childFn}
+
         R.OutlineInternalsView {fn: @childFn.fn}
 
       if canHaveChildren and expanded
@@ -199,6 +203,28 @@ R.create "OutlineInternalsView",
       else if @fn instanceof C.CompoundFn
         R.CombinerView {compoundFn: @fn}
 
+
+# =============================================================================
+
+R.create "OutlineThumbnailView",
+  propTypes:
+    childFn: C.ChildFn
+
+  render: ->
+    bounds = UI.selectedFn.bounds # HACK
+    R.div {className: "OutlineThumbnail"},
+      R.div {className: "PlotContainer"},
+        R.GridView {bounds}
+
+        R.ShaderCartesianView {
+          bounds
+          plots: [
+            {
+              exprString: @childFn.getExprString("x")
+              color: config.color.main
+            }
+          ]
+        }
 
 # =============================================================================
 
@@ -228,11 +254,10 @@ R.create "CombinerView",
     @compoundFn.combiner = value
 
   render: ->
-    R.div {},
-      R.select {value: @compoundFn.combiner, onChange: @handleChange},
-        R.option {value: "sum"}, "Add"
-        R.option {value: "product"}, "Multiply"
-        R.option {value: "composition"}, "Compose"
+    R.select {value: @compoundFn.combiner, onChange: @handleChange},
+      R.option {value: "sum"}, "Add"
+      R.option {value: "product"}, "Multiply"
+      R.option {value: "composition"}, "Compose"
 
 
 

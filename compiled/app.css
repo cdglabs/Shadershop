@@ -147,14 +147,25 @@ canvas,
 .OutlineDisclosure {
   display: inline-block;
   vertical-align: middle;
-  padding: 6px 0px 6px 6px;
+  padding: 6px;
 }
 .OutlineInternals {
   display: inline-block;
   vertical-align: middle;
-  margin: 6px;
+  margin: 3px 6px;
+}
+.OutlineThumbnail {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  width: 36px;
+  height: 36px;
+  margin: 2px;
+  border: 1px solid #eee;
 }
 .OutlineLabel {
+  display: inline-block;
+  vertical-align: middle;
   min-width: 30px;
   padding-right: 10px;
 }
@@ -169,7 +180,7 @@ canvas,
 .DisclosureTriangle {
   width: 0;
   height: 0;
-  margin-top: 1px;
+  margin: 0px 0.804px;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   border-left: 10.392px solid #ddd;

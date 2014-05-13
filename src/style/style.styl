@@ -5,12 +5,13 @@ PlusButtonSize = 18px
 
 DisclosureTriangleSize = 12px
 SpacingSize = 6px
-
+ThumbnailSize = 36px
 
 pointControlSize = 12px
 
 ShaderOverlayZIndex = 10
 PointControlZIndex = 20
+
 
 
 
@@ -198,13 +199,23 @@ canvas, .Shader
 
 .OutlineDisclosure
   inline middle
-  padding SpacingSize 0px SpacingSize SpacingSize
+  padding SpacingSize
 
 .OutlineInternals
   inline middle
-  margin 6px
+  margin 3px 6px
+
+.OutlineThumbnail
+  position relative
+  inline middle
+  width ThumbnailSize
+  height ThumbnailSize
+  margin 2px
+  border 1px solid #eee
+
 
 .OutlineLabel
+  inline middle
   // Give text editing cursor some room
   min-width 30px
   padding-right 10px
@@ -220,7 +231,7 @@ canvas, .Shader
 .DisclosureTriangle
   width 0
   height 0
-  margin-top 1px
+  margin 0px 0.067*DisclosureTriangleSize
   border-top: 0.5*DisclosureTriangleSize solid transparent
   border-bottom: 0.5*DisclosureTriangleSize solid transparent
   border-left: 0.866*DisclosureTriangleSize solid #ddd

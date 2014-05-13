@@ -47,7 +47,7 @@ require("./UI")
 
 
 
-
+debouncedSaveState = _.debounce(saveState, 400)
 
 willRefreshNextFrame = false
 refresh = ->
@@ -55,7 +55,8 @@ refresh = ->
   willRefreshNextFrame = true
   requestAnimationFrame ->
     refreshView()
-    saveState()
+    # saveState()
+    debouncedSaveState()
     willRefreshNextFrame = false
 
 refreshView = ->

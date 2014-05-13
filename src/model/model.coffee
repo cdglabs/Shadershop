@@ -2,9 +2,14 @@
 class C.Variable
   constructor: (@valueString = "0") ->
     @valueString = @valueString.toString()
+    @_lastValueString = null
+    @_lastWorkingValue = null
     @getValue() # to initialize @_lastWorkingValue
 
   getValue: ->
+    if @valueString == @_lastValueString
+      return @_lastWorkingValue
+
     value = @_lastWorkingValue
     try
       if /^[-+]?[0-9]*\.?[0-9]+$/.test(@valueString)
@@ -14,6 +19,7 @@ class C.Variable
     value = @_lastWorkingValue unless _.isFinite(value)
 
     @_lastWorkingValue = value
+    @_lastValueString = @valueString
     return value
 
 
@@ -158,24 +164,24 @@ class C.ChildFn extends C.Fn
 
     exprString = parameter
 
-    zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0))
-    identityMatrixString = util.glslString(numeric.identity(config.dimensions))
-
-    if domainTranslate != zeroVectorString
+    if domainTranslate != @_zeroVectorString
       exprString = "(#{exprString} - #{domainTranslate})"
 
-    if domainTransformInv != identityMatrixString
+    if domainTransformInv != @_identityMatrixString
       exprString = "(#{domainTransformInv} * #{exprString})"
 
     exprString = @fn.getExprString(exprString)
 
-    if rangeTransform != identityMatrixString
+    if rangeTransform != @_identityMatrixString
       exprString = "(#{rangeTransform} * #{exprString})"
 
-    if rangeTranslate != zeroVectorString
+    if rangeTranslate != @_zeroVectorString
       exprString = "(#{exprString} + #{rangeTranslate})"
 
     return exprString
+
+  _zeroVectorString: util.glslString(util.constructVector(config.dimensions, 0))
+  _identityMatrixString: util.glslString(numeric.identity(config.dimensions))
 
 
 
