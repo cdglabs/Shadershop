@@ -105,12 +105,7 @@ class C.DefinedFn extends C.CompoundFn
   constructor: ->
     super()
     @combiner = "last"
-    @bounds = {
-      xMin: -5
-      xMax: 5
-      yMin: -5
-      yMax: 5
-    }
+    @plot = new C.Plot()
 
 
 
@@ -194,6 +189,23 @@ class C.Plot
 
     @type = "cartesian"
 
+  getBounds: (width, height) ->
+    # TODO: This will be removed at some point...
+    minDimension = Math.min(width, height)
+    w = width  / minDimension
+    h = height / minDimension
+    return {
+      xMin: @domainCenter[0] - @scale * w
+      xMax: @domainCenter[0] + @scale * w
+      yMin: @rangeCenter[0]  - @scale * h
+      yMax: @rangeCenter[0]  + @scale * h
+    }
+
+  getPixelSize: (width, height) ->
+    # How "wide" a pixel is in local coordinates
+    minDimension = Math.min(width, height)
+    return 2 * @scale / minDimension
+
 
 
 
@@ -222,3 +234,5 @@ builtIn.fnEvaluators = {
   floor: numeric.floor
   sin: numeric.sin
 }
+
+builtIn.defaultPlot = new C.Plot()

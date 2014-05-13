@@ -1,11 +1,11 @@
 R.create "GridView",
   propTypes:
-    bounds: Object
+    plot: C.Plot
 
   drawFn: (canvas) ->
     ctx = canvas.getContext("2d")
 
-    {xMin, xMax, yMin, yMax} = @bounds
+    {xMin, xMax, yMin, yMax} = @plot.getBounds(canvas.width, canvas.height)
 
     util.canvas.clear(ctx)
 
@@ -16,7 +16,7 @@ R.create "GridView",
       yMax: yMax
 
   shouldComponentUpdate: (nextProps) ->
-    return @bounds != nextProps.bounds
+    return true
 
   render: ->
     R.CanvasView {drawFn: @drawFn}

@@ -60,9 +60,6 @@ Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
 Actions.setFnLabel = (fn, newValue) ->
   fn.label = newValue
 
-Actions.setFnBounds = (fn, newBounds) ->
-  fn.bounds = newBounds
-
 Actions.setCompoundFnCombiner = (compoundFn, combiner) ->
   compoundFn.combiner = combiner
   Compiler.setDirty()
@@ -77,6 +74,26 @@ Actions.toggleChildFnVisible = (childFn) ->
 Actions.setChildFnVisible = (childFn, newVisible) ->
   childFn.visible = newVisible
   Compiler.setDirty()
+
+
+# =============================================================================
+# Manipulating Plots
+# =============================================================================
+
+Actions.panPlot = (plot, domainOffset, rangeOffset) ->
+  plot.domainCenter = numeric.add(plot.domainCenter, domainOffset)
+  plot.rangeCenter  = numeric.add(plot.rangeCenter,  rangeOffset)
+
+Actions.zoomPlot = (plot, domainCenter, rangeCenter, scaleFactor) ->
+  # scaleFactor > 1 is zoom "out"
+  domainOffset = numeric.sub(plot.domainCenter, domainCenter)
+  rangeOffset  = numeric.sub(plot.rangeCenter,  rangeCenter)
+
+  plot.domainCenter = numeric.add(domainCenter, numeric.mul(scaleFactor, domainOffset))
+  plot.rangeCenter  = numeric.add(rangeCenter,  numeric.mul(scaleFactor, rangeOffset))
+
+  plot.scale *= scaleFactor
+
 
 # =============================================================================
 # Changing UI state (selection, hover, expanded)

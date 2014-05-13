@@ -1,7 +1,7 @@
 R.create "ShaderCartesianView",
   propTypes:
-    bounds: Object
-    plots: Array # [{exprString, color}]
+    plot: C.Plot
+    exprs: Array # [{exprString, color}]
 
   render: ->
     R.div {className: "Shader"}

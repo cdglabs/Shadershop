@@ -41,8 +41,8 @@ canvas,
   position: absolute;
   top: 0px;
   left: 96px;
-  width: 100vh;
-  height: 100vh;
+  bottom: 0px;
+  right: 300px;
 }
 .Outline {
   position: absolute;

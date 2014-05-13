@@ -20,13 +20,6 @@ R.create "DefinitionsView",
     Actions.addDefinedFn()
 
 
-defaultBounds = {
-  xMin: -6
-  xMax: 6
-  yMin: -6
-  yMax: 6
-}
-
 R.create "DefinitionView",
   propTypes:
     fn: C.Fn
@@ -36,9 +29,9 @@ R.create "DefinitionView",
     fnString = "(function (x) { return #{exprString}; })"
 
     if @fn instanceof C.BuiltInFn
-      bounds = defaultBounds
+      plot = builtIn.defaultPlot
     else
-      bounds = @fn.bounds
+      plot = @fn.plot
 
     className = R.cx {
       Definition: true
@@ -49,7 +42,7 @@ R.create "DefinitionView",
       className: className
     },
       R.span {onMouseDown: @_onMouseDown},
-        R.ThumbnailPlotView {bounds, fn: @fn}
+        R.ThumbnailPlotView {plot, fn: @fn}
 
       if @fn instanceof C.BuiltInFn
         R.div {className: "Label"}, @fn.label

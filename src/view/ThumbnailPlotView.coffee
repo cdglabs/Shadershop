@@ -1,15 +1,15 @@
 R.create "ThumbnailPlotView",
   propTypes:
-    bounds: Object
+    plot: C.Plot
     fn: C.Fn
 
   render: ->
     R.div {className: "PlotContainer"},
-      R.GridView {@bounds}
+      R.GridView {plot: @plot}
 
       R.ShaderCartesianView {
-        bounds: @bounds
-        plots: [
+        plot: @plot
+        exprs: [
           {
             exprString: Compiler.getExprString(@fn, "x")
             color: config.color.main

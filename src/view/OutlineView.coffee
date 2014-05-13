@@ -207,9 +207,9 @@ R.create "OutlineThumbnailView",
     childFn: C.ChildFn
 
   render: ->
-    bounds = UI.selectedFn.bounds # HACK
+    plot = UI.selectedFn.plot # HACK
     R.div {className: "OutlineThumbnail"},
-      R.ThumbnailPlotView {bounds, fn: @childFn}
+      R.ThumbnailPlotView {plot, fn: @childFn}
 
 # =============================================================================
 

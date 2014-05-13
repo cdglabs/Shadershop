@@ -13,10 +13,8 @@ Misc
 
 
 
-Make a Plot object in model
-  Allow for non-square plots
-  We want control points on the plot
-    Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
+Plot
+  Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
 
 
 

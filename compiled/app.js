@@ -127,10 +127,6 @@
     return fn.label = newValue;
   };
 
-  Actions.setFnBounds = function(fn, newBounds) {
-    return fn.bounds = newBounds;
-  };
-
   Actions.setCompoundFnCombiner = function(compoundFn, combiner) {
     compoundFn.combiner = combiner;
     return Compiler.setDirty();
@@ -148,6 +144,20 @@
   Actions.setChildFnVisible = function(childFn, newVisible) {
     childFn.visible = newVisible;
     return Compiler.setDirty();
+  };
+
+  Actions.panPlot = function(plot, domainOffset, rangeOffset) {
+    plot.domainCenter = numeric.add(plot.domainCenter, domainOffset);
+    return plot.rangeCenter = numeric.add(plot.rangeCenter, rangeOffset);
+  };
+
+  Actions.zoomPlot = function(plot, domainCenter, rangeCenter, scaleFactor) {
+    var domainOffset, rangeOffset;
+    domainOffset = numeric.sub(plot.domainCenter, domainCenter);
+    rangeOffset = numeric.sub(plot.rangeCenter, rangeCenter);
+    plot.domainCenter = numeric.add(domainCenter, numeric.mul(scaleFactor, domainOffset));
+    plot.rangeCenter = numeric.add(rangeCenter, numeric.mul(scaleFactor, rangeOffset));
+    return plot.scale *= scaleFactor;
   };
 
   Actions.selectFn = function(fn) {
@@ -737,12 +747,7 @@
     function DefinedFn() {
       DefinedFn.__super__.constructor.call(this);
       this.combiner = "last";
-      this.bounds = {
-        xMin: -5,
-        xMax: 5,
-        yMin: -5,
-        yMax: 5
-      };
+      this.plot = new C.Plot();
     }
 
     return DefinedFn;
@@ -852,6 +857,25 @@
       this.type = "cartesian";
     }
 
+    Plot.prototype.getBounds = function(width, height) {
+      var h, minDimension, w;
+      minDimension = Math.min(width, height);
+      w = width / minDimension;
+      h = height / minDimension;
+      return {
+        xMin: this.domainCenter[0] - this.scale * w,
+        xMax: this.domainCenter[0] + this.scale * w,
+        yMin: this.rangeCenter[0] - this.scale * h,
+        yMax: this.rangeCenter[0] + this.scale * h
+      };
+    };
+
+    Plot.prototype.getPixelSize = function(width, height) {
+      var minDimension;
+      minDimension = Math.min(width, height);
+      return 2 * this.scale / minDimension;
+    };
+
     return Plot;
 
   })();
@@ -880,6 +904,8 @@
     floor: numeric.floor,
     sin: numeric.sin
   };
+
+  builtIn.defaultPlot = new C.Plot();
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
@@ -1595,8 +1621,6 @@
 
 }).call(this);
 }, "view/DefinitionsView": function(exports, require, module) {(function() {
-  var defaultBounds;
-
   R.create("DefinitionsView", {
     propTypes: {
       appRoot: C.AppRoot
@@ -1632,25 +1656,18 @@
     }
   });
 
-  defaultBounds = {
-    xMin: -6,
-    xMax: 6,
-    yMin: -6,
-    yMax: 6
-  };
-
   R.create("DefinitionView", {
     propTypes: {
       fn: C.Fn
     },
     render: function() {
-      var bounds, className, exprString, fnString;
+      var className, exprString, fnString, plot;
       exprString = Compiler.getExprString(this.fn, "x");
       fnString = "(function (x) { return " + exprString + "; })";
       if (this.fn instanceof C.BuiltInFn) {
-        bounds = defaultBounds;
+        plot = builtIn.defaultPlot;
       } else {
-        bounds = this.fn.bounds;
+        plot = this.fn.plot;
       }
       className = R.cx({
         Definition: true,
@@ -1661,7 +1678,7 @@
       }, R.span({
         onMouseDown: this._onMouseDown
       }, R.ThumbnailPlotView({
-        bounds: bounds,
+        plot: plot,
         fn: this.fn
       })), this.fn instanceof C.BuiltInFn ? R.div({
         className: "Label"
@@ -1722,8 +1739,8 @@
     },
     _getLocalMouseCoords: function() {
       var bounds, rect, x, y;
-      bounds = this.fn.bounds;
       rect = this.getDOMNode().getBoundingClientRect();
+      bounds = this.fn.plot.getBounds(rect.width, rect.height);
       x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
       y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
       return {
@@ -1732,13 +1749,12 @@
       };
     },
     _findHitTarget: function() {
-      var bounds, childFn, distance, evaluated, found, foundDistance, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
+      var childFn, distance, evaluated, found, foundDistance, pixelSize, rect, x, y, _i, _len, _ref, _ref1;
       _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
       rect = this.getDOMNode().getBoundingClientRect();
-      bounds = this.fn.bounds;
-      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
+      pixelSize = this.fn.plot.getPixelSize(rect.width, rect.height);
       found = null;
-      foundDistance = config.hitTolerance * pixelWidth;
+      foundDistance = config.hitTolerance * pixelSize;
       _ref1 = this._getExpandedChildFns();
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
@@ -1752,36 +1768,36 @@
       return found;
     },
     render: function() {
-      var childFn, expandedChildFns, plots, _i, _len;
-      plots = [];
+      var childFn, expandedChildFns, exprs, _i, _len;
+      exprs = [];
       expandedChildFns = this._getExpandedChildFns();
       for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
         childFn = expandedChildFns[_i];
-        plots.push({
+        exprs.push({
           exprString: Compiler.getExprString(childFn, "x"),
           color: config.color.child
         });
       }
       if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
-        plots.push({
+        exprs.push({
           exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
           color: config.color.hovered
         });
       }
-      plots.push({
+      exprs.push({
         exprString: Compiler.getExprString(this.fn, "x"),
         color: config.color.main
       });
       if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
-        plots.push({
+        exprs.push({
           exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
           color: config.color.selected
         });
       }
-      plots = _.reject(plots, function(plot, plotIndex) {
+      exprs = _.reject(exprs, function(expr, exprIndex) {
         var i, _j, _ref, _ref1;
-        for (i = _j = _ref = plotIndex + 1, _ref1 = plots.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
-          if (plots[i].exprString === plot.exprString) {
+        for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
+          if (exprs[i].exprString === expr.exprString) {
             return true;
           }
         }
@@ -1796,12 +1812,13 @@
       }, R.div({
         className: "PlotContainer"
       }, R.GridView({
-        bounds: this.fn.bounds
+        plot: this.fn.plot
       }), R.ShaderCartesianView({
-        bounds: this.fn.bounds,
-        plots: plots
+        plot: this.fn.plot,
+        exprs: exprs
       }), UI.selectedChildFn ? R.ChildFnControlsView({
-        childFn: UI.selectedChildFn
+        childFn: UI.selectedChildFn,
+        plot: this.fn.plot
       }) : void 0));
     },
     _onMouseMove: function() {
@@ -1823,48 +1840,32 @@
       })(this));
     },
     _onWheel: function(e) {
-      var bounds, scale, scaleFactor, x, y, _ref;
+      var domainCenter, rangeCenter, scaleFactor, x, y, _ref;
       e.preventDefault();
       _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      bounds = this.fn.bounds;
+      domainCenter = [x, 0, 0, 0];
+      rangeCenter = [y, 0, 0, 0];
       scaleFactor = 1.1;
-      scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
-      return Actions.setFnBounds(this.fn, {
-        xMin: (bounds.xMin - x) * scale + x,
-        xMax: (bounds.xMax - x) * scale + x,
-        yMin: (bounds.yMin - y) * scale + y,
-        yMax: (bounds.yMax - y) * scale + y
-      });
+      if (e.deltaY < 0) {
+        scaleFactor = 1 / scaleFactor;
+      }
+      return Actions.zoomPlot(this.fn.plot, domainCenter, rangeCenter, scaleFactor);
     },
     _changeSelection: function() {
       return Actions.selectChildFn(this._findHitTarget());
     },
     _startPan: function(e) {
-      var originalBounds, originalX, originalY, rect, xScale, yScale;
-      originalX = e.clientX;
-      originalY = e.clientY;
-      originalBounds = {
-        xMin: this.fn.bounds.xMin,
-        xMax: this.fn.bounds.xMax,
-        yMin: this.fn.bounds.yMin,
-        yMax: this.fn.bounds.yMax
-      };
-      rect = this.getDOMNode().getBoundingClientRect();
-      xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width;
-      yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height;
+      var originalMouseCoords;
+      originalMouseCoords = this._getLocalMouseCoords();
       return UI.dragging = {
         cursor: config.cursor.grabbing,
         onMove: (function(_this) {
           return function(e) {
-            var dx, dy;
-            dx = e.clientX - originalX;
-            dy = e.clientY - originalY;
-            return Actions.setFnBounds(_this.fn, {
-              xMin: originalBounds.xMin - dx * xScale,
-              xMax: originalBounds.xMax - dx * xScale,
-              yMin: originalBounds.yMin + dy * yScale,
-              yMax: originalBounds.yMax + dy * yScale
-            });
+            var currentMouseCoords, dx, dy;
+            currentMouseCoords = _this._getLocalMouseCoords();
+            dx = currentMouseCoords.x - originalMouseCoords.x;
+            dy = currentMouseCoords.y - originalMouseCoords.y;
+            return Actions.panPlot(_this.fn.plot, [-dx, 0, 0, 0], [-dy, 0, 0, 0]);
           };
         })(this)
       };
@@ -1873,14 +1874,15 @@
 
   R.create("ChildFnControlsView", {
     propTypes: {
-      childFn: C.ChildFn
+      childFn: C.ChildFn,
+      plot: C.Plot
     },
     snap: function(value) {
-      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelWidth, precision, rect, smallSpacing, snapTolerance, _ref;
+      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
-      bounds = this.lookup("fn").bounds;
-      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
+      bounds = this.plot.getBounds(rect.width, rect.height);
+      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
       _ref = util.canvas.getSpacing({
         xMin: bounds.xMin,
         xMax: bounds.xMax,
@@ -1889,7 +1891,7 @@
         width: rect.width,
         height: rect.height
       }), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
-      snapTolerance = pixelWidth * config.snapTolerance;
+      snapTolerance = pixelSize * config.snapTolerance;
       nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
       if (Math.abs(value - nearestSnap) < snapTolerance) {
         value = nearestSnap;
@@ -1897,7 +1899,7 @@
         precision = Math.pow(10, digitPrecision);
         return util.floatToString(value, precision);
       }
-      digitPrecision = Math.floor(Math.log(pixelWidth) / Math.log(10));
+      digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10));
       precision = Math.pow(10, digitPrecision);
       return util.floatToString(value, precision);
     },
@@ -1905,11 +1907,13 @@
       return R.span({}, R.PointControlView({
         x: this.childFn.domainTranslate[0].getValue(),
         y: this.childFn.rangeTranslate[0].getValue(),
-        onChange: this._onTranslateChange
+        plot: this.plot,
+        onMove: this._onTranslateChange
       }), R.PointControlView({
         x: this.childFn.domainTranslate[0].getValue() + this.childFn.domainTransform[0][0].getValue(),
         y: this.childFn.rangeTranslate[0].getValue() + this.childFn.rangeTransform[0][0].getValue(),
-        onChange: this._onScaleChange
+        plot: this.plot,
+        onMove: this._onScaleChange
       }));
     },
     _onTranslateChange: function(x, y) {
@@ -1926,48 +1930,46 @@
     propTypes: {
       x: Number,
       y: Number,
-      onChange: Function
+      plot: C.Plot,
+      onMove: Function
     },
-    getDefaultProps: function() {
-      return {
-        onChange: function() {}
-      };
-    },
-    _onMouseDown: function(e) {
-      var container, rect;
-      util.preventDefault(e);
+    _refreshPosition: function() {
+      var bounds, container, el, rect;
+      el = this.getDOMNode();
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
-      return UI.dragging = {
-        onMove: (function(_this) {
-          return function(e) {
-            var bounds, x, y;
-            bounds = _this.lookup("fn").bounds;
-            x = (e.clientX - rect.left) / rect.width;
-            y = (e.clientY - rect.top) / rect.height;
-            x = util.lerp(x, 0, 1, bounds.xMin, bounds.xMax);
-            y = util.lerp(y, 1, 0, bounds.yMin, bounds.yMax);
-            return _this.onChange(x, y);
-          };
-        })(this)
-      };
-    },
-    style: function() {
-      var bounds, left, top;
-      bounds = this.lookup("fn").bounds;
-      top = util.lerp(this.y, bounds.yMin, bounds.yMax, 100, 0) + "%";
-      left = util.lerp(this.x, bounds.xMin, bounds.xMax, 0, 100) + "%";
-      return {
-        top: top,
-        left: left
-      };
+      bounds = this.plot.getBounds(rect.width, rect.height);
+      el.style.left = util.lerp(this.x, bounds.xMin, bounds.xMax, 0, rect.width) + "px";
+      return el.style.top = util.lerp(this.y, bounds.yMin, bounds.yMax, rect.height, 0) + "px";
     },
     render: function() {
       return R.div({
         className: "PointControl",
-        style: this.style(),
         onMouseDown: this._onMouseDown
       });
+    },
+    componentDidMount: function() {
+      return this._refreshPosition();
+    },
+    componentDidUpdate: function() {
+      return this._refreshPosition();
+    },
+    _onMouseDown: function(e) {
+      var bounds, container, rect;
+      util.preventDefault(e);
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      bounds = this.plot.getBounds(rect.width, rect.height);
+      return UI.dragging = {
+        onMove: (function(_this) {
+          return function(e) {
+            var x, y;
+            x = util.lerp(e.clientX, rect.left, rect.right, bounds.xMin, bounds.xMax);
+            y = util.lerp(e.clientY, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
+            return _this.onMove(x, y);
+          };
+        })(this)
+      };
     }
   });
 
@@ -2213,12 +2215,12 @@
       childFn: C.ChildFn
     },
     render: function() {
-      var bounds;
-      bounds = UI.selectedFn.bounds;
+      var plot;
+      plot = UI.selectedFn.plot;
       return R.div({
         className: "OutlineThumbnail"
       }, R.ThumbnailPlotView({
-        bounds: bounds,
+        plot: plot,
         fn: this.childFn
       }));
     }
@@ -2504,7 +2506,7 @@
       }
     },
     draw: function() {
-      var bounds, canvas, junk, name, numSamples, plot, plots, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, expr, exprs, junk, name, numSamples, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -2516,18 +2518,18 @@
         rect = shaderEl.getBoundingClientRect();
         setViewport(this.glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height);
         shaderView = shaderEl.dataFor;
-        plots = shaderView.plots;
-        bounds = shaderView.bounds;
+        exprs = shaderView.exprs;
+        bounds = shaderView.plot.getBounds(rect.width, rect.height);
         numSamples = rect.width / config.resolution;
-        for (_j = 0, _len1 = plots.length; _j < _len1; _j++) {
-          plot = plots[_j];
-          name = plot.exprString;
+        for (_j = 0, _len1 = exprs.length; _j < _len1; _j++) {
+          expr = exprs[_j];
+          name = expr.exprString;
           if (!this.programs[name]) {
             createCartesianProgram(this.glod, name, name);
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
-          drawCartesianProgram(this.glod, name, numSamples, plot.color, bounds);
+          drawCartesianProgram(this.glod, name, numSamples, expr.color, bounds);
         }
       }
       _ref = this.programs;
@@ -2647,17 +2649,17 @@
 }, "view/ThumbnailPlotView": function(exports, require, module) {(function() {
   R.create("ThumbnailPlotView", {
     propTypes: {
-      bounds: Object,
+      plot: C.Plot,
       fn: C.Fn
     },
     render: function() {
       return R.div({
         className: "PlotContainer"
       }, R.GridView({
-        bounds: this.bounds
+        plot: this.plot
       }), R.ShaderCartesianView({
-        bounds: this.bounds,
-        plots: [
+        plot: this.plot,
+        exprs: [
           {
             exprString: Compiler.getExprString(this.fn, "x"),
             color: config.color.main
@@ -2732,12 +2734,12 @@
 }, "view/plot/GridView": function(exports, require, module) {(function() {
   R.create("GridView", {
     propTypes: {
-      bounds: Object
+      plot: C.Plot
     },
     drawFn: function(canvas) {
       var ctx, xMax, xMin, yMax, yMin, _ref;
       ctx = canvas.getContext("2d");
-      _ref = this.bounds, xMin = _ref.xMin, xMax = _ref.xMax, yMin = _ref.yMin, yMax = _ref.yMax;
+      _ref = this.plot.getBounds(canvas.width, canvas.height), xMin = _ref.xMin, xMax = _ref.xMax, yMin = _ref.yMin, yMax = _ref.yMax;
       util.canvas.clear(ctx);
       return util.canvas.drawGrid(ctx, {
         xMin: xMin,
@@ -2747,7 +2749,7 @@
       });
     },
     shouldComponentUpdate: function(nextProps) {
-      return this.bounds !== nextProps.bounds;
+      return true;
     },
     render: function() {
       return R.CanvasView({
@@ -2760,8 +2762,8 @@
 }, "view/plot/ShaderCartesianView": function(exports, require, module) {(function() {
   R.create("ShaderCartesianView", {
     propTypes: {
-      bounds: Object,
-      plots: Array
+      plot: C.Plot,
+      exprs: Array
     },
     render: function() {
       return R.div({

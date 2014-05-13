@@ -14,8 +14,8 @@ R.create "MainPlotView",
     return result
 
   _getLocalMouseCoords: ->
-    bounds = @fn.bounds
     rect = @getDOMNode().getBoundingClientRect()
+    bounds = @fn.plot.getBounds(rect.width, rect.height)
     x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax)
     y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
     return {x, y}
@@ -24,11 +24,10 @@ R.create "MainPlotView",
     {x, y} = @_getLocalMouseCoords()
 
     rect = @getDOMNode().getBoundingClientRect()
-    bounds = @fn.bounds
-    pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
+    pixelSize = @fn.plot.getPixelSize(rect.width, rect.height)
 
     found = null
-    foundDistance = config.hitTolerance * pixelWidth
+    foundDistance = config.hitTolerance * pixelSize
 
     for childFn in @_getExpandedChildFns()
       evaluated = childFn.evaluate([x, 0, 0, 0])
@@ -41,41 +40,41 @@ R.create "MainPlotView",
     return found
 
   render: ->
-    plots = []
+    exprs = []
 
     expandedChildFns = @_getExpandedChildFns()
 
     # Child Fns
     for childFn in expandedChildFns
-      plots.push {
+      exprs.push {
         exprString: Compiler.getExprString(childFn, "x")
         color: config.color.child
       }
 
     # Hovered
     if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
-      plots.push {
+      exprs.push {
         exprString: Compiler.getExprString(UI.hoveredChildFn, "x")
         color: config.color.hovered
       }
 
     # Main
-    plots.push {
+    exprs.push {
       exprString: Compiler.getExprString(@fn, "x")
       color: config.color.main
     }
 
     # Selected
     if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
-      plots.push {
+      exprs.push {
         exprString: Compiler.getExprString(UI.selectedChildFn, "x")
         color: config.color.selected
       }
 
-    # Remove redundant plots
-    plots = _.reject plots, (plot, plotIndex) ->
-      for i in [plotIndex+1 ... plots.length]
-        if plots[i].exprString == plot.exprString
+    # Remove redundant exprs
+    exprs = _.reject exprs, (expr, exprIndex) ->
+      for i in [exprIndex+1 ... exprs.length]
+        if exprs[i].exprString == expr.exprString
           return true
       return false
 
@@ -88,16 +87,17 @@ R.create "MainPlotView",
     },
       R.div {className: "PlotContainer"},
         # Grid
-        R.GridView {bounds: @fn.bounds}
+        R.GridView {plot: @fn.plot}
 
         R.ShaderCartesianView {
-          bounds: @fn.bounds
-          plots: plots
+          plot: @fn.plot
+          exprs: exprs
         }
 
         if UI.selectedChildFn
           R.ChildFnControlsView {
             childFn: UI.selectedChildFn
+            plot: @fn.plot
           }
 
   _onMouseMove: ->
@@ -120,48 +120,30 @@ R.create "MainPlotView",
 
     {x, y} = @_getLocalMouseCoords()
 
-    bounds = @fn.bounds
+    domainCenter = [x, 0,0,0]
+    rangeCenter  = [y, 0,0,0]
 
     scaleFactor = 1.1
-    scale = if e.deltaY > 0 then scaleFactor else 1/scaleFactor
+    scaleFactor = 1 / scaleFactor if e.deltaY < 0
 
-    Actions.setFnBounds(@fn, {
-      xMin: (bounds.xMin - x) * scale + x
-      xMax: (bounds.xMax - x) * scale + x
-      yMin: (bounds.yMin - y) * scale + y
-      yMax: (bounds.yMax - y) * scale + y
-    })
+    Actions.zoomPlot(@fn.plot, domainCenter, rangeCenter, scaleFactor)
 
   _changeSelection: ->
     Actions.selectChildFn(@_findHitTarget())
 
   _startPan: (e) ->
-    originalX = e.clientX
-    originalY = e.clientY
-    originalBounds = {
-      xMin: @fn.bounds.xMin
-      xMax: @fn.bounds.xMax
-      yMin: @fn.bounds.yMin
-      yMax: @fn.bounds.yMax
-    }
-
-    rect = @getDOMNode().getBoundingClientRect()
-    xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width
-    yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height
+    originalMouseCoords = @_getLocalMouseCoords()
 
     UI.dragging = {
       cursor: config.cursor.grabbing
       onMove: (e) =>
-        dx = e.clientX - originalX
-        dy = e.clientY - originalY
-        Actions.setFnBounds(@fn, {
-          xMin: originalBounds.xMin - dx * xScale
-          xMax: originalBounds.xMax - dx * xScale
-          yMin: originalBounds.yMin + dy * yScale
-          yMax: originalBounds.yMax + dy * yScale
-        })
-    }
+        currentMouseCoords = @_getLocalMouseCoords()
 
+        dx = currentMouseCoords.x - originalMouseCoords.x
+        dy = currentMouseCoords.y - originalMouseCoords.y
+
+        Actions.panPlot(@fn.plot, [-dx, 0,0,0], [-dy, 0,0,0])
+    }
 
 
 
@@ -169,14 +151,14 @@ R.create "MainPlotView",
 R.create "ChildFnControlsView",
   propTypes:
     childFn: C.ChildFn
+    plot: C.Plot
 
   snap: (value) ->
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()
 
-    bounds = @lookup("fn").bounds
-
-    pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
+    bounds = @plot.getBounds(rect.width, rect.height)
+    pixelSize = @plot.getPixelSize(rect.width, rect.height)
 
     {largeSpacing, smallSpacing} = util.canvas.getSpacing({
       xMin: bounds.xMin
@@ -187,7 +169,7 @@ R.create "ChildFnControlsView",
       height: rect.height
     })
 
-    snapTolerance = pixelWidth * config.snapTolerance
+    snapTolerance = pixelSize * config.snapTolerance
 
     nearestSnap = Math.round(value / largeSpacing) * largeSpacing
     if Math.abs(value - nearestSnap) < snapTolerance
@@ -196,7 +178,7 @@ R.create "ChildFnControlsView",
       precision = Math.pow(10, digitPrecision)
       return util.floatToString(value, precision)
 
-    digitPrecision = Math.floor(Math.log(pixelWidth) / Math.log(10))
+    digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10))
     precision = Math.pow(10, digitPrecision)
 
     return util.floatToString(value, precision)
@@ -206,12 +188,14 @@ R.create "ChildFnControlsView",
       R.PointControlView {
         x: @childFn.domainTranslate[0].getValue()
         y: @childFn.rangeTranslate[0].getValue()
-        onChange: @_onTranslateChange
+        plot: @plot
+        onMove: @_onTranslateChange
       }
       R.PointControlView {
         x: @childFn.domainTranslate[0].getValue() + @childFn.domainTransform[0][0].getValue()
         y: @childFn.rangeTranslate[0].getValue()  + @childFn.rangeTransform[0][0].getValue()
-        onChange: @_onScaleChange
+        plot: @plot
+        onMove: @_onScaleChange
       }
 
   _onTranslateChange: (x, y) ->
@@ -231,11 +215,28 @@ R.create "PointControlView",
   propTypes:
     x: Number
     y: Number
-    onChange: Function
+    plot: C.Plot
+    onMove: Function
 
-  getDefaultProps: -> {
-    onChange: ->
-  }
+  _refreshPosition: ->
+    el = @getDOMNode()
+
+    container = @getDOMNode().closest(".PlotContainer")
+    rect = container.getBoundingClientRect()
+
+    bounds = @plot.getBounds(rect.width, rect.height)
+
+    el.style.left = util.lerp(@x, bounds.xMin, bounds.xMax, 0, rect.width)  + "px"
+    el.style.top  = util.lerp(@y, bounds.yMin, bounds.yMax, rect.height, 0) + "px"
+
+  render: ->
+    R.div {className: "PointControl", onMouseDown: @_onMouseDown}
+
+  componentDidMount: ->
+    @_refreshPosition()
+
+  componentDidUpdate: ->
+    @_refreshPosition()
 
   _onMouseDown: (e) ->
     util.preventDefault(e)
@@ -243,29 +244,11 @@ R.create "PointControlView",
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()
 
+    bounds = @plot.getBounds(rect.width, rect.height)
+
     UI.dragging = {
       onMove: (e) =>
-        bounds = @lookup("fn").bounds
-
-        x = (e.clientX - rect.left) / rect.width
-        y = (e.clientY - rect.top)  / rect.height
-
-        x = util.lerp(x, 0, 1, bounds.xMin, bounds.xMax)
-        y = util.lerp(y, 1, 0, bounds.yMin, bounds.yMax)
-
-        @onChange(x, y)
-    }
-
-
-  style: ->
-    bounds = @lookup("fn").bounds
-    top  = util.lerp(@y, bounds.yMin, bounds.yMax, 100, 0) + "%"
-    left = util.lerp(@x, bounds.xMin, bounds.xMax, 0, 100) + "%"
-    return {top, left}
-
-  render: ->
-    R.div {
-      className: "PointControl"
-      style: @style()
-      onMouseDown: @_onMouseDown
+        x = util.lerp(e.clientX, rect.left, rect.right, bounds.xMin, bounds.xMax)
+        y = util.lerp(e.clientY, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
+        @onMove(x, y)
     }

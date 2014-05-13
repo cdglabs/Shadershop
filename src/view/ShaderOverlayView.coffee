@@ -37,13 +37,13 @@ R.create "ShaderOverlayView",
       setViewport(@glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height)
 
       shaderView = shaderEl.dataFor
-      plots = shaderView.plots
-      bounds = shaderView.bounds
+      exprs = shaderView.exprs
+      bounds = shaderView.plot.getBounds(rect.width, rect.height)
 
       numSamples = rect.width / config.resolution
 
-      for plot in plots
-        name = plot.exprString
+      for expr in exprs
+        name = expr.exprString
         unless @programs[name]
 
           createCartesianProgram(@glod, name, name)
@@ -52,7 +52,7 @@ R.create "ShaderOverlayView",
           @programs[name] = true
         usedPrograms[name] = true
 
-        drawCartesianProgram(@glod, name, numSamples, plot.color, bounds)
+        drawCartesianProgram(@glod, name, numSamples, expr.color, bounds)
         # drawColorMapProgram(@glod, name, bounds)
 
     # Delete unused programs
