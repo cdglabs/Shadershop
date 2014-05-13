@@ -108,7 +108,7 @@ R.create "MainPlotView",
 
   _onMouseDown: (e) ->
     return if e.target.closest(".PointControl")
-    UI.preventDefault(e)
+    util.preventDefault(e)
 
     @_startPan(e)
 
@@ -238,7 +238,7 @@ R.create "PointControlView",
   }
 
   _onMouseDown: (e) ->
-    UI.preventDefault(e)
+    util.preventDefault(e)
 
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()

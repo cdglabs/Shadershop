@@ -49,7 +49,7 @@ R.create "OutlineItemView",
   handleMouseDown: (e) ->
     return unless e.target.classList.contains("OutlineRow")
 
-    UI.preventDefault(e)
+    util.preventDefault(e)
 
     UI.selectChildFn(@childFn)
 

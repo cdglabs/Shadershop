@@ -153,11 +153,6 @@
       return window.addEventListener("mouseup", this.handleWindowMouseUp);
     };
 
-    _Class.prototype.preventDefault = function(e) {
-      e.preventDefault();
-      return util.selection.set(null);
-    };
-
     _Class.prototype.handleWindowMouseMove = function(e) {
       var _ref;
       this.mousePosition = {
@@ -1350,6 +1345,11 @@
     return vertical && horizontal;
   };
 
+  util.preventDefault = function(e) {
+    e.preventDefault();
+    return util.selection.set(null);
+  };
+
   util.lerp = function(x, dMin, dMax, rMin, rMax) {
     var ratio;
     ratio = (x - dMin) / (dMax - dMin);
@@ -1648,7 +1648,7 @@
     },
     _onMouseDown: function(e) {
       var addChildFn, selectFn;
-      UI.preventDefault(e);
+      util.preventDefault(e);
       addChildFn = (function(_this) {
         return function() {
           return Actions.addChildFn(_this.fn);
@@ -1789,7 +1789,7 @@
       if (e.target.closest(".PointControl")) {
         return;
       }
-      UI.preventDefault(e);
+      util.preventDefault(e);
       this._startPan(e);
       return util.onceDragConsummated(e, null, (function(_this) {
         return function() {
@@ -1910,7 +1910,7 @@
     },
     _onMouseDown: function(e) {
       var container, rect;
-      UI.preventDefault(e);
+      util.preventDefault(e);
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
       return UI.dragging = {
@@ -2012,7 +2012,7 @@
       if (!e.target.classList.contains("OutlineRow")) {
         return;
       }
-      UI.preventDefault(e);
+      util.preventDefault(e);
       UI.selectChildFn(this.childFn);
       el = this.getDOMNode();
       rect = el.getMarginRect();

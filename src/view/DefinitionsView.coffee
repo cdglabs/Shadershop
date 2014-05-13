@@ -71,7 +71,7 @@ R.create "DefinitionView",
         }
 
   _onMouseDown: (e) ->
-    UI.preventDefault(e)
+    util.preventDefault(e)
 
     addChildFn = =>
       Actions.addChildFn(@fn)
