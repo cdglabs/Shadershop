@@ -123,6 +123,7 @@ require("./ShaderOverlayView")
 
 require("./DefinitionsView")
 require("./MainPlotView")
+require("./ThumbnailPlotView")
 require("./OutlineView")
 require("./VariableView")
 

@@ -186,6 +186,16 @@ class C.ChildFn extends C.Fn
 
 
 
+class C.Plot
+  constructor: ->
+    @domainCenter = util.constructVector(config.dimensions, 0)
+    @rangeCenter = util.constructVector(config.dimensions, 0)
+    @scale = 5 # minimum distance that can be "seen" from the center
+
+    @type = "cartesian"
+
+
+
 
 class C.AppRoot
   constructor: ->

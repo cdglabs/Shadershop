@@ -21,6 +21,7 @@ findParentOf = (childFnTarget) ->
 Actions.addDefinedFn = ->
   fn = new C.DefinedFn()
   appRoot.fns.push(fn)
+  Compiler.setDirty()
   Actions.selectFn(fn)
 
 Actions.addChildFn = (fn) ->

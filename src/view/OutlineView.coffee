@@ -209,18 +209,7 @@ R.create "OutlineThumbnailView",
   render: ->
     bounds = UI.selectedFn.bounds # HACK
     R.div {className: "OutlineThumbnail"},
-      R.div {className: "PlotContainer"},
-        R.GridView {bounds}
-
-        R.ShaderCartesianView {
-          bounds
-          plots: [
-            {
-              exprString: Compiler.getExprString(@childFn, "x")
-              color: config.color.main
-            }
-          ]
-        }
+      R.ThumbnailPlotView {bounds, fn: @childFn}
 
 # =============================================================================
 

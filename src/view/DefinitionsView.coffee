@@ -48,18 +48,8 @@ R.create "DefinitionView",
     R.div {
       className: className
     },
-      R.div {className: "PlotContainer", onMouseDown: @_onMouseDown},
-        R.GridView {bounds}
-
-        R.ShaderCartesianView {
-          bounds
-          plots: [
-            {
-              exprString: Compiler.getExprString(@fn, "x")
-              color: config.color.main
-            }
-          ]
-        }
+      R.span {onMouseDown: @_onMouseDown},
+        R.ThumbnailPlotView {bounds, fn: @fn}
 
       if @fn instanceof C.BuiltInFn
         R.div {className: "Label"}, @fn.label

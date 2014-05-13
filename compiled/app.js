@@ -78,6 +78,7 @@
     var fn;
     fn = new C.DefinedFn();
     appRoot.fns.push(fn);
+    Compiler.setDirty();
     return Actions.selectFn(fn);
   };
 
@@ -842,6 +843,18 @@
     return ChildFn;
 
   })(C.Fn);
+
+  C.Plot = (function() {
+    function Plot() {
+      this.domainCenter = util.constructVector(config.dimensions, 0);
+      this.rangeCenter = util.constructVector(config.dimensions, 0);
+      this.scale = 5;
+      this.type = "cartesian";
+    }
+
+    return Plot;
+
+  })();
 
   C.AppRoot = (function() {
     function AppRoot() {
@@ -1645,19 +1658,11 @@
       });
       return R.div({
         className: className
-      }, R.div({
-        className: "PlotContainer",
+      }, R.span({
         onMouseDown: this._onMouseDown
-      }, R.GridView({
-        bounds: bounds
-      }), R.ShaderCartesianView({
+      }, R.ThumbnailPlotView({
         bounds: bounds,
-        plots: [
-          {
-            exprString: Compiler.getExprString(this.fn, "x"),
-            color: config.color.main
-          }
-        ]
+        fn: this.fn
       })), this.fn instanceof C.BuiltInFn ? R.div({
         className: "Label"
       }, this.fn.label) : R.TextFieldView({
@@ -2212,19 +2217,10 @@
       bounds = UI.selectedFn.bounds;
       return R.div({
         className: "OutlineThumbnail"
-      }, R.div({
-        className: "PlotContainer"
-      }, R.GridView({
-        bounds: bounds
-      }), R.ShaderCartesianView({
+      }, R.ThumbnailPlotView({
         bounds: bounds,
-        plots: [
-          {
-            exprString: Compiler.getExprString(this.childFn, "x"),
-            color: config.color.main
-          }
-        ]
-      })));
+        fn: this.childFn
+      }));
     }
   });
 
@@ -2464,6 +2460,8 @@
 
   require("./MainPlotView");
 
+  require("./ThumbnailPlotView");
+
   require("./OutlineView");
 
   require("./VariableView");
@@ -2644,6 +2642,30 @@
     glod.ready().triangles().drawArrays(0, 6);
     return glod.end();
   };
+
+}).call(this);
+}, "view/ThumbnailPlotView": function(exports, require, module) {(function() {
+  R.create("ThumbnailPlotView", {
+    propTypes: {
+      bounds: Object,
+      fn: C.Fn
+    },
+    render: function() {
+      return R.div({
+        className: "PlotContainer"
+      }, R.GridView({
+        bounds: this.bounds
+      }), R.ShaderCartesianView({
+        bounds: this.bounds,
+        plots: [
+          {
+            exprString: Compiler.getExprString(this.fn, "x"),
+            color: config.color.main
+          }
+        ]
+      }));
+    }
+  });
 
 }).call(this);
 }, "view/VariableView": function(exports, require, module) {(function() {
