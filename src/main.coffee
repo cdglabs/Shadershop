@@ -5,6 +5,7 @@
 require("./config")
 require("./util/util")
 require("./model/C")
+require("./Actions")
 require("./view/R")
 
 

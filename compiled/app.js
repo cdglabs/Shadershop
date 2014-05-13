@@ -48,7 +48,74 @@
     };
   }
   return this.require.define;
-}).call(this)({"UI": function(exports, require, module) {(function() {
+}).call(this)({"Actions": function(exports, require, module) {(function() {
+  var Actions, findParentOf;
+
+  window.Actions = Actions = {};
+
+  findParentOf = function(childFnTarget) {
+    var recurse;
+    recurse = function(compoundFn) {
+      var childFn, _i, _len, _ref;
+      if (_.contains(compoundFn.childFns, childFnTarget)) {
+        return compoundFn;
+      }
+      _ref = compoundFn.childFns;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        childFn = _ref[_i];
+        if (childFn.fn instanceof C.CompoundFn) {
+          if (recurse(childFn.fn)) {
+            return childFn.fn;
+          }
+        }
+      }
+      return null;
+    };
+    return recurse(UI.selectedFn);
+  };
+
+  Actions.addDefinedFn = function() {
+    var fn;
+    fn = new C.DefinedFn();
+    appRoot.fns.push(fn);
+    return Actions.selectFn(fn);
+  };
+
+  Actions.addChildFn = function(fn) {
+    var childFn, parent;
+    if (UI.selectedChildFn) {
+      if (UI.selectedChildFn.fn instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFn)) {
+        parent = UI.selectedChildFn.fn;
+      } else {
+        parent = findParentOf(UI.selectedChildFn);
+      }
+    }
+    if (parent == null) {
+      parent = UI.selectedFn;
+    }
+    childFn = new C.ChildFn(fn);
+    parent.childFns.push(childFn);
+    return Actions.selectChildFn(childFn);
+  };
+
+  Actions.changeFnLabel = function(fn, newValue) {
+    return fn.label = newValue;
+  };
+
+  Actions.selectFn = function(fn) {
+    if (!(fn instanceof C.DefinedFn)) {
+      return;
+    }
+    UI.selectedFn = fn;
+    return UI.selectedChildFn = null;
+  };
+
+  Actions.selectChildFn = function(childFn) {
+    return UI.selectedChildFn = childFn;
+  };
+
+}).call(this);
+}, "UI": function(exports, require, module) {(function() {
   var UI,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -136,13 +203,6 @@
       return this.selectedChildFn = childFn;
     };
 
-    _Class.prototype.addFn = function(appRoot) {
-      var fn;
-      fn = new C.DefinedFn();
-      appRoot.fns.push(fn);
-      return this.selectFn(fn);
-    };
-
     _Class.prototype.addChildFn = function(fn) {
       var childFn, parent;
       if (this.selectedChildFn) {
@@ -207,69 +267,6 @@
       var id;
       id = C.id(childFn);
       return this.expandedChildFns[id] = expanded;
-    };
-
-    _Class.prototype.startVariableScrub = function(opts) {
-      var cursor, onMove, variable;
-      variable = opts.variable;
-      cursor = opts.cursor;
-      onMove = opts.onMove;
-      return UI.dragging = {
-        cursor: cursor,
-        onMove: (function(_this) {
-          return function(e) {
-            var newValueString;
-            newValueString = onMove(e);
-            return variable.valueString = newValueString;
-          };
-        })(this)
-      };
-    };
-
-    _Class.prototype.setAutoFocus = function(opts) {
-      if (opts.descendantOf == null) {
-        opts.descendantOf = [];
-      }
-      if (!_.isArray(opts.descendantOf)) {
-        opts.descendantOf = [opts.descendantOf];
-      }
-      if (opts.props == null) {
-        opts.props = {};
-      }
-      if (opts.location == null) {
-        opts.location = "end";
-      }
-      return this.autofocus = opts;
-    };
-
-    _Class.prototype.attemptAutoFocus = function(textFieldView) {
-      var el, matchesDescendantOf, matchesProps;
-      if (!this.autofocus) {
-        return;
-      }
-      matchesDescendantOf = _.every(this.autofocus.descendantOf, (function(_this) {
-        return function(ancestorView) {
-          return textFieldView.lookupView(ancestorView);
-        };
-      })(this));
-      if (!matchesDescendantOf) {
-        return;
-      }
-      matchesProps = _.every(this.autofocus.props, (function(_this) {
-        return function(propValue, propName) {
-          return textFieldView.lookup(propName) === propValue;
-        };
-      })(this));
-      if (!matchesProps) {
-        return;
-      }
-      el = textFieldView.getDOMNode();
-      if (this.autofocus.location === "start") {
-        util.selection.setAtStart(el);
-      } else if (this.autofocus.location === "end") {
-        util.selection.setAtEnd(el);
-      }
-      return this.autofocus = null;
     };
 
     return _Class;
@@ -343,6 +340,8 @@
   require("./util/util");
 
   require("./model/C");
+
+  require("./Actions");
 
   require("./view/R");
 
@@ -1557,9 +1556,6 @@
     propTypes: {
       appRoot: C.AppRoot
     },
-    addFn: function() {
-      return UI.addFn(this.appRoot);
-    },
     render: function() {
       return R.div({
         className: "Definitions"
@@ -1583,8 +1579,11 @@
         className: "AddDefinition"
       }, R.button({
         className: "AddButton",
-        onClick: this.addFn
+        onClick: this._onAddButtonClick
       })));
+    },
+    _onAddButtonClick: function() {
+      return Actions.addDefinedFn();
     }
   });
 
@@ -1598,24 +1597,6 @@
   R.create("DefinitionView", {
     propTypes: {
       fn: C.Fn
-    },
-    handleMouseDown: function(e) {
-      var addChildFn, selectFn;
-      UI.preventDefault(e);
-      addChildFn = (function(_this) {
-        return function() {
-          return UI.addChildFn(_this.fn);
-        };
-      })(this);
-      selectFn = (function(_this) {
-        return function() {
-          return UI.selectFn(_this.fn);
-        };
-      })(this);
-      return util.onceDragConsummated(e, addChildFn, selectFn);
-    },
-    handleLabelInput: function(newValue) {
-      return this.fn.label = newValue;
     },
     render: function() {
       var bounds, className, exprString, fnString;
@@ -1634,7 +1615,7 @@
         className: className
       }, R.div({
         className: "PlotContainer",
-        onMouseDown: this.handleMouseDown
+        onMouseDown: this._onMouseDown
       }, R.GridView({
         bounds: bounds
       }), R.ShaderCartesianView({
@@ -1650,8 +1631,26 @@
       }, this.fn.label) : R.TextFieldView({
         className: "Label",
         value: this.fn.label,
-        onInput: this.handleLabelInput
+        onInput: this._onLabelInput
       }));
+    },
+    _onMouseDown: function(e) {
+      var addChildFn, selectFn;
+      UI.preventDefault(e);
+      addChildFn = (function(_this) {
+        return function() {
+          return Actions.addChildFn(_this.fn);
+        };
+      })(this);
+      selectFn = (function(_this) {
+        return function() {
+          return Actions.selectFn(_this.fn);
+        };
+      })(this);
+      return util.onceDragConsummated(e, addChildFn, selectFn);
+    },
+    _onLabelInput: function(newValue) {
+      return Actions.changeFnLabel(this.fn, newValue);
     }
   });
 
@@ -3612,8 +3611,7 @@ Glod.prototype.allocv = function(id, v, f) {
       if (el.textContent !== this.value) {
         el.textContent = this.value;
       }
-      this._isDirty = false;
-      return UI.attemptAutoFocus(this);
+      return this._isDirty = false;
     },
     componentDidMount: function() {
       return this.refresh();

@@ -2,9 +2,6 @@ R.create "DefinitionsView",
   propTypes:
     appRoot: C.AppRoot
 
-  addFn: ->
-    UI.addFn(@appRoot)
-
   render: ->
     R.div {className: "Definitions"},
 
@@ -17,7 +14,10 @@ R.create "DefinitionsView",
         R.DefinitionView {fn, key: C.id(fn)}
 
       R.div {className: "AddDefinition"},
-        R.button {className: "AddButton", onClick: @addFn}
+        R.button {className: "AddButton", onClick: @_onAddButtonClick}
+
+  _onAddButtonClick: ->
+    Actions.addDefinedFn()
 
 
 defaultBounds = {
@@ -30,21 +30,6 @@ defaultBounds = {
 R.create "DefinitionView",
   propTypes:
     fn: C.Fn
-
-  handleMouseDown: (e) ->
-    UI.preventDefault(e)
-
-    addChildFn = =>
-      UI.addChildFn(@fn)
-
-    selectFn = =>
-      UI.selectFn(@fn)
-
-    util.onceDragConsummated(e, addChildFn, selectFn)
-
-
-  handleLabelInput: (newValue) ->
-    @fn.label = newValue
 
   render: ->
     exprString = @fn.getExprString("x")
@@ -63,7 +48,7 @@ R.create "DefinitionView",
     R.div {
       className: className
     },
-      R.div {className: "PlotContainer", onMouseDown: @handleMouseDown},
+      R.div {className: "PlotContainer", onMouseDown: @_onMouseDown},
         R.GridView {bounds}
 
         R.ShaderCartesianView {
@@ -82,6 +67,20 @@ R.create "DefinitionView",
         R.TextFieldView {
           className: "Label"
           value: @fn.label
-          onInput: @handleLabelInput
+          onInput: @_onLabelInput
         }
+
+  _onMouseDown: (e) ->
+    UI.preventDefault(e)
+
+    addChildFn = =>
+      Actions.addChildFn(@fn)
+
+    selectFn = =>
+      Actions.selectFn(@fn)
+
+    util.onceDragConsummated(e, addChildFn, selectFn)
+
+  _onLabelInput: (newValue) ->
+    Actions.changeFnLabel(@fn, newValue)
 

@@ -70,11 +70,6 @@ window.UI = UI = new class
   selectChildFn: (childFn) ->
     @selectedChildFn = childFn
 
-  addFn: (appRoot) ->
-    fn = new C.DefinedFn()
-    appRoot.fns.push(fn)
-    @selectFn(fn)
-
   addChildFn: (fn) ->
     if @selectedChildFn
       if @selectedChildFn.fn instanceof C.CompoundFn and @isChildFnExpanded(@selectedChildFn)
@@ -119,59 +114,4 @@ window.UI = UI = new class
   setChildFnExpanded: (childFn, expanded) ->
     id = C.id(childFn)
     @expandedChildFns[id] = expanded
-
-
-  # ===========================================================================
-  # Scrubbing variables
-  # ===========================================================================
-
-  startVariableScrub: (opts) ->
-    variable = opts.variable
-    cursor = opts.cursor
-    onMove = opts.onMove
-    # onMove should be a function which returns a valueString
-
-    UI.dragging = {
-      cursor
-      onMove: (e) =>
-        newValueString = onMove(e)
-        variable.valueString = newValueString
-    }
-
-
-
-  # ===========================================================================
-  # Auto Focus
-  # ===========================================================================
-
-  setAutoFocus: (opts) ->
-    opts.descendantOf ?= []
-    if !_.isArray(opts.descendantOf)
-      opts.descendantOf = [opts.descendantOf]
-
-    opts.props ?= {}
-
-    opts.location ?= "end"
-
-    @autofocus = opts
-
-  attemptAutoFocus: (textFieldView) ->
-    return unless @autofocus
-
-    matchesDescendantOf = _.every @autofocus.descendantOf, (ancestorView) =>
-      textFieldView.lookupView(ancestorView)
-    return unless matchesDescendantOf
-
-    matchesProps = _.every @autofocus.props, (propValue, propName) =>
-      textFieldView.lookup(propName) == propValue
-    return unless matchesProps
-
-    # Found a match, focus it.
-    el = textFieldView.getDOMNode()
-    if @autofocus.location == "start"
-      util.selection.setAtStart(el)
-    else if @autofocus.location == "end"
-      util.selection.setAtEnd(el)
-
-    @autofocus = null
 

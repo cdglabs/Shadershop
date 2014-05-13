@@ -29,8 +29,6 @@ R.create "TextFieldView",
       el.textContent = @value
     @_isDirty = false
 
-    UI.attemptAutoFocus(this)
-
   componentDidMount: -> @refresh()
   componentDidUpdate: -> @refresh()
 
