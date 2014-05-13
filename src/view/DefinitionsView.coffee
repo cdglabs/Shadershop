@@ -82,5 +82,5 @@ R.create "DefinitionView",
     util.onceDragConsummated(e, addChildFn, selectFn)
 
   _onLabelInput: (newValue) ->
-    Actions.changeFnLabel(@fn, newValue)
+    Actions.setFnLabel(@fn, newValue)
 

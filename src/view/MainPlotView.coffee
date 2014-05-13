@@ -2,95 +2,7 @@ R.create "MainPlotView",
   propTypes:
     fn: C.DefinedFn
 
-  getLocalMouseCoords: ->
-    bounds = @fn.bounds
-    rect = @getDOMNode().getBoundingClientRect()
-    x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax)
-    y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
-    return {x, y}
-
-  findHitTarget: ->
-    {x, y} = @getLocalMouseCoords()
-
-    rect = @getDOMNode().getBoundingClientRect()
-    bounds = @fn.bounds
-    pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
-
-    found = null
-    foundDistance = config.hitTolerance * pixelWidth
-
-    for childFn in @getExpandedChildFns()
-      evaluated = childFn.evaluate([x, 0, 0, 0])
-
-      distance = Math.abs(y - evaluated[0])
-      if distance < foundDistance
-        found = childFn
-        foundDistance = distance
-
-    return found
-
-  changeSelection: ->
-    UI.selectChildFn(@findHitTarget())
-
-  handleMouseMove: ->
-    UI.hoveredChildFn = @findHitTarget()
-
-  handleMouseLeave: ->
-    UI.hoveredChildFn = null
-
-  startPan: (e) ->
-    originalX = e.clientX
-    originalY = e.clientY
-    originalBounds = {
-      xMin: @fn.bounds.xMin
-      xMax: @fn.bounds.xMax
-      yMin: @fn.bounds.yMin
-      yMax: @fn.bounds.yMax
-    }
-
-    rect = @getDOMNode().getBoundingClientRect()
-    xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width
-    yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height
-
-    UI.dragging = {
-      cursor: config.cursor.grabbing
-      onMove: (e) =>
-        dx = e.clientX - originalX
-        dy = e.clientY - originalY
-        @fn.bounds = {
-          xMin: originalBounds.xMin - dx * xScale
-          xMax: originalBounds.xMax - dx * xScale
-          yMin: originalBounds.yMin + dy * yScale
-          yMax: originalBounds.yMax + dy * yScale
-        }
-    }
-
-    util.onceDragConsummated e, null, =>
-      @changeSelection()
-
-  handleMouseDown: (e) ->
-    return if e.target.closest(".PointControl")
-    UI.preventDefault(e)
-    @startPan(e)
-
-  handleWheel: (e) ->
-    e.preventDefault()
-
-    {x, y} = @getLocalMouseCoords()
-
-    bounds = @fn.bounds
-
-    scaleFactor = 1.1
-    scale = if e.deltaY > 0 then scaleFactor else 1/scaleFactor
-
-    @fn.bounds = {
-      xMin: (bounds.xMin - x) * scale + x
-      xMax: (bounds.xMax - x) * scale + x
-      yMin: (bounds.yMin - y) * scale + y
-      yMax: (bounds.yMax - y) * scale + y
-    }
-
-  getExpandedChildFns: ->
+  _getExpandedChildFns: ->
     result = []
     recurse = (childFns) ->
       for childFn in childFns
@@ -101,11 +13,37 @@ R.create "MainPlotView",
     recurse(@fn.childFns)
     return result
 
+  _getLocalMouseCoords: ->
+    bounds = @fn.bounds
+    rect = @getDOMNode().getBoundingClientRect()
+    x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax)
+    y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
+    return {x, y}
+
+  _findHitTarget: ->
+    {x, y} = @_getLocalMouseCoords()
+
+    rect = @getDOMNode().getBoundingClientRect()
+    bounds = @fn.bounds
+    pixelWidth = (bounds.xMax - bounds.xMin) / rect.width
+
+    found = null
+    foundDistance = config.hitTolerance * pixelWidth
+
+    for childFn in @_getExpandedChildFns()
+      evaluated = childFn.evaluate([x, 0, 0, 0])
+
+      distance = Math.abs(y - evaluated[0])
+      if distance < foundDistance
+        found = childFn
+        foundDistance = distance
+
+    return found
 
   render: ->
     plots = []
 
-    expandedChildFns = @getExpandedChildFns()
+    expandedChildFns = @_getExpandedChildFns()
 
     # Child Fns
     for childFn in expandedChildFns
@@ -143,10 +81,10 @@ R.create "MainPlotView",
 
     R.div {
       className: "MainPlot",
-      onMouseDown: @handleMouseDown,
-      onWheel: @handleWheel,
-      onMouseMove: @handleMouseMove,
-      onMouseLeave: @handleMouseLeave
+      onMouseDown: @_onMouseDown,
+      onWheel: @_onWheel,
+      onMouseMove: @_onMouseMove,
+      onMouseLeave: @_onMouseLeave
     },
       R.div {className: "PlotContainer"},
         # Grid
@@ -161,6 +99,71 @@ R.create "MainPlotView",
           R.ChildFnControlsView {
             childFn: UI.selectedChildFn
           }
+
+  _onMouseMove: ->
+    Actions.hoverChildFn(@_findHitTarget())
+
+  _onMouseLeave: ->
+    Actions.hoverChildFn(null)
+
+  _onMouseDown: (e) ->
+    return if e.target.closest(".PointControl")
+    UI.preventDefault(e)
+
+    @_startPan(e)
+
+    util.onceDragConsummated e, null, =>
+      @_changeSelection()
+
+  _onWheel: (e) ->
+    e.preventDefault()
+
+    {x, y} = @_getLocalMouseCoords()
+
+    bounds = @fn.bounds
+
+    scaleFactor = 1.1
+    scale = if e.deltaY > 0 then scaleFactor else 1/scaleFactor
+
+    Actions.setFnBounds(@fn, {
+      xMin: (bounds.xMin - x) * scale + x
+      xMax: (bounds.xMax - x) * scale + x
+      yMin: (bounds.yMin - y) * scale + y
+      yMax: (bounds.yMax - y) * scale + y
+    })
+
+  _changeSelection: ->
+    Actions.selectChildFn(@_findHitTarget())
+
+  _startPan: (e) ->
+    originalX = e.clientX
+    originalY = e.clientY
+    originalBounds = {
+      xMin: @fn.bounds.xMin
+      xMax: @fn.bounds.xMax
+      yMin: @fn.bounds.yMin
+      yMax: @fn.bounds.yMax
+    }
+
+    rect = @getDOMNode().getBoundingClientRect()
+    xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width
+    yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height
+
+    UI.dragging = {
+      cursor: config.cursor.grabbing
+      onMove: (e) =>
+        dx = e.clientX - originalX
+        dy = e.clientY - originalY
+        Actions.setFnBounds(@fn, {
+          xMin: originalBounds.xMin - dx * xScale
+          xMax: originalBounds.xMax - dx * xScale
+          yMin: originalBounds.yMin + dy * yScale
+          yMax: originalBounds.yMax + dy * yScale
+        })
+    }
+
+
+
 
 
 R.create "ChildFnControlsView",
@@ -198,26 +201,28 @@ R.create "ChildFnControlsView",
 
     return util.floatToString(value, precision)
 
-  handleTranslateChange: (x, y) ->
-    @childFn.domainTranslate[0].valueString = @snap(x)
-    @childFn.rangeTranslate[0].valueString  = @snap(y)
-
-  handleScaleChange: (x, y) ->
-    @childFn.domainTransform[0][0].valueString = @snap(x - @childFn.domainTranslate[0].getValue())
-    @childFn.rangeTransform[0][0].valueString  = @snap(y - @childFn.rangeTranslate[0].getValue())
-
   render: ->
     R.span {},
       R.PointControlView {
         x: @childFn.domainTranslate[0].getValue()
         y: @childFn.rangeTranslate[0].getValue()
-        onChange: @handleTranslateChange
+        onChange: @_onTranslateChange
       }
       R.PointControlView {
         x: @childFn.domainTranslate[0].getValue() + @childFn.domainTransform[0][0].getValue()
         y: @childFn.rangeTranslate[0].getValue()  + @childFn.rangeTransform[0][0].getValue()
-        onChange: @handleScaleChange
+        onChange: @_onScaleChange
       }
+
+  _onTranslateChange: (x, y) ->
+    Actions.setVariableValueString(@childFn.domainTranslate[0], @snap(x))
+    Actions.setVariableValueString(@childFn.rangeTranslate[0] , @snap(y))
+
+  _onScaleChange: (x, y) ->
+    Actions.setVariableValueString(@childFn.domainTransform[0][0], @snap(x - @childFn.domainTranslate[0].getValue()) )
+    Actions.setVariableValueString(@childFn.rangeTransform[0][0] , @snap(y - @childFn.rangeTranslate[0].getValue())  )
+
+
 
 
 
@@ -232,7 +237,7 @@ R.create "PointControlView",
     onChange: ->
   }
 
-  handleMouseDown: (e) ->
+  _onMouseDown: (e) ->
     UI.preventDefault(e)
 
     container = @getDOMNode().closest(".PlotContainer")
@@ -262,5 +267,5 @@ R.create "PointControlView",
     R.div {
       className: "PointControl"
       style: @style()
-      onMouseDown: @handleMouseDown
+      onMouseDown: @_onMouseDown
     }

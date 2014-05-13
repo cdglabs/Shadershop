@@ -40,11 +40,14 @@ Actions.addChildFn = (fn) ->
 # Manipulating Fn incidentals
 # =============================================================================
 
-Actions.changeFnLabel = (fn, newValue) ->
+Actions.setFnLabel = (fn, newValue) ->
   fn.label = newValue
 
+Actions.setFnBounds = (fn, newBounds) ->
+  fn.bounds = newBounds
 
-
+Actions.setVariableValueString = (variable, newValueString) ->
+  variable.valueString = newValueString
 
 # =============================================================================
 # Changing UI state (selection, hover)
@@ -58,7 +61,8 @@ Actions.selectFn = (fn) ->
 Actions.selectChildFn = (childFn) ->
   UI.selectedChildFn = childFn
 
-
+Actions.hoverChildFn = (childFn) ->
+  UI.hoveredChildFn = childFn
 
 
 

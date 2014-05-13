@@ -98,8 +98,16 @@
     return Actions.selectChildFn(childFn);
   };
 
-  Actions.changeFnLabel = function(fn, newValue) {
+  Actions.setFnLabel = function(fn, newValue) {
     return fn.label = newValue;
+  };
+
+  Actions.setFnBounds = function(fn, newBounds) {
+    return fn.bounds = newBounds;
+  };
+
+  Actions.setVariableValueString = function(variable, newValueString) {
+    return variable.valueString = newValueString;
   };
 
   Actions.selectFn = function(fn) {
@@ -112,6 +120,10 @@
 
   Actions.selectChildFn = function(childFn) {
     return UI.selectedChildFn = childFn;
+  };
+
+  Actions.hoverChildFn = function(childFn) {
+    return UI.hoveredChildFn = childFn;
   };
 
 }).call(this);
@@ -1650,7 +1662,7 @@
       return util.onceDragConsummated(e, addChildFn, selectFn);
     },
     _onLabelInput: function(newValue) {
-      return Actions.changeFnLabel(this.fn, newValue);
+      return Actions.setFnLabel(this.fn, newValue);
     }
   });
 
@@ -1660,103 +1672,7 @@
     propTypes: {
       fn: C.DefinedFn
     },
-    getLocalMouseCoords: function() {
-      var bounds, rect, x, y;
-      bounds = this.fn.bounds;
-      rect = this.getDOMNode().getBoundingClientRect();
-      x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
-      y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
-      return {
-        x: x,
-        y: y
-      };
-    },
-    findHitTarget: function() {
-      var bounds, childFn, distance, evaluated, found, foundDistance, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
-      _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      rect = this.getDOMNode().getBoundingClientRect();
-      bounds = this.fn.bounds;
-      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
-      found = null;
-      foundDistance = config.hitTolerance * pixelWidth;
-      _ref1 = this.getExpandedChildFns();
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        childFn = _ref1[_i];
-        evaluated = childFn.evaluate([x, 0, 0, 0]);
-        distance = Math.abs(y - evaluated[0]);
-        if (distance < foundDistance) {
-          found = childFn;
-          foundDistance = distance;
-        }
-      }
-      return found;
-    },
-    changeSelection: function() {
-      return UI.selectChildFn(this.findHitTarget());
-    },
-    handleMouseMove: function() {
-      return UI.hoveredChildFn = this.findHitTarget();
-    },
-    handleMouseLeave: function() {
-      return UI.hoveredChildFn = null;
-    },
-    startPan: function(e) {
-      var originalBounds, originalX, originalY, rect, xScale, yScale;
-      originalX = e.clientX;
-      originalY = e.clientY;
-      originalBounds = {
-        xMin: this.fn.bounds.xMin,
-        xMax: this.fn.bounds.xMax,
-        yMin: this.fn.bounds.yMin,
-        yMax: this.fn.bounds.yMax
-      };
-      rect = this.getDOMNode().getBoundingClientRect();
-      xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width;
-      yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height;
-      UI.dragging = {
-        cursor: config.cursor.grabbing,
-        onMove: (function(_this) {
-          return function(e) {
-            var dx, dy;
-            dx = e.clientX - originalX;
-            dy = e.clientY - originalY;
-            return _this.fn.bounds = {
-              xMin: originalBounds.xMin - dx * xScale,
-              xMax: originalBounds.xMax - dx * xScale,
-              yMin: originalBounds.yMin + dy * yScale,
-              yMax: originalBounds.yMax + dy * yScale
-            };
-          };
-        })(this)
-      };
-      return util.onceDragConsummated(e, null, (function(_this) {
-        return function() {
-          return _this.changeSelection();
-        };
-      })(this));
-    },
-    handleMouseDown: function(e) {
-      if (e.target.closest(".PointControl")) {
-        return;
-      }
-      UI.preventDefault(e);
-      return this.startPan(e);
-    },
-    handleWheel: function(e) {
-      var bounds, scale, scaleFactor, x, y, _ref;
-      e.preventDefault();
-      _ref = this.getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      bounds = this.fn.bounds;
-      scaleFactor = 1.1;
-      scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
-      return this.fn.bounds = {
-        xMin: (bounds.xMin - x) * scale + x,
-        xMax: (bounds.xMax - x) * scale + x,
-        yMin: (bounds.yMin - y) * scale + y,
-        yMax: (bounds.yMax - y) * scale + y
-      };
-    },
-    getExpandedChildFns: function() {
+    _getExpandedChildFns: function() {
       var recurse, result;
       result = [];
       recurse = function(childFns) {
@@ -1779,10 +1695,41 @@
       recurse(this.fn.childFns);
       return result;
     },
+    _getLocalMouseCoords: function() {
+      var bounds, rect, x, y;
+      bounds = this.fn.bounds;
+      rect = this.getDOMNode().getBoundingClientRect();
+      x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
+      y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
+      return {
+        x: x,
+        y: y
+      };
+    },
+    _findHitTarget: function() {
+      var bounds, childFn, distance, evaluated, found, foundDistance, pixelWidth, rect, x, y, _i, _len, _ref, _ref1;
+      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      rect = this.getDOMNode().getBoundingClientRect();
+      bounds = this.fn.bounds;
+      pixelWidth = (bounds.xMax - bounds.xMin) / rect.width;
+      found = null;
+      foundDistance = config.hitTolerance * pixelWidth;
+      _ref1 = this._getExpandedChildFns();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        childFn = _ref1[_i];
+        evaluated = childFn.evaluate([x, 0, 0, 0]);
+        distance = Math.abs(y - evaluated[0]);
+        if (distance < foundDistance) {
+          found = childFn;
+          foundDistance = distance;
+        }
+      }
+      return found;
+    },
     render: function() {
       var childFn, expandedChildFns, plots, _i, _len;
       plots = [];
-      expandedChildFns = this.getExpandedChildFns();
+      expandedChildFns = this._getExpandedChildFns();
       for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
         childFn = expandedChildFns[_i];
         plots.push({
@@ -1817,10 +1764,10 @@
       });
       return R.div({
         className: "MainPlot",
-        onMouseDown: this.handleMouseDown,
-        onWheel: this.handleWheel,
-        onMouseMove: this.handleMouseMove,
-        onMouseLeave: this.handleMouseLeave
+        onMouseDown: this._onMouseDown,
+        onWheel: this._onWheel,
+        onMouseMove: this._onMouseMove,
+        onMouseLeave: this._onMouseLeave
       }, R.div({
         className: "PlotContainer"
       }, R.GridView({
@@ -1831,6 +1778,71 @@
       }), UI.selectedChildFn ? R.ChildFnControlsView({
         childFn: UI.selectedChildFn
       }) : void 0));
+    },
+    _onMouseMove: function() {
+      return Actions.hoverChildFn(this._findHitTarget());
+    },
+    _onMouseLeave: function() {
+      return Actions.hoverChildFn(null);
+    },
+    _onMouseDown: function(e) {
+      if (e.target.closest(".PointControl")) {
+        return;
+      }
+      UI.preventDefault(e);
+      this._startPan(e);
+      return util.onceDragConsummated(e, null, (function(_this) {
+        return function() {
+          return _this._changeSelection();
+        };
+      })(this));
+    },
+    _onWheel: function(e) {
+      var bounds, scale, scaleFactor, x, y, _ref;
+      e.preventDefault();
+      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      bounds = this.fn.bounds;
+      scaleFactor = 1.1;
+      scale = e.deltaY > 0 ? scaleFactor : 1 / scaleFactor;
+      return Actions.setFnBounds(this.fn, {
+        xMin: (bounds.xMin - x) * scale + x,
+        xMax: (bounds.xMax - x) * scale + x,
+        yMin: (bounds.yMin - y) * scale + y,
+        yMax: (bounds.yMax - y) * scale + y
+      });
+    },
+    _changeSelection: function() {
+      return Actions.selectChildFn(this._findHitTarget());
+    },
+    _startPan: function(e) {
+      var originalBounds, originalX, originalY, rect, xScale, yScale;
+      originalX = e.clientX;
+      originalY = e.clientY;
+      originalBounds = {
+        xMin: this.fn.bounds.xMin,
+        xMax: this.fn.bounds.xMax,
+        yMin: this.fn.bounds.yMin,
+        yMax: this.fn.bounds.yMax
+      };
+      rect = this.getDOMNode().getBoundingClientRect();
+      xScale = (originalBounds.xMax - originalBounds.xMin) / rect.width;
+      yScale = (originalBounds.yMax - originalBounds.yMin) / rect.height;
+      return UI.dragging = {
+        cursor: config.cursor.grabbing,
+        onMove: (function(_this) {
+          return function(e) {
+            var dx, dy;
+            dx = e.clientX - originalX;
+            dy = e.clientY - originalY;
+            return Actions.setFnBounds(_this.fn, {
+              xMin: originalBounds.xMin - dx * xScale,
+              xMax: originalBounds.xMax - dx * xScale,
+              yMin: originalBounds.yMin + dy * yScale,
+              yMax: originalBounds.yMax + dy * yScale
+            });
+          };
+        })(this)
+      };
     }
   });
 
@@ -1864,24 +1876,24 @@
       precision = Math.pow(10, digitPrecision);
       return util.floatToString(value, precision);
     },
-    handleTranslateChange: function(x, y) {
-      this.childFn.domainTranslate[0].valueString = this.snap(x);
-      return this.childFn.rangeTranslate[0].valueString = this.snap(y);
-    },
-    handleScaleChange: function(x, y) {
-      this.childFn.domainTransform[0][0].valueString = this.snap(x - this.childFn.domainTranslate[0].getValue());
-      return this.childFn.rangeTransform[0][0].valueString = this.snap(y - this.childFn.rangeTranslate[0].getValue());
-    },
     render: function() {
       return R.span({}, R.PointControlView({
         x: this.childFn.domainTranslate[0].getValue(),
         y: this.childFn.rangeTranslate[0].getValue(),
-        onChange: this.handleTranslateChange
+        onChange: this._onTranslateChange
       }), R.PointControlView({
         x: this.childFn.domainTranslate[0].getValue() + this.childFn.domainTransform[0][0].getValue(),
         y: this.childFn.rangeTranslate[0].getValue() + this.childFn.rangeTransform[0][0].getValue(),
-        onChange: this.handleScaleChange
+        onChange: this._onScaleChange
       }));
+    },
+    _onTranslateChange: function(x, y) {
+      Actions.setVariableValueString(this.childFn.domainTranslate[0], this.snap(x));
+      return Actions.setVariableValueString(this.childFn.rangeTranslate[0], this.snap(y));
+    },
+    _onScaleChange: function(x, y) {
+      Actions.setVariableValueString(this.childFn.domainTransform[0][0], this.snap(x - this.childFn.domainTranslate[0].getValue()));
+      return Actions.setVariableValueString(this.childFn.rangeTransform[0][0], this.snap(y - this.childFn.rangeTranslate[0].getValue()));
     }
   });
 
@@ -1896,7 +1908,7 @@
         onChange: function() {}
       };
     },
-    handleMouseDown: function(e) {
+    _onMouseDown: function(e) {
       var container, rect;
       UI.preventDefault(e);
       container = this.getDOMNode().closest(".PlotContainer");
@@ -1929,7 +1941,7 @@
       return R.div({
         className: "PointControl",
         style: this.style(),
-        onMouseDown: this.handleMouseDown
+        onMouseDown: this._onMouseDown
       });
     }
   });
