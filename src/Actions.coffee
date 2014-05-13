@@ -44,10 +44,12 @@ Actions.removeChildFn = (parentCompoundFn, childFn) ->
   index = parentCompoundFn.childFns.indexOf(childFn)
   return if index == -1
   parentCompoundFn.childFns.splice(index, 1)
+  Compiler.setDirty()
 
 Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
   index = parentCompoundFn.childFns.length if !index?
   parentCompoundFn.childFns.splice(index, 0, childFn)
+  Compiler.setDirty()
 
 
 # =============================================================================
@@ -62,15 +64,18 @@ Actions.setFnBounds = (fn, newBounds) ->
 
 Actions.setCompoundFnCombiner = (compoundFn, combiner) ->
   compoundFn.combiner = combiner
+  Compiler.setDirty()
 
 Actions.setVariableValueString = (variable, newValueString) ->
   variable.valueString = newValueString
+  Compiler.setDirty()
 
 Actions.toggleChildFnVisible = (childFn) ->
   Actions.setChildFnVisible(childFn, !childFn.visible)
 
 Actions.setChildFnVisible = (childFn, newVisible) ->
   childFn.visible = newVisible
+  Compiler.setDirty()
 
 # =============================================================================
 # Changing UI state (selection, hover, expanded)

@@ -48,27 +48,27 @@ R.create "MainPlotView",
     # Child Fns
     for childFn in expandedChildFns
       plots.push {
-        exprString: childFn.getExprString("x")
+        exprString: Compiler.getExprString(childFn, "x")
         color: config.color.child
       }
 
     # Hovered
     if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
       plots.push {
-        exprString: UI.hoveredChildFn.getExprString("x")
+        exprString: Compiler.getExprString(UI.hoveredChildFn, "x")
         color: config.color.hovered
       }
 
     # Main
     plots.push {
-      exprString: @fn.getExprString("x")
+      exprString: Compiler.getExprString(@fn, "x")
       color: config.color.main
     }
 
     # Selected
     if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
       plots.push {
-        exprString: UI.selectedChildFn.getExprString("x")
+        exprString: Compiler.getExprString(UI.selectedChildFn, "x")
         color: config.color.selected
       }
 

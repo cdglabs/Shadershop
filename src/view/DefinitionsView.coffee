@@ -32,7 +32,7 @@ R.create "DefinitionView",
     fn: C.Fn
 
   render: ->
-    exprString = @fn.getExprString("x")
+    exprString = Compiler.getExprString(@fn, "x")
     fnString = "(function (x) { return #{exprString}; })"
 
     if @fn instanceof C.BuiltInFn
@@ -55,7 +55,7 @@ R.create "DefinitionView",
           bounds
           plots: [
             {
-              exprString: @fn.getExprString("x")
+              exprString: Compiler.getExprString(@fn, "x")
               color: config.color.main
             }
           ]

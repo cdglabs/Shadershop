@@ -110,14 +110,16 @@
     if (index === -1) {
       return;
     }
-    return parentCompoundFn.childFns.splice(index, 1);
+    parentCompoundFn.childFns.splice(index, 1);
+    return Compiler.setDirty();
   };
 
   Actions.insertChildFn = function(parentCompoundFn, childFn, index) {
     if (index == null) {
       index = parentCompoundFn.childFns.length;
     }
-    return parentCompoundFn.childFns.splice(index, 0, childFn);
+    parentCompoundFn.childFns.splice(index, 0, childFn);
+    return Compiler.setDirty();
   };
 
   Actions.setFnLabel = function(fn, newValue) {
@@ -129,11 +131,13 @@
   };
 
   Actions.setCompoundFnCombiner = function(compoundFn, combiner) {
-    return compoundFn.combiner = combiner;
+    compoundFn.combiner = combiner;
+    return Compiler.setDirty();
   };
 
   Actions.setVariableValueString = function(variable, newValueString) {
-    return variable.valueString = newValueString;
+    variable.valueString = newValueString;
+    return Compiler.setDirty();
   };
 
   Actions.toggleChildFnVisible = function(childFn) {
@@ -141,7 +145,8 @@
   };
 
   Actions.setChildFnVisible = function(childFn, newVisible) {
-    return childFn.visible = newVisible;
+    childFn.visible = newVisible;
+    return Compiler.setDirty();
   };
 
   Actions.selectFn = function(fn) {
@@ -170,6 +175,29 @@
     var id;
     id = C.id(childFn);
     return UI.expandedChildFns[id] = expanded;
+  };
+
+}).call(this);
+}, "Compiler": function(exports, require, module) {(function() {
+  var Compiler, cache;
+
+  window.Compiler = Compiler = {};
+
+  cache = {};
+
+  Compiler.getExprString = function(fn, parameter) {
+    var key, result;
+    key = C.id(fn) + "," + parameter;
+    if (cache[key] != null) {
+      return cache[key];
+    }
+    result = fn.getExprString(parameter);
+    cache[key] = result;
+    return result;
+  };
+
+  Compiler.setDirty = function() {
+    return cache = {};
   };
 
 }).call(this);
@@ -331,6 +359,8 @@
   require("./model/C");
 
   require("./Actions");
+
+  require("./Compiler");
 
   require("./view/R");
 
@@ -1601,7 +1631,7 @@
     },
     render: function() {
       var bounds, className, exprString, fnString;
-      exprString = this.fn.getExprString("x");
+      exprString = Compiler.getExprString(this.fn, "x");
       fnString = "(function (x) { return " + exprString + "; })";
       if (this.fn instanceof C.BuiltInFn) {
         bounds = defaultBounds;
@@ -1623,7 +1653,7 @@
         bounds: bounds,
         plots: [
           {
-            exprString: this.fn.getExprString("x"),
+            exprString: Compiler.getExprString(this.fn, "x"),
             color: config.color.main
           }
         ]
@@ -1722,23 +1752,23 @@
       for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
         childFn = expandedChildFns[_i];
         plots.push({
-          exprString: childFn.getExprString("x"),
+          exprString: Compiler.getExprString(childFn, "x"),
           color: config.color.child
         });
       }
       if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
         plots.push({
-          exprString: UI.hoveredChildFn.getExprString("x"),
+          exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
           color: config.color.hovered
         });
       }
       plots.push({
-        exprString: this.fn.getExprString("x"),
+        exprString: Compiler.getExprString(this.fn, "x"),
         color: config.color.main
       });
       if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
         plots.push({
-          exprString: UI.selectedChildFn.getExprString("x"),
+          exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
           color: config.color.selected
         });
       }
@@ -2189,7 +2219,7 @@
         bounds: bounds,
         plots: [
           {
-            exprString: this.childFn.getExprString("x"),
+            exprString: Compiler.getExprString(this.childFn, "x"),
             color: config.color.main
           }
         ]

@@ -216,7 +216,7 @@ R.create "OutlineThumbnailView",
           bounds
           plots: [
             {
-              exprString: @childFn.getExprString("x")
+              exprString: Compiler.getExprString(@childFn, "x")
               color: config.color.main
             }
           ]
