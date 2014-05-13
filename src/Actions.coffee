@@ -32,8 +32,22 @@ Actions.addChildFn = (fn) ->
 
   parent ?= UI.selectedFn
   childFn = new C.ChildFn(fn)
-  parent.childFns.push(childFn)
+  Actions.insertChildFn(parent, childFn)
   Actions.selectChildFn(childFn)
+
+Actions.addCompoundFn = ->
+  # TODO more advanced
+  fn = new C.CompoundFn()
+  Actions.addChildFn(fn)
+
+Actions.removeChildFn = (parentCompoundFn, childFn) ->
+  index = parentCompoundFn.childFns.indexOf(childFn)
+  return if index == -1
+  parentCompoundFn.childFns.splice(index, 1)
+
+Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
+  index = parentCompoundFn.childFns.length if !index?
+  parentCompoundFn.childFns.splice(index, 0, childFn)
 
 
 # =============================================================================
@@ -46,11 +60,20 @@ Actions.setFnLabel = (fn, newValue) ->
 Actions.setFnBounds = (fn, newBounds) ->
   fn.bounds = newBounds
 
+Actions.setCompoundFnCombiner = (compoundFn, combiner) ->
+  compoundFn.combiner = combiner
+
 Actions.setVariableValueString = (variable, newValueString) ->
   variable.valueString = newValueString
 
+Actions.toggleChildFnVisible = (childFn) ->
+  Actions.setChildFnVisible(childFn, !childFn.visible)
+
+Actions.setChildFnVisible = (childFn, newVisible) ->
+  childFn.visible = newVisible
+
 # =============================================================================
-# Changing UI state (selection, hover)
+# Changing UI state (selection, hover, expanded)
 # =============================================================================
 
 Actions.selectFn = (fn) ->
@@ -64,6 +87,13 @@ Actions.selectChildFn = (childFn) ->
 Actions.hoverChildFn = (childFn) ->
   UI.hoveredChildFn = childFn
 
+Actions.toggleChildFnExpanded = (childFn) ->
+  expanded = UI.isChildFnExpanded(childFn)
+  Actions.setChildFnExpanded(childFn, !expanded)
+
+Actions.setChildFnExpanded = (childFn, expanded) ->
+  id = C.id(childFn)
+  UI.expandedChildFns[id] = expanded
 
 
 

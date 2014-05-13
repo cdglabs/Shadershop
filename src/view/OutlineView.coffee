@@ -2,20 +2,19 @@ R.create "OutlineView",
   propTypes:
     definedFn: C.DefinedFn
 
-  addCompoundFn: ->
-    fn = new C.CompoundFn()
-    UI.addChildFn(fn)
-
   render: ->
     R.div {className: "Outline"},
       R.OutlineChildrenView {
         compoundFn: @definedFn
       }
 
-      R.div {className: "TextButton", onClick: @addCompoundFn}, "Add"
+      R.div {className: "TextButton", onClick: @_onAddButtonClick}, "Add"
 
       if UI.selectedChildFn
         R.OutlineControlsView {fn: UI.selectedChildFn}
+
+  _onAddButtonClick: ->
+    Actions.addCompoundFn()
 
 
 # =============================================================================
@@ -39,19 +38,61 @@ R.create "OutlineItemView",
   propTypes:
     childFn: C.ChildFn
 
-  toggleExpanded: ->
+  render: ->
+    if !@isDraggingCopy and @childFn == UI.dragging?.childFn
+      return R.div {className: "Placeholder", style: {height: UI.dragging.placeholderHeight}}
+
+    canHaveChildren = @childFn.fn instanceof C.CompoundFn
     expanded = UI.isChildFnExpanded(@childFn)
-    UI.setChildFnExpanded(@childFn, !expanded)
+    selected = (@childFn == UI.selectedChildFn)
+    hovered = (@childFn == UI.hoveredChildFn)
 
-  toggleVisible: ->
-    @childFn.visible = !@childFn.visible
+    itemClassName = R.cx {
+      OutlineItem: true
+      Invisible: !@childFn.visible
+    }
 
-  handleMouseDown: (e) ->
+    rowClassName = R.cx {
+      OutlineRow: true
+      Selected: selected
+      Hovered: hovered
+    }
+
+    disclosureClassName = R.cx {
+      DisclosureTriangle: true
+      Expanded: expanded
+    }
+
+    R.div {className: itemClassName},
+      R.div {className: rowClassName, onMouseDown: @_onRowMouseDown, onMouseEnter: @_onRowMouseEnter, onMouseLeave: @_onRowMouseLeave},
+        R.div {className: "OutlineVisible", onClick: @_onVisibleClick},
+          R.div {className: "icon-eye"}
+
+        if canHaveChildren
+          R.div {className: "OutlineDisclosure", onClick: @_onDisclosureClick},
+            R.div {className: disclosureClassName}
+
+        R.OutlineThumbnailView {childFn: @childFn}
+
+        R.OutlineInternalsView {fn: @childFn.fn}
+
+      if canHaveChildren and expanded
+        R.OutlineChildrenView {
+          compoundFn: @childFn.fn
+        }
+
+  _onDisclosureClick: ->
+    Actions.toggleChildFnExpanded(@childFn)
+
+  _onVisibleClick: ->
+    Actions.toggleChildFnVisible(@childFn)
+
+  _onRowMouseDown: (e) ->
     return unless e.target.classList.contains("OutlineRow")
 
     util.preventDefault(e)
 
-    UI.selectChildFn(@childFn)
+    Actions.selectChildFn(@childFn)
 
     el = @getDOMNode()
     rect = el.getMarginRect()
@@ -124,66 +165,21 @@ R.create "OutlineItemView",
 
           # Remove self
           if parentCompoundFn
-            index = parentCompoundFn.childFns.indexOf(childFn)
-            parentCompoundFn.childFns.splice(index, 1)
+            Actions.removeChildFn(parentCompoundFn, childFn)
             parentCompoundFn = null
 
           # Add self
           if bestDrop
             parentCompoundFn = bestDrop.outlineChildrenEl.dataFor.compoundFn
-            parentCompoundFn.childFns.splice(bestDrop.index, 0, childFn)
-
+            Actions.insertChildFn(parentCompoundFn, childFn, bestDrop.index)
 
       }
 
-  handleMouseEnter: ->
-    UI.hoveredChildFn = @childFn
+  _onRowMouseEnter: ->
+    Actions.hoverChildFn(@childFn)
 
-  handleMouseLeave: ->
-    UI.hoveredChildFn = null
-
-  render: ->
-    if !@isDraggingCopy and @childFn == UI.dragging?.childFn
-      return R.div {className: "Placeholder", style: {height: UI.dragging.placeholderHeight}}
-
-    canHaveChildren = @childFn.fn instanceof C.CompoundFn
-    expanded = UI.isChildFnExpanded(@childFn)
-    selected = (@childFn == UI.selectedChildFn)
-    hovered = (@childFn == UI.hoveredChildFn)
-
-    itemClassName = R.cx {
-      OutlineItem: true
-      Invisible: !@childFn.visible
-    }
-
-    rowClassName = R.cx {
-      OutlineRow: true
-      Selected: selected
-      Hovered: hovered
-    }
-
-    disclosureClassName = R.cx {
-      DisclosureTriangle: true
-      Expanded: expanded
-    }
-
-    R.div {className: itemClassName},
-      R.div {className: rowClassName, onMouseDown: @handleMouseDown, onMouseEnter: @handleMouseEnter, onMouseLeave: @handleMouseLeave},
-        R.div {className: "OutlineVisible", onClick: @toggleVisible},
-          R.div {className: "icon-eye"}
-
-        if canHaveChildren
-          R.div {className: "OutlineDisclosure", onClick: @toggleExpanded},
-            R.div {className: disclosureClassName}
-
-        R.OutlineThumbnailView {childFn: @childFn}
-
-        R.OutlineInternalsView {fn: @childFn.fn}
-
-      if canHaveChildren and expanded
-        R.OutlineChildrenView {
-          compoundFn: @childFn.fn
-        }
+  _onRowMouseLeave: ->
+    Actions.hoverChildFn(null)
 
 
 # =============================================================================
@@ -232,15 +228,15 @@ R.create "LabelView",
   propTypes:
     fn: C.Fn
 
-  handleInput: (newValue) ->
-    @fn.label = newValue
-
   render: ->
     R.TextFieldView {
       className: "OutlineLabel"
       value: @fn.label
-      onInput: @handleInput
+      onInput: @_onInput
     }
+
+  _onInput: (newValue) ->
+    Actions.setFnLabel(@fn, newValue)
 
 
 # =============================================================================
@@ -249,17 +245,15 @@ R.create "CombinerView",
   propTypes:
     compoundFn: C.CompoundFn
 
-  handleChange: (e) ->
-    value = e.target.selectedOptions[0].value
-    @compoundFn.combiner = value
-
   render: ->
-    R.select {value: @compoundFn.combiner, onChange: @handleChange},
+    R.select {value: @compoundFn.combiner, onChange: @_onChange},
       R.option {value: "sum"}, "Add"
       R.option {value: "product"}, "Multiply"
       R.option {value: "composition"}, "Compose"
 
-
+  _onChange: (e) ->
+    value = e.target.selectedOptions[0].value
+    Actions.setCompoundFnCombiner(@compoundFn, value)
 
 
 
@@ -271,6 +265,8 @@ R.create "CombinerView",
 
 
 # =============================================================================
+
+# TODO: Move this into Inspector
 
 R.create "OutlineControlsView",
   propTypes:

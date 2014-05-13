@@ -94,8 +94,30 @@
       parent = UI.selectedFn;
     }
     childFn = new C.ChildFn(fn);
-    parent.childFns.push(childFn);
+    Actions.insertChildFn(parent, childFn);
     return Actions.selectChildFn(childFn);
+  };
+
+  Actions.addCompoundFn = function() {
+    var fn;
+    fn = new C.CompoundFn();
+    return Actions.addChildFn(fn);
+  };
+
+  Actions.removeChildFn = function(parentCompoundFn, childFn) {
+    var index;
+    index = parentCompoundFn.childFns.indexOf(childFn);
+    if (index === -1) {
+      return;
+    }
+    return parentCompoundFn.childFns.splice(index, 1);
+  };
+
+  Actions.insertChildFn = function(parentCompoundFn, childFn, index) {
+    if (index == null) {
+      index = parentCompoundFn.childFns.length;
+    }
+    return parentCompoundFn.childFns.splice(index, 0, childFn);
   };
 
   Actions.setFnLabel = function(fn, newValue) {
@@ -106,8 +128,20 @@
     return fn.bounds = newBounds;
   };
 
+  Actions.setCompoundFnCombiner = function(compoundFn, combiner) {
+    return compoundFn.combiner = combiner;
+  };
+
   Actions.setVariableValueString = function(variable, newValueString) {
     return variable.valueString = newValueString;
+  };
+
+  Actions.toggleChildFnVisible = function(childFn) {
+    return Actions.setChildFnVisible(childFn, !childFn.visible);
+  };
+
+  Actions.setChildFnVisible = function(childFn, newVisible) {
+    return childFn.visible = newVisible;
   };
 
   Actions.selectFn = function(fn) {
@@ -124,6 +158,18 @@
 
   Actions.hoverChildFn = function(childFn) {
     return UI.hoveredChildFn = childFn;
+  };
+
+  Actions.toggleChildFnExpanded = function(childFn) {
+    var expanded;
+    expanded = UI.isChildFnExpanded(childFn);
+    return Actions.setChildFnExpanded(childFn, !expanded);
+  };
+
+  Actions.setChildFnExpanded = function(childFn, expanded) {
+    var id;
+    id = C.id(childFn);
+    return UI.expandedChildFns[id] = expanded;
   };
 
 }).call(this);
@@ -151,6 +197,20 @@
     _Class.prototype.registerEvents = function() {
       window.addEventListener("mousemove", this.handleWindowMouseMove);
       return window.addEventListener("mouseup", this.handleWindowMouseUp);
+    };
+
+    _Class.prototype.isChildFnExpanded = function(childFn) {
+      var expanded, id;
+      id = C.id(childFn);
+      expanded = this.expandedChildFns[id];
+      if (expanded == null) {
+        if (childFn.fn instanceof C.DefinedFn) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+      return expanded;
     };
 
     _Class.prototype.handleWindowMouseMove = function(e) {
@@ -196,84 +256,6 @@
         return el.dataFor != null;
       }) : void 0;
       return el != null ? el.dataFor : void 0;
-    };
-
-    _Class.prototype.selectFn = function(fn) {
-      if (!(fn instanceof C.DefinedFn)) {
-        return;
-      }
-      this.selectedFn = fn;
-      return this.selectedChildFn = null;
-    };
-
-    _Class.prototype.selectChildFn = function(childFn) {
-      return this.selectedChildFn = childFn;
-    };
-
-    _Class.prototype.addChildFn = function(fn) {
-      var childFn, parent;
-      if (this.selectedChildFn) {
-        if (this.selectedChildFn.fn instanceof C.CompoundFn && this.isChildFnExpanded(this.selectedChildFn)) {
-          parent = this.selectedChildFn.fn;
-        } else {
-          parent = this.findParentOf(this.selectedChildFn);
-        }
-      }
-      if (parent == null) {
-        parent = this.selectedFn;
-      }
-      childFn = new C.ChildFn(fn);
-      parent.childFns.push(childFn);
-      return this.selectChildFn(childFn);
-    };
-
-    _Class.prototype.findParentOf = function(childFnTarget) {
-      var recurse;
-      recurse = function(compoundFn) {
-        var childFn, _i, _len, _ref;
-        if (_.contains(compoundFn.childFns, childFnTarget)) {
-          return compoundFn;
-        }
-        _ref = compoundFn.childFns;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          childFn = _ref[_i];
-          if (childFn.fn instanceof C.CompoundFn) {
-            if (recurse(childFn.fn)) {
-              return childFn.fn;
-            }
-          }
-        }
-        return null;
-      };
-      return recurse(this.selectedFn);
-    };
-
-    _Class.prototype.removeChildFn = function(fn, childFnIndex) {
-      var removedChildFn;
-      removedChildFn = fn.childFns.splice(childFnIndex, 1)[0];
-      if (this.selectedChildFn === removedChildFn) {
-        return this.selectChildFn(null);
-      }
-    };
-
-    _Class.prototype.isChildFnExpanded = function(childFn) {
-      var expanded, id;
-      id = C.id(childFn);
-      expanded = this.expandedChildFns[id];
-      if (expanded == null) {
-        if (childFn.fn instanceof C.DefinedFn) {
-          return false;
-        } else {
-          return true;
-        }
-      }
-      return expanded;
-    };
-
-    _Class.prototype.setChildFnExpanded = function(childFn, expanded) {
-      var id;
-      id = C.id(childFn);
-      return this.expandedChildFns[id] = expanded;
     };
 
     return _Class;
@@ -1952,11 +1934,6 @@
     propTypes: {
       definedFn: C.DefinedFn
     },
-    addCompoundFn: function() {
-      var fn;
-      fn = new C.CompoundFn();
-      return UI.addChildFn(fn);
-    },
     render: function() {
       return R.div({
         className: "Outline"
@@ -1964,10 +1941,13 @@
         compoundFn: this.definedFn
       }), R.div({
         className: "TextButton",
-        onClick: this.addCompoundFn
+        onClick: this._onAddButtonClick
       }, "Add"), UI.selectedChildFn ? R.OutlineControlsView({
         fn: UI.selectedChildFn
       }) : void 0);
+    },
+    _onAddButtonClick: function() {
+      return Actions.addCompoundFn();
     }
   });
 
@@ -1999,21 +1979,71 @@
     propTypes: {
       childFn: C.ChildFn
     },
-    toggleExpanded: function() {
-      var expanded;
+    render: function() {
+      var canHaveChildren, disclosureClassName, expanded, hovered, itemClassName, rowClassName, selected, _ref;
+      if (!this.isDraggingCopy && this.childFn === ((_ref = UI.dragging) != null ? _ref.childFn : void 0)) {
+        return R.div({
+          className: "Placeholder",
+          style: {
+            height: UI.dragging.placeholderHeight
+          }
+        });
+      }
+      canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
       expanded = UI.isChildFnExpanded(this.childFn);
-      return UI.setChildFnExpanded(this.childFn, !expanded);
+      selected = this.childFn === UI.selectedChildFn;
+      hovered = this.childFn === UI.hoveredChildFn;
+      itemClassName = R.cx({
+        OutlineItem: true,
+        Invisible: !this.childFn.visible
+      });
+      rowClassName = R.cx({
+        OutlineRow: true,
+        Selected: selected,
+        Hovered: hovered
+      });
+      disclosureClassName = R.cx({
+        DisclosureTriangle: true,
+        Expanded: expanded
+      });
+      return R.div({
+        className: itemClassName
+      }, R.div({
+        className: rowClassName,
+        onMouseDown: this._onRowMouseDown,
+        onMouseEnter: this._onRowMouseEnter,
+        onMouseLeave: this._onRowMouseLeave
+      }, R.div({
+        className: "OutlineVisible",
+        onClick: this._onVisibleClick
+      }, R.div({
+        className: "icon-eye"
+      })), canHaveChildren ? R.div({
+        className: "OutlineDisclosure",
+        onClick: this._onDisclosureClick
+      }, R.div({
+        className: disclosureClassName
+      })) : void 0, R.OutlineThumbnailView({
+        childFn: this.childFn
+      }), R.OutlineInternalsView({
+        fn: this.childFn.fn
+      })), canHaveChildren && expanded ? R.OutlineChildrenView({
+        compoundFn: this.childFn.fn
+      }) : void 0);
     },
-    toggleVisible: function() {
-      return this.childFn.visible = !this.childFn.visible;
+    _onDisclosureClick: function() {
+      return Actions.toggleChildFnExpanded(this.childFn);
     },
-    handleMouseDown: function(e) {
+    _onVisibleClick: function() {
+      return Actions.toggleChildFnVisible(this.childFn);
+    },
+    _onRowMouseDown: function(e) {
       var childFn, el, myHeight, myWidth, offset, parentCompoundFn, rect;
       if (!e.target.classList.contains("OutlineRow")) {
         return;
       }
       util.preventDefault(e);
-      UI.selectChildFn(this.childFn);
+      Actions.selectChildFn(this.childFn);
       el = this.getDOMNode();
       rect = el.getMarginRect();
       myWidth = rect.width;
@@ -2098,76 +2128,23 @@
                 placeholderEl.style.display = "";
               }
               if (parentCompoundFn) {
-                index = parentCompoundFn.childFns.indexOf(childFn);
-                parentCompoundFn.childFns.splice(index, 1);
+                Actions.removeChildFn(parentCompoundFn, childFn);
                 parentCompoundFn = null;
               }
               if (bestDrop) {
                 parentCompoundFn = bestDrop.outlineChildrenEl.dataFor.compoundFn;
-                return parentCompoundFn.childFns.splice(bestDrop.index, 0, childFn);
+                return Actions.insertChildFn(parentCompoundFn, childFn, bestDrop.index);
               }
             }
           };
         };
       })(this));
     },
-    handleMouseEnter: function() {
-      return UI.hoveredChildFn = this.childFn;
+    _onRowMouseEnter: function() {
+      return Actions.hoverChildFn(this.childFn);
     },
-    handleMouseLeave: function() {
-      return UI.hoveredChildFn = null;
-    },
-    render: function() {
-      var canHaveChildren, disclosureClassName, expanded, hovered, itemClassName, rowClassName, selected, _ref;
-      if (!this.isDraggingCopy && this.childFn === ((_ref = UI.dragging) != null ? _ref.childFn : void 0)) {
-        return R.div({
-          className: "Placeholder",
-          style: {
-            height: UI.dragging.placeholderHeight
-          }
-        });
-      }
-      canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
-      expanded = UI.isChildFnExpanded(this.childFn);
-      selected = this.childFn === UI.selectedChildFn;
-      hovered = this.childFn === UI.hoveredChildFn;
-      itemClassName = R.cx({
-        OutlineItem: true,
-        Invisible: !this.childFn.visible
-      });
-      rowClassName = R.cx({
-        OutlineRow: true,
-        Selected: selected,
-        Hovered: hovered
-      });
-      disclosureClassName = R.cx({
-        DisclosureTriangle: true,
-        Expanded: expanded
-      });
-      return R.div({
-        className: itemClassName
-      }, R.div({
-        className: rowClassName,
-        onMouseDown: this.handleMouseDown,
-        onMouseEnter: this.handleMouseEnter,
-        onMouseLeave: this.handleMouseLeave
-      }, R.div({
-        className: "OutlineVisible",
-        onClick: this.toggleVisible
-      }, R.div({
-        className: "icon-eye"
-      })), canHaveChildren ? R.div({
-        className: "OutlineDisclosure",
-        onClick: this.toggleExpanded
-      }, R.div({
-        className: disclosureClassName
-      })) : void 0, R.OutlineThumbnailView({
-        childFn: this.childFn
-      }), R.OutlineInternalsView({
-        fn: this.childFn.fn
-      })), canHaveChildren && expanded ? R.OutlineChildrenView({
-        compoundFn: this.childFn.fn
-      }) : void 0);
+    _onRowMouseLeave: function() {
+      return Actions.hoverChildFn(null);
     }
   });
 
@@ -2217,15 +2194,15 @@
     propTypes: {
       fn: C.Fn
     },
-    handleInput: function(newValue) {
-      return this.fn.label = newValue;
-    },
     render: function() {
       return R.TextFieldView({
         className: "OutlineLabel",
         value: this.fn.label,
-        onInput: this.handleInput
+        onInput: this._onInput
       });
+    },
+    _onInput: function(newValue) {
+      return Actions.setFnLabel(this.fn, newValue);
     }
   });
 
@@ -2233,15 +2210,10 @@
     propTypes: {
       compoundFn: C.CompoundFn
     },
-    handleChange: function(e) {
-      var value;
-      value = e.target.selectedOptions[0].value;
-      return this.compoundFn.combiner = value;
-    },
     render: function() {
       return R.select({
         value: this.compoundFn.combiner,
-        onChange: this.handleChange
+        onChange: this._onChange
       }, R.option({
         value: "sum"
       }, "Add"), R.option({
@@ -2249,6 +2221,11 @@
       }, "Multiply"), R.option({
         value: "composition"
       }, "Compose"));
+    },
+    _onChange: function(e) {
+      var value;
+      value = e.target.selectedOptions[0].value;
+      return Actions.setCompoundFnCombiner(this.compoundFn, value);
     }
   });
 
