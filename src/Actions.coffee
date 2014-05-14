@@ -69,7 +69,7 @@ Actions.addChildFn = (fn) ->
   childFn = new C.ChildFn(fn)
   Actions.insertChildFn(parent, childFn, index)
   Actions.selectChildFn(childFn)
-  return parent
+  return {childFn, parent, index}
 
 Actions.addCompoundFn = ->
   fn = new C.CompoundFn()

@@ -141,7 +141,11 @@
     childFn = new C.ChildFn(fn);
     Actions.insertChildFn(parent, childFn, index);
     Actions.selectChildFn(childFn);
-    return parent;
+    return {
+      childFn: childFn,
+      parent: parent,
+      index: index
+    };
   };
 
   Actions.addCompoundFn = function() {

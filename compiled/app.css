@@ -95,6 +95,9 @@ canvas,
   font-style: italic;
   color: #ccc;
 }
+.Definition {
+  white-space: nowrap;
+}
 .Definition:hover {
   background-color: #f2f9fc;
 }
@@ -117,7 +120,7 @@ canvas,
 }
 .PaletteHeader {
   padding: 6px 0 6px 12px;
-  background-color: #eee;
+  background-color: #f3f3f3;
 }
 .PaletteHeader:not(:first-child) {
   margin-top: 12px;
@@ -158,6 +161,7 @@ canvas,
 }
 .OutlineRow {
   position: relative;
+  white-space: nowrap;
 }
 .OutlineRow.Hovered {
   background-color: #f2f9fc;

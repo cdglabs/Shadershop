@@ -155,6 +155,8 @@ canvas, .Shader
 // ============================================================================
 
 .Definition
+  white-space nowrap
+
   // &.Hovered
   &:hover
     background-color tint(highlightColor, 95%)
@@ -179,7 +181,7 @@ canvas, .Shader
 .PaletteHeader
   // padding-left SpacingSize*2 + PaletteThumbnailSize
   padding SpacingSize 0 SpacingSize SpacingSize*2
-  background-color #eee
+  background-color #f3f3f3
   // text-align center
   &:not(:first-child)
     margin-top SpacingSize*2
@@ -232,6 +234,7 @@ canvas, .Shader
 
 .OutlineRow
   position relative
+  white-space nowrap
   &.Hovered
     background-color tint(highlightColor, 95%)
   &.Selected
