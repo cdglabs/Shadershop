@@ -225,7 +225,7 @@ R.create "LabelView",
 
   render: ->
     R.TextFieldView {
-      className: "OutlineLabel"
+      className: "Label"
       value: @fn.label
       onInput: @_onInput
     }

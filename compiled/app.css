@@ -20,10 +20,6 @@ canvas,
   width: 100%;
   height: 100%;
 }
-[contenteditable] {
-  min-width: 30px;
-  padding-right: 10px;
-}
 .ShaderOverlay {
   z-index: 10;
   pointer-events: none;
@@ -51,6 +47,21 @@ canvas,
   top: 300px;
   bottom: 0px;
 }
+.DraggingObject {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.5;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+}
+.DraggingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 200;
+}
 .Header {
   position: absolute;
   width: 100%;
@@ -75,20 +86,14 @@ canvas,
   overflow-y: auto;
   overflow-x: hidden;
 }
-.DraggingObject {
-  position: fixed;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.5;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+.Label {
+  min-width: 30px;
+  padding-right: 10px;
 }
-.DraggingOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 200;
+.Label:empty:not(:active):not(:focus):before {
+  content: "Untitled Function";
+  font-style: italic;
+  color: #ccc;
 }
 .Palette .Scroller {
   padding-bottom: 12px;
@@ -186,6 +191,10 @@ canvas,
   vertical-align: middle;
   margin: 3px 6px;
 }
+.OutlineInternals .Label {
+  display: inline-block;
+  vertical-align: middle;
+}
 .OutlineThumbnail {
   position: relative;
   display: inline-block;
@@ -194,10 +203,6 @@ canvas,
   height: 36px;
   margin: 2px;
   border: 1px solid #eee;
-}
-.OutlineLabel {
-  display: inline-block;
-  vertical-align: middle;
 }
 .Placeholder {
   background-color: #bbb;

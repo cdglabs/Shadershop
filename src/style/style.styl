@@ -50,11 +50,6 @@ canvas, .Shader
   width 100%
   height 100%
 
-[contenteditable]
-  // Give text editing cursor some room
-  min-width 30px
-  padding-right 10px
-
 
 // Kill scrollbars in webkit...
 // ::-webkit-scrollbar {
@@ -98,6 +93,28 @@ canvas, .Shader
   top 300px
   bottom 0px
 
+
+// ============================================================================
+// Dragging
+// ============================================================================
+
+.DraggingObject
+  position: fixed
+  z-index: 100;
+  pointer-events: none;
+  opacity 0.5
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+
+.DraggingOverlay
+  position: fixed
+  top: 0; left: 0; bottom: 0; right: 0;
+  z-index: 200
+
+
+// ============================================================================
+// Common
+// ============================================================================
+
 .Header
   position absolute
   width 100%
@@ -122,22 +139,14 @@ canvas, .Shader
   overflow-y auto
   overflow-x hidden
 
-
-// ============================================================================
-// Dragging
-// ============================================================================
-
-.DraggingObject
-  position: fixed
-  z-index: 100;
-  pointer-events: none;
-  opacity 0.5
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
-
-.DraggingOverlay
-  position: fixed
-  top: 0; left: 0; bottom: 0; right: 0;
-  z-index: 200
+.Label
+  // Give text editing cursor some room
+  min-width 30px
+  padding-right 10px
+  &:empty:not(:active):not(:focus):before
+    content "Untitled Function"
+    font-style italic
+    color #ccc
 
 
 // ============================================================================
@@ -246,6 +255,8 @@ canvas, .Shader
 .OutlineInternals
   inline middle
   margin 3px 6px
+  .Label
+    inline middle
 
 .OutlineThumbnail
   position relative
@@ -255,9 +266,6 @@ canvas, .Shader
   margin 2px
   border 1px solid #eee
 
-
-.OutlineLabel
-  inline middle
 
 .Placeholder
   background-color #bbb

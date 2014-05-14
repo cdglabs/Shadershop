@@ -2172,7 +2172,7 @@
     },
     render: function() {
       return R.TextFieldView({
-        className: "OutlineLabel",
+        className: "Label",
         value: this.fn.label,
         onInput: this._onInput
       });
