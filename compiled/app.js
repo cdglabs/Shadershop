@@ -1918,9 +1918,10 @@
     render: function() {
       return R.div({
         className: "Outline"
-      }, R.div({
+      }, R.LabelView({
+        fn: this.definedFn,
         className: "Header"
-      }, "Outline"), R.div({
+      }), R.div({
         className: "Scroller"
       }, R.OutlineChildrenView({
         compoundFn: this.definedFn
@@ -2171,11 +2172,19 @@
       fn: C.Fn
     },
     render: function() {
-      return R.TextFieldView({
-        className: "Label",
-        value: this.fn.label,
-        onInput: this._onInput
-      });
+      var className;
+      className = "Label " + this.className;
+      if (this.fn instanceof C.BuiltInFn) {
+        return R.div({
+          className: className
+        }, this.fn.label);
+      } else {
+        return R.TextFieldView({
+          className: className,
+          value: this.fn.label,
+          onInput: this._onInput
+        });
+      }
     },
     _onInput: function(newValue) {
       return Actions.setFnLabel(this.fn, newValue);
@@ -2327,12 +2336,8 @@
       }, R.ThumbnailPlotView({
         plot: plot,
         fn: this.fn
-      })), this.fn instanceof C.BuiltInFn ? R.div({
-        className: "Label"
-      }, this.fn.label) : R.TextFieldView({
-        className: "Label",
-        value: this.fn.label,
-        onInput: this._onLabelInput
+      })), R.LabelView({
+        fn: this.fn
       }));
     },
     _onMouseDown: function(e) {
@@ -2349,9 +2354,6 @@
         };
       })(this);
       return util.onceDragConsummated(e, addChildFn, selectFn);
-    },
-    _onLabelInput: function(newValue) {
-      return Actions.setFnLabel(this.fn, newValue);
     }
   });
 

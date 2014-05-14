@@ -76,7 +76,6 @@ canvas,
   background-image: linear-gradient(to bottom, #fff, #ddd);
   border-top: 1px solid #e6e6e6;
   border-bottom: 1px solid #d3d3d3;
-  pointer-events: none;
 }
 .Scroller {
   position: absolute;

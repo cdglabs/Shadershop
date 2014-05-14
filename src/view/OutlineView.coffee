@@ -5,8 +5,10 @@ R.create "OutlineView",
   render: ->
     R.div {className: "Outline"},
 
-      R.div {className: "Header"},
-        "Outline"
+      R.LabelView {
+        fn: @definedFn
+        className: "Header"
+      }
 
       R.div {className: "Scroller"},
 
@@ -224,11 +226,15 @@ R.create "LabelView",
     fn: C.Fn
 
   render: ->
-    R.TextFieldView {
-      className: "Label"
-      value: @fn.label
-      onInput: @_onInput
-    }
+    className = "Label " + @className
+    if @fn instanceof C.BuiltInFn
+      R.div {className: className}, @fn.label
+    else
+      R.TextFieldView {
+        className: className
+        value: @fn.label
+        onInput: @_onInput
+      }
 
   _onInput: (newValue) ->
     Actions.setFnLabel(@fn, newValue)

@@ -46,14 +46,9 @@ R.create "DefinitionView",
       R.span {onMouseDown: @_onMouseDown},
         R.ThumbnailPlotView {plot, fn: @fn}
 
-      if @fn instanceof C.BuiltInFn
-        R.div {className: "Label"}, @fn.label
-      else
-        R.TextFieldView {
-          className: "Label"
-          value: @fn.label
-          onInput: @_onLabelInput
-        }
+      R.LabelView {
+        fn: @fn
+      }
 
   _onMouseDown: (e) ->
     util.preventDefault(e)
@@ -65,7 +60,4 @@ R.create "DefinitionView",
       Actions.selectFn(@fn)
 
     util.onceDragConsummated(e, addChildFn, selectFn)
-
-  _onLabelInput: (newValue) ->
-    Actions.setFnLabel(@fn, newValue)
 
