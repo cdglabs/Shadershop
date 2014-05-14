@@ -167,8 +167,9 @@ canvas,
 }
 .OutlineVisible {
   position: absolute;
-  right: 12px;
+  right: 6px;
   line-height: 42px;
+  font-size: 18px;
   color: #bbb;
   cursor: pointer;
   opacity: 0;

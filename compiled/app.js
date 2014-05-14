@@ -2332,18 +2332,20 @@
         Selected: UI.selectedFn === this.fn
       });
       return R.div({
-        className: className
-      }, R.span({
+        className: className,
         onMouseDown: this._onMouseDown
       }, R.ThumbnailPlotView({
         plot: plot,
         fn: this.fn
-      })), R.LabelView({
+      }), R.LabelView({
         fn: this.fn
       }));
     },
     _onMouseDown: function(e) {
       var addChildFn, selectFn;
+      if (e.target.matches(".Label")) {
+        return;
+      }
       util.preventDefault(e);
       addChildFn = (function(_this) {
         return function() {

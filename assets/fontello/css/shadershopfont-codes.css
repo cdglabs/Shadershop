@@ -1,2 +1,3 @@
 
-.icon-eye:before { content: '\65'; } /* 'e' */
+.icon-eye:before { content: '\e800'; } /* '' */
+.icon-pencil:before { content: '\e801'; } /* '' */

@@ -44,15 +44,15 @@ R.create "DefinitionView",
 
     R.div {
       className: className
+      onMouseDown: @_onMouseDown
     },
-      R.span {onMouseDown: @_onMouseDown},
-        R.ThumbnailPlotView {plot, fn: @fn}
-
+      R.ThumbnailPlotView {plot, fn: @fn}
       R.LabelView {
         fn: @fn
       }
 
   _onMouseDown: (e) ->
+    return if e.target.matches(".Label")
     util.preventDefault(e)
 
     addChildFn = =>
