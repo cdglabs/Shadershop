@@ -20,36 +20,37 @@ canvas,
   width: 100%;
   height: 100%;
 }
-::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-}
 .ShaderOverlay {
   z-index: 10;
   pointer-events: none;
 }
-.Definitions {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 96px;
-  height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
 .MainPlot {
   position: absolute;
   top: 0px;
-  left: 96px;
+  left: 0px;
   bottom: 0px;
-  right: 300px;
+  right: 270px;
+  border-right: 1px solid #eee;
+  box-sizing: border-box;
+}
+.Palette {
+  position: absolute;
+  right: 0px;
+  width: 270px;
+  top: 0px;
+  height: 50vh;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
 }
 .Outline {
   position: absolute;
-  top: 30px;
-  right: 30px;
-  width: 240px;
-  bottom: 30px;
+  right: 0px;
+  width: 270px;
+  top: 50vh;
+  bottom: 0px;
+}
+.Scroller {
+  overflow-y: auto;
 }
 .DraggingObject {
   position: fixed;
@@ -133,9 +134,9 @@ canvas,
 }
 .OutlineVisible {
   position: absolute;
-  right: 9px;
+  right: 12px;
   line-height: 42px;
-  color: #999;
+  color: #bbb;
   opacity: 0;
 }
 .OutlineRow:hover .OutlineVisible {

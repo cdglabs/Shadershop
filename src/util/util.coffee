@@ -51,6 +51,27 @@ Element::isOnScreen = ->
   horizontal = (0 <= rect.left <= screenWidth or 0 <= rect.right <= screenWidth)
   return vertical and horizontal
 
+Element::getClippingRect = ->
+  rect = @getBoundingClientRect()
+  rect = {
+    left: rect.left
+    right: rect.right
+    top: rect.top
+    bottom: rect.bottom
+  }
+  el = this.parentNode
+  while el?.nodeType == Node.ELEMENT_NODE
+    if el.matches(".Scroller")
+      scrollerRect = el.getBoundingClientRect()
+      rect.left   = Math.max(rect.left,   scrollerRect.left)
+      rect.right  = Math.min(rect.right,  scrollerRect.right)
+      rect.top    = Math.max(rect.top,    scrollerRect.top)
+      rect.bottom = Math.min(rect.bottom, scrollerRect.bottom)
+    el = el.parentNode
+  rect.width  = rect.right  - rect.left
+  rect.height = rect.bottom - rect.top
+  return rect
+
 
 # =============================================================================
 # Util functions

@@ -1,9 +1,9 @@
-R.create "DefinitionsView",
+R.create "PaletteView",
   propTypes:
     appRoot: C.AppRoot
 
   render: ->
-    R.div {className: "Definitions"},
+    R.div {className: "Palette Scroller"},
 
       builtIn.fns.map (fn) =>
         R.DefinitionView {fn, key: C.id(fn)}
@@ -25,9 +25,6 @@ R.create "DefinitionView",
     fn: C.Fn
 
   render: ->
-    exprString = Compiler.getExprString(@fn, "x")
-    fnString = "(function (x) { return #{exprString}; })"
-
     if @fn instanceof C.BuiltInFn
       plot = builtIn.defaultPlot
     else

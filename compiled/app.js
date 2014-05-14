@@ -1397,6 +1397,31 @@
     return vertical && horizontal;
   };
 
+  Element.prototype.getClippingRect = function() {
+    var el, rect, scrollerRect;
+    rect = this.getBoundingClientRect();
+    rect = {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom
+    };
+    el = this.parentNode;
+    while ((el != null ? el.nodeType : void 0) === Node.ELEMENT_NODE) {
+      if (el.matches(".Scroller")) {
+        scrollerRect = el.getBoundingClientRect();
+        rect.left = Math.max(rect.left, scrollerRect.left);
+        rect.right = Math.min(rect.right, scrollerRect.right);
+        rect.top = Math.max(rect.top, scrollerRect.top);
+        rect.bottom = Math.min(rect.bottom, scrollerRect.bottom);
+      }
+      el = el.parentNode;
+    }
+    rect.width = rect.right - rect.left;
+    rect.height = rect.bottom - rect.top;
+    return rect;
+  };
+
   util.preventDefault = function(e) {
     e.preventDefault();
     return util.selection.set(null);
@@ -1592,10 +1617,10 @@
       return this.refreshShaderOverlay();
     },
     render: function() {
-      return R.div({}, R.DefinitionsView({
-        appRoot: this.appRoot
-      }), R.MainPlotView({
+      return R.div({}, R.MainPlotView({
         fn: UI.selectedFn
+      }), R.PaletteView({
+        appRoot: this.appRoot
       }), R.OutlineView({
         definedFn: UI.selectedFn
       }), R.DraggingView({}), R.ShaderOverlayView({
@@ -1616,95 +1641,6 @@
       }, UI.dragging.render()) : void 0, UI.dragging ? R.div({
         className: "DraggingOverlay"
       }) : void 0);
-    }
-  });
-
-}).call(this);
-}, "view/DefinitionsView": function(exports, require, module) {(function() {
-  R.create("DefinitionsView", {
-    propTypes: {
-      appRoot: C.AppRoot
-    },
-    render: function() {
-      return R.div({
-        className: "Definitions"
-      }, builtIn.fns.map((function(_this) {
-        return function(fn) {
-          return R.DefinitionView({
-            fn: fn,
-            key: C.id(fn)
-          });
-        };
-      })(this)), R.div({
-        className: "Divider"
-      }), this.appRoot.fns.map((function(_this) {
-        return function(fn) {
-          return R.DefinitionView({
-            fn: fn,
-            key: C.id(fn)
-          });
-        };
-      })(this)), R.div({
-        className: "AddDefinition"
-      }, R.button({
-        className: "AddButton",
-        onClick: this._onAddButtonClick
-      })));
-    },
-    _onAddButtonClick: function() {
-      return Actions.addDefinedFn();
-    }
-  });
-
-  R.create("DefinitionView", {
-    propTypes: {
-      fn: C.Fn
-    },
-    render: function() {
-      var className, exprString, fnString, plot;
-      exprString = Compiler.getExprString(this.fn, "x");
-      fnString = "(function (x) { return " + exprString + "; })";
-      if (this.fn instanceof C.BuiltInFn) {
-        plot = builtIn.defaultPlot;
-      } else {
-        plot = this.fn.plot;
-      }
-      className = R.cx({
-        Definition: true,
-        Selected: UI.selectedFn === this.fn
-      });
-      return R.div({
-        className: className
-      }, R.span({
-        onMouseDown: this._onMouseDown
-      }, R.ThumbnailPlotView({
-        plot: plot,
-        fn: this.fn
-      })), this.fn instanceof C.BuiltInFn ? R.div({
-        className: "Label"
-      }, this.fn.label) : R.TextFieldView({
-        className: "Label",
-        value: this.fn.label,
-        onInput: this._onLabelInput
-      }));
-    },
-    _onMouseDown: function(e) {
-      var addChildFn, selectFn;
-      util.preventDefault(e);
-      addChildFn = (function(_this) {
-        return function() {
-          return Actions.addChildFn(_this.fn);
-        };
-      })(this);
-      selectFn = (function(_this) {
-        return function() {
-          return Actions.selectFn(_this.fn);
-        };
-      })(this);
-      return util.onceDragConsummated(e, addChildFn, selectFn);
-    },
-    _onLabelInput: function(newValue) {
-      return Actions.setFnLabel(this.fn, newValue);
     }
   });
 
@@ -1981,7 +1917,7 @@
     },
     render: function() {
       return R.div({
-        className: "Outline"
+        className: "Outline Scroller"
       }, R.OutlineChildrenView({
         compoundFn: this.definedFn
       }), R.div({
@@ -2325,6 +2261,93 @@
   });
 
 }).call(this);
+}, "view/PaletteView": function(exports, require, module) {(function() {
+  R.create("PaletteView", {
+    propTypes: {
+      appRoot: C.AppRoot
+    },
+    render: function() {
+      return R.div({
+        className: "Palette Scroller"
+      }, builtIn.fns.map((function(_this) {
+        return function(fn) {
+          return R.DefinitionView({
+            fn: fn,
+            key: C.id(fn)
+          });
+        };
+      })(this)), R.div({
+        className: "Divider"
+      }), this.appRoot.fns.map((function(_this) {
+        return function(fn) {
+          return R.DefinitionView({
+            fn: fn,
+            key: C.id(fn)
+          });
+        };
+      })(this)), R.div({
+        className: "AddDefinition"
+      }, R.button({
+        className: "AddButton",
+        onClick: this._onAddButtonClick
+      })));
+    },
+    _onAddButtonClick: function() {
+      return Actions.addDefinedFn();
+    }
+  });
+
+  R.create("DefinitionView", {
+    propTypes: {
+      fn: C.Fn
+    },
+    render: function() {
+      var className, plot;
+      if (this.fn instanceof C.BuiltInFn) {
+        plot = builtIn.defaultPlot;
+      } else {
+        plot = this.fn.plot;
+      }
+      className = R.cx({
+        Definition: true,
+        Selected: UI.selectedFn === this.fn
+      });
+      return R.div({
+        className: className
+      }, R.span({
+        onMouseDown: this._onMouseDown
+      }, R.ThumbnailPlotView({
+        plot: plot,
+        fn: this.fn
+      })), this.fn instanceof C.BuiltInFn ? R.div({
+        className: "Label"
+      }, this.fn.label) : R.TextFieldView({
+        className: "Label",
+        value: this.fn.label,
+        onInput: this._onLabelInput
+      }));
+    },
+    _onMouseDown: function(e) {
+      var addChildFn, selectFn;
+      util.preventDefault(e);
+      addChildFn = (function(_this) {
+        return function() {
+          return Actions.addChildFn(_this.fn);
+        };
+      })(this);
+      selectFn = (function(_this) {
+        return function() {
+          return Actions.selectFn(_this.fn);
+        };
+      })(this);
+      return util.onceDragConsummated(e, addChildFn, selectFn);
+    },
+    _onLabelInput: function(newValue) {
+      return Actions.setFnLabel(this.fn, newValue);
+    }
+  });
+
+}).call(this);
 }, "view/R": function(exports, require, module) {(function() {
   var R, desugarPropType, key, value, _ref,
     __hasProp = {}.hasOwnProperty;
@@ -2458,7 +2481,7 @@
 
   require("./ShaderOverlayView");
 
-  require("./DefinitionsView");
+  require("./PaletteView");
 
   require("./MainPlotView");
 
@@ -2506,7 +2529,7 @@
       }
     },
     draw: function() {
-      var bounds, canvas, expr, exprs, junk, name, numSamples, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -2516,7 +2539,11 @@
           continue;
         }
         rect = shaderEl.getBoundingClientRect();
-        setViewport(this.glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height);
+        clippingRect = shaderEl.getClippingRect();
+        if (clippingRect.height <= 0 || clippingRect.width <= 0) {
+          continue;
+        }
+        setViewport(this.glod, rect, clippingRect);
         shaderView = shaderEl.dataFor;
         exprs = shaderView.exprs;
         bounds = shaderView.plot.getBounds(rect.width, rect.height);
@@ -2575,8 +2602,20 @@
     return glod.createProgram(name);
   };
 
-  setViewport = function(glod, x, y, w, h) {
-    glod.viewport(x, y, w, h);
+  setViewport = function(glod, rect, clippingRect) {
+    var canvas, gl, h, sh, sw, sx, sy, w, x, y;
+    gl = glod.gl();
+    canvas = glod.canvas();
+    x = rect.left;
+    y = canvas.height - rect.bottom;
+    w = rect.width;
+    h = rect.height;
+    sx = clippingRect.left;
+    sy = canvas.height - clippingRect.bottom;
+    sw = rect.width;
+    sh = rect.height;
+    gl.viewport(x, y, w, h);
+    gl.scissor(sx, sy, sw, sh);
     return glod.viewport_ = {
       x: x,
       y: y,

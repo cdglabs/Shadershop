@@ -13,8 +13,8 @@ R.create "AppRootView",
 
   render: ->
     R.div {},
-      R.DefinitionsView {appRoot: @appRoot}
       R.MainPlotView {fn: UI.selectedFn}
+      R.PaletteView {appRoot: @appRoot}
       R.OutlineView {definedFn: UI.selectedFn}
       R.DraggingView {}
       R.ShaderOverlayView {ref: "shaderOverlay"}

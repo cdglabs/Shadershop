@@ -1,6 +1,8 @@
 highlightColor = #09c
 plotBackgroundColor = #FAF8F2
 
+SidebarWidth = 270px
+
 PlusButtonSize = 18px
 
 DisclosureTriangleSize = 12px
@@ -47,10 +49,10 @@ canvas, .Shader
 
 
 // Kill scrollbars in webkit...
-::-webkit-scrollbar {
-    width: 0px;
-    height: 0px;
-}
+// ::-webkit-scrollbar {
+//     width: 0px;
+//     height: 0px;
+// }
 
 
 
@@ -65,28 +67,37 @@ canvas, .Shader
   z-index ShaderOverlayZIndex
   pointer-events none
 
-.Definitions
-  position absolute
-  top 0px
-  left 0px
-  width 96px
-  height 100vh
-  overflow-x hidden
-  overflow-y auto
-
 .MainPlot
   position absolute
   top 0px
-  left 96px
+  left 0px
   bottom 0px
-  right 300px
+  right SidebarWidth
+  border-right 1px solid #eee
+  box-sizing border-box
+
+.Palette
+  position absolute
+  right 0px
+  width SidebarWidth
+  top 0px
+  height 50vh
+  border-bottom 1px solid #eee
+  box-sizing border-box
 
 .Outline
   position absolute
-  top 30px
-  right 30px
-  width 240px
-  bottom 30px
+  right 0px
+  width SidebarWidth
+  top 50vh
+  bottom 0px
+
+// ============================================================================
+// Scrolling
+// ============================================================================
+
+.Scroller
+  overflow-y auto
 
 
 // ============================================================================
@@ -186,9 +197,9 @@ canvas, .Shader
 
 .OutlineVisible
   position absolute
-  right 9px
+  right 12px
   line-height ThumbnailSize + SpacingSize
-  color #999
+  color #bbb
   opacity 0
 .OutlineRow:hover
   .OutlineVisible

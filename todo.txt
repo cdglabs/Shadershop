@@ -8,6 +8,10 @@ Misc
   Do something better than util.safeInv
   Tune mousewheel zooming
   Maybe invisible childFn's shouldn't be selectable
+  Delete key
+  Undo
+  Duplicate
+  Check that you don't create dependency loops
 
 
 

@@ -3,7 +3,7 @@ R.create "OutlineView",
     definedFn: C.DefinedFn
 
   render: ->
-    R.div {className: "Outline"},
+    R.div {className: "Outline Scroller"},
       R.OutlineChildrenView {
         compoundFn: @definedFn
       }
