@@ -3,18 +3,23 @@ R.create "PaletteView",
     appRoot: C.AppRoot
 
   render: ->
-    R.div {className: "Palette Scroller"},
+    R.div {className: "Palette"},
 
-      builtIn.fns.map (fn) =>
-        R.DefinitionView {fn, key: C.id(fn)}
+      R.div {className: "Header"},
+        "Functions"
 
-      R.div {className: "Divider"}
+      R.div {className: "Scroller"},
 
-      @appRoot.fns.map (fn) =>
-        R.DefinitionView {fn, key: C.id(fn)}
+        builtIn.fns.map (fn) =>
+          R.DefinitionView {fn, key: C.id(fn)}
 
-      R.div {className: "AddDefinition"},
-        R.button {className: "AddButton", onClick: @_onAddButtonClick}
+        R.div {className: "Divider"}
+
+        @appRoot.fns.map (fn) =>
+          R.DefinitionView {fn, key: C.id(fn)}
+
+        R.div {className: "AddDefinition"},
+          R.button {className: "AddButton", onClick: @_onAddButtonClick}
 
   _onAddButtonClick: ->
     Actions.addDefinedFn()

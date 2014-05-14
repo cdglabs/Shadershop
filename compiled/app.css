@@ -20,6 +20,10 @@ canvas,
   width: 100%;
   height: 100%;
 }
+[contenteditable] {
+  min-width: 30px;
+  padding-right: 10px;
+}
 .ShaderOverlay {
   z-index: 10;
   pointer-events: none;
@@ -30,7 +34,7 @@ canvas,
   left: 0px;
   bottom: 0px;
   right: 270px;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #e6e6e6;
   box-sizing: border-box;
 }
 .Palette {
@@ -38,19 +42,38 @@ canvas,
   right: 0px;
   width: 270px;
   top: 0px;
-  height: 50vh;
-  border-bottom: 1px solid #eee;
-  box-sizing: border-box;
+  height: 300px;
 }
 .Outline {
   position: absolute;
   right: 0px;
   width: 270px;
-  top: 50vh;
+  top: 300px;
   bottom: 0px;
 }
+.Header {
+  position: absolute;
+  width: 100%;
+  top: 0px;
+  height: 18px;
+  box-sizing: border-box;
+  line-height: 16px;
+  text-align: center;
+  color: #666;
+  text-shadow: 0px 1px 0px rgba(255,255,255,0.5);
+  background-color: #eee;
+  background-image: linear-gradient(to bottom, #fff, #ddd);
+  border-top: 1px solid #e6e6e6;
+  border-bottom: 1px solid #d3d3d3;
+  pointer-events: none;
+}
 .Scroller {
+  position: absolute;
+  width: 100%;
+  top: 18px;
+  bottom: 0px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .DraggingObject {
   position: fixed;
@@ -67,31 +90,35 @@ canvas,
   right: 0;
   z-index: 200;
 }
-.Definition {
-  margin: 12px;
+.Palette .Scroller {
+  padding-bottom: 12px;
+}
+.Definition:hover {
+  background-color: #f2f9fc;
 }
 .Definition .PlotContainer {
+  display: inline-block;
+  vertical-align: middle;
   position: relative;
-  box-sizing: border-box;
-  width: 72px;
-  height: 72px;
-  box-shadow: 0px 1px 2px rgba(0,0,0,0.2);
+  width: 48px;
+  height: 48px;
+  border: 1px solid #eee;
+  margin: 3px 6px;
 }
 .Definition.Selected .PlotContainer {
   outline: 1px solid #09c;
   box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
 }
 .Definition .Label {
-  width: 72px;
-  margin-top: 4px;
-  text-align: center;
+  display: inline-block;
+  vertical-align: middle;
 }
 .Divider {
   border-bottom: 1px solid #eee;
 }
 .AddDefinition {
-  margin: 12px;
-  width: 72px;
+  padding: 6px;
+  width: 48px;
   text-align: center;
 }
 .PlotContainer {
@@ -117,7 +144,7 @@ canvas,
 .PointControl:hover {
   opacity: 1;
 }
-.Outline > .OutlineChildren {
+.Outline .Scroller > .OutlineChildren {
   margin-left: 0px;
 }
 .OutlineItem.Invisible {
@@ -137,7 +164,11 @@ canvas,
   right: 12px;
   line-height: 42px;
   color: #bbb;
+  cursor: pointer;
   opacity: 0;
+}
+.OutlineVisible:hover {
+  color: #09c;
 }
 .OutlineRow:hover .OutlineVisible {
   opacity: 1;
@@ -167,8 +198,6 @@ canvas,
 .OutlineLabel {
   display: inline-block;
   vertical-align: middle;
-  min-width: 30px;
-  padding-right: 10px;
 }
 .Placeholder {
   background-color: #bbb;

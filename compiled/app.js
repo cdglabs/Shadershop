@@ -1917,7 +1917,11 @@
     },
     render: function() {
       return R.div({
-        className: "Outline Scroller"
+        className: "Outline"
+      }, R.div({
+        className: "Header"
+      }, "Outline"), R.div({
+        className: "Scroller"
       }, R.OutlineChildrenView({
         compoundFn: this.definedFn
       }), R.div({
@@ -1925,7 +1929,7 @@
         onClick: this._onAddButtonClick
       }, "Add"), UI.selectedChildFn ? R.OutlineControlsView({
         fn: UI.selectedChildFn
-      }) : void 0);
+      }) : void 0));
     },
     _onAddButtonClick: function() {
       return Actions.addCompoundFn();
@@ -2268,7 +2272,11 @@
     },
     render: function() {
       return R.div({
-        className: "Palette Scroller"
+        className: "Palette"
+      }, R.div({
+        className: "Header"
+      }, "Functions"), R.div({
+        className: "Scroller"
       }, builtIn.fns.map((function(_this) {
         return function(fn) {
           return R.DefinitionView({
@@ -2290,7 +2298,7 @@
       }, R.button({
         className: "AddButton",
         onClick: this._onAddButtonClick
-      })));
+      }))));
     },
     _onAddButtonClick: function() {
       return Actions.addDefinedFn();
@@ -2612,8 +2620,8 @@
     h = rect.height;
     sx = clippingRect.left;
     sy = canvas.height - clippingRect.bottom;
-    sw = rect.width;
-    sh = rect.height;
+    sw = clippingRect.width;
+    sh = clippingRect.height;
     gl.viewport(x, y, w, h);
     gl.scissor(sx, sy, sw, sh);
     return glod.viewport_ = {

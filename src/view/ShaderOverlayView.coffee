@@ -39,7 +39,6 @@ R.create "ShaderOverlayView",
       continue if clippingRect.height <= 0 or clippingRect.width <= 0
 
       setViewport(@glod, rect, clippingRect)
-      # setViewport(@glod, rect.left, canvas.height - rect.bottom, rect.width, rect.height)
 
       shaderView = shaderEl.dataFor
       exprs = shaderView.exprs
@@ -109,10 +108,6 @@ createProgramFromSrc = (glod, name, vertex, fragment) ->
   delete glod._programs[name]
   glod.createProgram(name)
 
-# setViewport = (glod, x, y, w, h) ->
-#   glod.viewport(x, y, w, h)
-#   glod.viewport_ = {x, y, w, h}
-
 setViewport = (glod, rect, clippingRect) ->
   gl = glod.gl()
   canvas = glod.canvas()
@@ -124,8 +119,8 @@ setViewport = (glod, rect, clippingRect) ->
 
   sx = clippingRect.left
   sy = canvas.height - clippingRect.bottom
-  sw = rect.width
-  sh = rect.height
+  sw = clippingRect.width
+  sh = clippingRect.height
 
   gl.viewport(x, y, w, h)
   gl.scissor(sx, sy, sw, sh)

@@ -3,15 +3,21 @@ R.create "OutlineView",
     definedFn: C.DefinedFn
 
   render: ->
-    R.div {className: "Outline Scroller"},
-      R.OutlineChildrenView {
-        compoundFn: @definedFn
-      }
+    R.div {className: "Outline"},
 
-      R.div {className: "TextButton", onClick: @_onAddButtonClick}, "Add"
+      R.div {className: "Header"},
+        "Outline"
 
-      if UI.selectedChildFn
-        R.OutlineControlsView {fn: UI.selectedChildFn}
+      R.div {className: "Scroller"},
+
+        R.OutlineChildrenView {
+          compoundFn: @definedFn
+        }
+
+        R.div {className: "TextButton", onClick: @_onAddButtonClick}, "Add"
+
+        if UI.selectedChildFn
+          R.OutlineControlsView {fn: UI.selectedChildFn}
 
   _onAddButtonClick: ->
     Actions.addCompoundFn()
