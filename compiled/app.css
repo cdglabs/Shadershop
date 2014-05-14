@@ -27,24 +27,25 @@ canvas,
 .MainPlot {
   position: absolute;
   top: 0px;
-  left: 0px;
+  left: 180px;
   bottom: 0px;
   right: 270px;
+  border-left: 1px solid #e6e6e6;
   border-right: 1px solid #e6e6e6;
   box-sizing: border-box;
 }
 .Palette {
   position: absolute;
-  right: 0px;
-  width: 270px;
+  left: 0px;
+  width: 180px;
   top: 0px;
-  height: 300px;
+  bottom: 0px;
 }
 .Outline {
   position: absolute;
   right: 0px;
   width: 270px;
-  top: 300px;
+  top: 0px;
   bottom: 0px;
 }
 .DraggingObject {
@@ -119,12 +120,11 @@ canvas,
   background-color: #eee;
 }
 .PaletteHeader:not(:first-child) {
-  margin-top: 18px;
+  margin-top: 12px;
 }
 .AddDefinition {
-  margin: 12px 0px;
+  margin: 6px 0px;
   padding: 6px;
-  width: 48px;
   text-align: center;
 }
 .PlotContainer {

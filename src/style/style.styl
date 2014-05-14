@@ -1,7 +1,8 @@
 highlightColor = #09c
 plotBackgroundColor = #FAF8F2
 
-SidebarWidth = 270px
+LeftSidebarWidth = 180px
+RightSidebarWidth = 270px
 
 HeaderSize = 18px
 
@@ -73,24 +74,25 @@ canvas, .Shader
 .MainPlot
   position absolute
   top 0px
-  left 0px
+  left LeftSidebarWidth
   bottom 0px
-  right SidebarWidth
+  right RightSidebarWidth
+  border-left 1px solid #e6e6e6
   border-right 1px solid #e6e6e6
   box-sizing border-box
 
 .Palette
   position absolute
-  right 0px
-  width SidebarWidth
+  left 0px
+  width LeftSidebarWidth
   top 0px
-  height 300px
+  bottom 0px
 
 .Outline
   position absolute
   right 0px
-  width SidebarWidth
-  top 300px
+  width RightSidebarWidth
+  top 0px
   bottom 0px
 
 
@@ -180,13 +182,13 @@ canvas, .Shader
   background-color #eee
   // text-align center
   &:not(:first-child)
-    margin-top SpacingSize*3
+    margin-top SpacingSize*2
 
 
 .AddDefinition
-  margin SpacingSize*2 0px
+  margin SpacingSize 0px
   padding SpacingSize
-  width PaletteThumbnailSize
+  // width PaletteThumbnailSize
   text-align center
 
 
