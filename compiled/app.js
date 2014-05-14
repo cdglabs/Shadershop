@@ -49,29 +49,57 @@
   }
   return this.require.define;
 }).call(this)({"Actions": function(exports, require, module) {(function() {
-  var Actions, findParentOf;
+  var Actions, findParentIndexOf, getExpandedChildFns;
 
   window.Actions = Actions = {};
 
-  findParentOf = function(childFnTarget) {
+  findParentIndexOf = function(childFnTarget) {
     var recurse;
     recurse = function(compoundFn) {
-      var childFn, _i, _len, _ref;
-      if (_.contains(compoundFn.childFns, childFnTarget)) {
-        return compoundFn;
+      var childFn, found, index, _i, _len, _ref;
+      index = compoundFn.childFns.indexOf(childFnTarget);
+      if (index !== -1) {
+        return {
+          parent: compoundFn,
+          index: index
+        };
       }
       _ref = compoundFn.childFns;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         childFn = _ref[_i];
         if (childFn.fn instanceof C.CompoundFn) {
-          if (recurse(childFn.fn)) {
-            return childFn.fn;
+          if (found = recurse(childFn.fn)) {
+            return found;
           }
         }
       }
       return null;
     };
     return recurse(UI.selectedFn);
+  };
+
+  getExpandedChildFns = function() {
+    var recurse, result;
+    result = [];
+    recurse = function(childFns) {
+      var childFn, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = childFns.length; _i < _len; _i++) {
+        childFn = childFns[_i];
+        if (!childFn.visible) {
+          continue;
+        }
+        result.push(childFn);
+        if (UI.isChildFnExpanded(childFn) && childFn.fn instanceof C.CompoundFn) {
+          _results.push(recurse(childFn.fn.childFns));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+    recurse(UI.selectedFn.childFns);
+    return result;
   };
 
   Actions.addDefinedFn = function() {
@@ -83,26 +111,46 @@
   };
 
   Actions.addChildFn = function(fn) {
-    var childFn, parent;
-    if (UI.selectedChildFn) {
-      if (UI.selectedChildFn.fn instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFn)) {
-        parent = UI.selectedChildFn.fn;
+    var childFn, index, onlyChild, parent, possibleParent, selectedChildFnVisible, takesChildren, _ref;
+    selectedChildFnVisible = UI.selectedChildFn && _.contains(getExpandedChildFns(), UI.selectedChildFn);
+    if (selectedChildFnVisible) {
+      possibleParent = UI.selectedChildFn.fn;
+      takesChildren = possibleParent instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFn);
+      if (takesChildren) {
+        parent = possibleParent;
+        index = parent.childFns.length;
       } else {
-        parent = findParentOf(UI.selectedChildFn);
+        _ref = findParentIndexOf(UI.selectedChildFn), parent = _ref.parent, index = _ref.index;
+        index = index + 1;
+      }
+    } else {
+      if (UI.selectedFn.childFns.length === 1) {
+        onlyChild = UI.selectedFn.childFns[0];
+        possibleParent = onlyChild.fn;
+        takesChildren = possibleParent instanceof C.CompoundFn && UI.isChildFnExpanded(onlyChild);
+        if (takesChildren) {
+          parent = possibleParent;
+          index = parent.childFns.length;
+        }
       }
     }
     if (parent == null) {
       parent = UI.selectedFn;
+      index = parent.childFns.length;
     }
     childFn = new C.ChildFn(fn);
-    Actions.insertChildFn(parent, childFn);
-    return Actions.selectChildFn(childFn);
+    Actions.insertChildFn(parent, childFn, index);
+    Actions.selectChildFn(childFn);
+    return parent;
   };
 
   Actions.addCompoundFn = function() {
-    var fn;
+    var childFn, fn;
     fn = new C.CompoundFn();
-    return Actions.addChildFn(fn);
+    fn.childFns = UI.selectedFn.childFns;
+    childFn = new C.ChildFn(fn);
+    UI.selectedFn.childFns = [childFn];
+    return Compiler.setDirty();
   };
 
   Actions.removeChildFn = function(parentCompoundFn, childFn) {
@@ -116,9 +164,6 @@
   };
 
   Actions.insertChildFn = function(parentCompoundFn, childFn, index) {
-    if (index == null) {
-      index = parentCompoundFn.childFns.length;
-    }
     parentCompoundFn.childFns.splice(index, 0, childFn);
     return Compiler.setDirty();
   };

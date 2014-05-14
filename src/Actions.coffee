@@ -1,21 +1,37 @@
 window.Actions = Actions = {}
 
+
 # =============================================================================
 # Manipulating Fn hierarchy
 # =============================================================================
 
-findParentOf = (childFnTarget) ->
+findParentIndexOf = (childFnTarget) ->
   recurse = (compoundFn) ->
-    if _.contains(compoundFn.childFns, childFnTarget)
-      return compoundFn
+    index = compoundFn.childFns.indexOf(childFnTarget)
+    if index != -1
+      return {
+        parent: compoundFn
+        index: index
+      }
 
     for childFn in compoundFn.childFns
       if childFn.fn instanceof C.CompoundFn
-        if recurse(childFn.fn)
-          return childFn.fn
+        if found = recurse(childFn.fn)
+          return found
 
     return null
   recurse(UI.selectedFn)
+
+getExpandedChildFns = ->
+  result = []
+  recurse = (childFns) ->
+    for childFn in childFns
+      continue unless childFn.visible
+      result.push(childFn)
+      if UI.isChildFnExpanded(childFn) and childFn.fn instanceof C.CompoundFn
+        recurse(childFn.fn.childFns)
+  recurse(UI.selectedFn.childFns)
+  return result
 
 
 Actions.addDefinedFn = ->
@@ -25,21 +41,42 @@ Actions.addDefinedFn = ->
   Actions.selectFn(fn)
 
 Actions.addChildFn = (fn) ->
-  if UI.selectedChildFn
-    if UI.selectedChildFn.fn instanceof C.CompoundFn and UI.isChildFnExpanded(UI.selectedChildFn)
-      parent = UI.selectedChildFn.fn
-    else
-      parent = findParentOf(UI.selectedChildFn)
+  selectedChildFnVisible = (UI.selectedChildFn and _.contains(getExpandedChildFns(), UI.selectedChildFn))
 
-  parent ?= UI.selectedFn
+  if selectedChildFnVisible
+    possibleParent = UI.selectedChildFn.fn
+    takesChildren = (possibleParent instanceof C.CompoundFn and UI.isChildFnExpanded(UI.selectedChildFn))
+    if takesChildren
+      parent = possibleParent
+      index = parent.childFns.length
+    else
+      {parent, index} = findParentIndexOf(UI.selectedChildFn)
+      index = index + 1 # insert it after the selectedChildFn
+
+  else
+    if UI.selectedFn.childFns.length == 1
+      onlyChild = UI.selectedFn.childFns[0]
+      possibleParent = onlyChild.fn
+      takesChildren = (possibleParent instanceof C.CompoundFn and UI.isChildFnExpanded(onlyChild))
+      if takesChildren
+        parent = possibleParent
+        index = parent.childFns.length
+
+  if !parent?
+    parent = UI.selectedFn
+    index = parent.childFns.length
+
   childFn = new C.ChildFn(fn)
-  Actions.insertChildFn(parent, childFn)
+  Actions.insertChildFn(parent, childFn, index)
   Actions.selectChildFn(childFn)
+  return parent
 
 Actions.addCompoundFn = ->
-  # TODO more advanced
   fn = new C.CompoundFn()
-  Actions.addChildFn(fn)
+  fn.childFns = UI.selectedFn.childFns
+  childFn = new C.ChildFn(fn)
+  UI.selectedFn.childFns = [childFn]
+  Compiler.setDirty()
 
 Actions.removeChildFn = (parentCompoundFn, childFn) ->
   index = parentCompoundFn.childFns.indexOf(childFn)
@@ -48,7 +85,6 @@ Actions.removeChildFn = (parentCompoundFn, childFn) ->
   Compiler.setDirty()
 
 Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
-  index = parentCompoundFn.childFns.length if !index?
   parentCompoundFn.childFns.splice(index, 0, childFn)
   Compiler.setDirty()
 
