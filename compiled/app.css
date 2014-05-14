@@ -94,9 +94,6 @@ canvas,
   font-style: italic;
   color: #ccc;
 }
-.Palette .Scroller {
-  padding-bottom: 12px;
-}
 .Definition:hover {
   background-color: #f2f9fc;
 }
@@ -107,7 +104,7 @@ canvas,
   width: 48px;
   height: 48px;
   border: 1px solid #eee;
-  margin: 3px 6px;
+  margin: 6px 6px;
 }
 .Definition.Selected .PlotContainer {
   outline: 1px solid #09c;
@@ -117,10 +114,15 @@ canvas,
   display: inline-block;
   vertical-align: middle;
 }
-.Divider {
-  border-bottom: 1px solid #eee;
+.PaletteHeader {
+  padding: 6px 0 6px 12px;
+  background-color: #eee;
+}
+.PaletteHeader:not(:first-child) {
+  margin-top: 18px;
 }
 .AddDefinition {
+  margin: 12px 0px;
   padding: 6px;
   width: 48px;
   text-align: center;

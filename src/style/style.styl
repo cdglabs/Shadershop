@@ -152,9 +152,6 @@ canvas, .Shader
 // Palette
 // ============================================================================
 
-.Palette .Scroller
-  padding-bottom SpacingSize*2
-
 .Definition
   // &.Hovered
   &:hover
@@ -166,7 +163,7 @@ canvas, .Shader
     width PaletteThumbnailSize
     height PaletteThumbnailSize
     border 1px solid #eee
-    margin 3px 6px
+    margin SpacingSize SpacingSize
 
   &.Selected
     .PlotContainer
@@ -177,10 +174,17 @@ canvas, .Shader
     inline middle
     // margin-left SpacingSize
 
-.Divider
-  border-bottom 1px solid #eee
+.PaletteHeader
+  // padding-left SpacingSize*2 + PaletteThumbnailSize
+  padding SpacingSize 0 SpacingSize SpacingSize*2
+  background-color #eee
+  // text-align center
+  &:not(:first-child)
+    margin-top SpacingSize*3
+
 
 .AddDefinition
+  margin SpacingSize*2 0px
   padding SpacingSize
   width PaletteThumbnailSize
   text-align center

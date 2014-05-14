@@ -2284,9 +2284,11 @@
         className: "Palette"
       }, R.div({
         className: "Header"
-      }, "Functions"), R.div({
+      }, "Library"), R.div({
         className: "Scroller"
-      }, builtIn.fns.map((function(_this) {
+      }, R.div({
+        className: "PaletteHeader"
+      }, "Built In Functions"), builtIn.fns.map((function(_this) {
         return function(fn) {
           return R.DefinitionView({
             fn: fn,
@@ -2294,8 +2296,8 @@
           });
         };
       })(this)), R.div({
-        className: "Divider"
-      }), this.appRoot.fns.map((function(_this) {
+        className: "PaletteHeader"
+      }, "Custom Functions"), this.appRoot.fns.map((function(_this) {
         return function(fn) {
           return R.DefinitionView({
             fn: fn,

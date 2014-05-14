@@ -6,14 +6,16 @@ R.create "PaletteView",
     R.div {className: "Palette"},
 
       R.div {className: "Header"},
-        "Functions"
+        "Library"
 
       R.div {className: "Scroller"},
+
+        R.div {className: "PaletteHeader"}, "Built In Functions"
 
         builtIn.fns.map (fn) =>
           R.DefinitionView {fn, key: C.id(fn)}
 
-        R.div {className: "Divider"}
+        R.div {className: "PaletteHeader"}, "Custom Functions"
 
         @appRoot.fns.map (fn) =>
           R.DefinitionView {fn, key: C.id(fn)}
