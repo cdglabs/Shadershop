@@ -40,9 +40,13 @@ html, body
 [contenteditable]:active, [contenteditable]:focus, button:active, button:focus
   outline none
 
+[contenteditable]
+  cursor text
+
 body
   font-family "Lucida Sans Unicode", "Lucida Grande", sans-serif
   font-size 12px
+  cursor default
 
 canvas, .Shader
   position absolute
@@ -246,7 +250,6 @@ canvas, .Shader
   line-height OutlineThumbnailSize + SpacingSize
   font-size 18px
   color #bbb
-  cursor pointer
   opacity 0
   &:hover
     color highlightColor

@@ -73,11 +73,11 @@ R.create "OutlineItemView",
 
     R.div {className: itemClassName},
       R.div {className: rowClassName, onMouseDown: @_onRowMouseDown, onMouseEnter: @_onRowMouseEnter, onMouseLeave: @_onRowMouseLeave},
-        R.div {className: "OutlineVisible", onClick: @_onVisibleClick},
+        R.div {className: "OutlineVisible Interactive", onClick: @_onVisibleClick},
           R.div {className: "icon-eye"}
 
         if canHaveChildren
-          R.div {className: "OutlineDisclosure", onClick: @_onDisclosureClick},
+          R.div {className: "OutlineDisclosure Interactive", onClick: @_onDisclosureClick},
             R.div {className: disclosureClassName}
 
         R.OutlineThumbnailView {childFn: @childFn}
@@ -96,11 +96,11 @@ R.create "OutlineItemView",
     Actions.toggleChildFnVisible(@childFn)
 
   _onRowMouseDown: (e) ->
-    return unless e.target.classList.contains("OutlineRow")
-
-    util.preventDefault(e)
+    return if e.target.closest(".Interactive, select, [contenteditable]")
 
     Actions.selectChildFn(@childFn)
+
+    util.preventDefault(e)
 
     el = @getDOMNode()
     rect = el.getMarginRect()

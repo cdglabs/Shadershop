@@ -2060,12 +2060,12 @@
         onMouseEnter: this._onRowMouseEnter,
         onMouseLeave: this._onRowMouseLeave
       }, R.div({
-        className: "OutlineVisible",
+        className: "OutlineVisible Interactive",
         onClick: this._onVisibleClick
       }, R.div({
         className: "icon-eye"
       })), canHaveChildren ? R.div({
-        className: "OutlineDisclosure",
+        className: "OutlineDisclosure Interactive",
         onClick: this._onDisclosureClick
       }, R.div({
         className: disclosureClassName
@@ -2085,11 +2085,11 @@
     },
     _onRowMouseDown: function(e) {
       var childFn, el, myHeight, myWidth, offset, parentCompoundFn, rect;
-      if (!e.target.classList.contains("OutlineRow")) {
+      if (e.target.closest(".Interactive, select, [contenteditable]")) {
         return;
       }
-      util.preventDefault(e);
       Actions.selectChildFn(this.childFn);
+      util.preventDefault(e);
       el = this.getDOMNode();
       rect = el.getMarginRect();
       myWidth = rect.width;
