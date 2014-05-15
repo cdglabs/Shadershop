@@ -49,7 +49,7 @@
   }
   return this.require.define;
 }).call(this)({"Actions": function(exports, require, module) {(function() {
-  var Actions, findParentIndexOf, getExpandedChildFns;
+  var Actions, ensureSelectedChildFnVisible, findParentIndexOf, getExpandedChildFns;
 
   window.Actions = Actions = {};
 
@@ -102,6 +102,14 @@
     return result;
   };
 
+  ensureSelectedChildFnVisible = function() {
+    if (UI.selectedChildFn) {
+      if (!_.contains(getExpandedChildFns(), UI.selectedChildFn)) {
+        return UI.selectedChildFn = null;
+      }
+    }
+  };
+
   Actions.addDefinedFn = function() {
     var fn;
     fn = new C.DefinedFn();
@@ -111,9 +119,8 @@
   };
 
   Actions.addChildFn = function(fn) {
-    var childFn, index, onlyChild, parent, possibleParent, selectedChildFnVisible, takesChildren, _ref;
-    selectedChildFnVisible = UI.selectedChildFn && _.contains(getExpandedChildFns(), UI.selectedChildFn);
-    if (selectedChildFnVisible) {
+    var childFn, index, onlyChild, parent, possibleParent, takesChildren, _ref;
+    if (UI.selectedChildFn) {
       possibleParent = UI.selectedChildFn.fn;
       takesChildren = possibleParent instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFn);
       if (takesChildren) {
@@ -164,6 +171,7 @@
       return;
     }
     parentCompoundFn.childFns.splice(index, 1);
+    ensureSelectedChildFnVisible();
     return Compiler.setDirty();
   };
 
@@ -192,6 +200,7 @@
 
   Actions.setChildFnVisible = function(childFn, newVisible) {
     childFn.visible = newVisible;
+    ensureSelectedChildFnVisible();
     return Compiler.setDirty();
   };
 
@@ -218,7 +227,8 @@
   };
 
   Actions.selectChildFn = function(childFn) {
-    return UI.selectedChildFn = childFn;
+    UI.selectedChildFn = childFn;
+    return ensureSelectedChildFnVisible();
   };
 
   Actions.hoverChildFn = function(childFn) {
@@ -234,7 +244,8 @@
   Actions.setChildFnExpanded = function(childFn, expanded) {
     var id;
     id = C.id(childFn);
-    return UI.expandedChildFns[id] = expanded;
+    UI.expandedChildFns[id] = expanded;
+    return ensureSelectedChildFnVisible();
   };
 
 }).call(this);

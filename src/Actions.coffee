@@ -33,6 +33,11 @@ getExpandedChildFns = ->
   recurse(UI.selectedFn.childFns)
   return result
 
+ensureSelectedChildFnVisible = ->
+  if UI.selectedChildFn
+    if !_.contains(getExpandedChildFns(), UI.selectedChildFn)
+      UI.selectedChildFn = null
+
 
 Actions.addDefinedFn = ->
   fn = new C.DefinedFn()
@@ -41,9 +46,7 @@ Actions.addDefinedFn = ->
   Actions.selectFn(fn)
 
 Actions.addChildFn = (fn) ->
-  selectedChildFnVisible = (UI.selectedChildFn and _.contains(getExpandedChildFns(), UI.selectedChildFn))
-
-  if selectedChildFnVisible
+  if UI.selectedChildFn
     possibleParent = UI.selectedChildFn.fn
     takesChildren = (possibleParent instanceof C.CompoundFn and UI.isChildFnExpanded(UI.selectedChildFn))
     if takesChildren
@@ -82,6 +85,7 @@ Actions.removeChildFn = (parentCompoundFn, childFn) ->
   index = parentCompoundFn.childFns.indexOf(childFn)
   return if index == -1
   parentCompoundFn.childFns.splice(index, 1)
+  ensureSelectedChildFnVisible()
   Compiler.setDirty()
 
 Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
@@ -109,6 +113,7 @@ Actions.toggleChildFnVisible = (childFn) ->
 
 Actions.setChildFnVisible = (childFn, newVisible) ->
   childFn.visible = newVisible
+  ensureSelectedChildFnVisible()
   Compiler.setDirty()
 
 
@@ -142,6 +147,7 @@ Actions.selectFn = (fn) ->
 
 Actions.selectChildFn = (childFn) ->
   UI.selectedChildFn = childFn
+  ensureSelectedChildFnVisible()
 
 Actions.hoverChildFn = (childFn) ->
   UI.hoveredChildFn = childFn
@@ -153,6 +159,7 @@ Actions.toggleChildFnExpanded = (childFn) ->
 Actions.setChildFnExpanded = (childFn, expanded) ->
   id = C.id(childFn)
   UI.expandedChildFns[id] = expanded
+  ensureSelectedChildFnVisible()
 
 
 
