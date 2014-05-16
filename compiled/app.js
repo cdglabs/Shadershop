@@ -958,14 +958,14 @@
     Plot.prototype.toWorld = function(width, height, _arg) {
       var center, dimensions, pixelSize, result, x, xOffset, y, yOffset;
       x = _arg.x, y = _arg.y;
-      xOffset = x - (width / 2);
-      yOffset = -(y - (height / 2));
       pixelSize = this.getPixelSize(width, height);
       center = {
         domain: this.domainCenter,
         range: this.rangeCenter
       };
       dimensions = this.getDimensions();
+      xOffset = x - width / 2;
+      yOffset = -(y - height / 2);
       result = {
         domain: util.constructVector(config.dimensions, null),
         range: util.constructVector(config.dimensions, null)
@@ -973,6 +973,29 @@
       result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + xOffset * pixelSize;
       result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize;
       return result;
+    };
+
+    Plot.prototype.toPixel = function(width, height, _arg) {
+      var center, dimensions, domain, offset, pixelSize, range, x, xOffset, y, yOffset;
+      domain = _arg.domain, range = _arg.range;
+      pixelSize = this.getPixelSize(width, height);
+      center = {
+        domain: this.domainCenter,
+        range: this.rangeCenter
+      };
+      dimensions = this.getDimensions();
+      offset = {
+        domain: util.vector.sub(domain, center.domain),
+        range: util.vector.sub(range, center.range)
+      };
+      xOffset = offset[dimensions[0].space][dimensions[0].coord] / pixelSize;
+      yOffset = offset[dimensions[1].space][dimensions[1].coord] / pixelSize;
+      x = width / 2 + xOffset;
+      y = height / 2 - yOffset;
+      return {
+        x: x,
+        y: y
+      };
     };
 
     return Plot;

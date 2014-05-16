@@ -86,7 +86,6 @@ Plot
 
 
 TODO
-  add toWorld and toPixel methods
   try to get rid of all getBounds calls in MainPlotView
 
 

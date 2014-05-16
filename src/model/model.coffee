@@ -202,7 +202,7 @@ class C.Plot
     }
 
   getPixelSize: (width, height) ->
-    # How "wide" a pixel is in local coordinates
+    # How "wide" a pixel is in world coordinates
     minDimension = Math.min(width, height)
     return 2 * @scale / minDimension
 
@@ -214,15 +214,15 @@ class C.Plot
     ]
 
   toWorld: (width, height, {x, y}) ->
-    xOffset = x - (width / 2)
-    yOffset = -(y - (height / 2))
-
     pixelSize = @getPixelSize(width, height)
     center = {
       domain: @domainCenter
       range:  @rangeCenter
     }
     dimensions = @getDimensions()
+
+    xOffset = x - width/2
+    yOffset = -(y - height/2)
 
     result = {
       domain: util.constructVector(config.dimensions, null)
@@ -232,6 +232,29 @@ class C.Plot
     result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize
 
     return result
+
+  toPixel: (width, height, {domain, range}) ->
+    pixelSize = @getPixelSize(width, height)
+    center = {
+      domain: @domainCenter
+      range:  @rangeCenter
+    }
+    dimensions = @getDimensions()
+
+    offset = {
+      domain: util.vector.sub(domain, center.domain)
+      range:  util.vector.sub(range,  center.range)
+    }
+
+    xOffset = offset[dimensions[0].space][dimensions[0].coord] / pixelSize
+    yOffset = offset[dimensions[1].space][dimensions[1].coord] / pixelSize
+
+    x = width/2 + xOffset
+    y = height/2 - yOffset
+
+    return {x, y}
+
+
 
 
 class C.AppRoot
