@@ -120,13 +120,15 @@ R.create "MainPlotView",
 
     {x, y} = @_getLocalMouseCoords()
 
-    domainCenter = [x, 0,0,0]
-    rangeCenter  = [y, 0,0,0]
+    zoomCenter = {
+      domain: [x, null,null,null]
+      range:  [y, null,null,null]
+    }
 
     scaleFactor = 1.1
     scaleFactor = 1 / scaleFactor if e.deltaY < 0
 
-    Actions.zoomPlot(@fn.plot, domainCenter, rangeCenter, scaleFactor)
+    Actions.zoomPlot(@fn.plot, zoomCenter, scaleFactor)
 
   _changeSelection: ->
     Actions.selectChildFn(@_findHitTarget())

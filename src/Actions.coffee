@@ -125,13 +125,17 @@ Actions.panPlot = (plot, domainOffset, rangeOffset) ->
   plot.domainCenter = numeric.add(plot.domainCenter, domainOffset)
   plot.rangeCenter  = numeric.add(plot.rangeCenter,  rangeOffset)
 
-Actions.zoomPlot = (plot, domainCenter, rangeCenter, scaleFactor) ->
+Actions.zoomPlot = (plot, zoomCenter, scaleFactor) ->
   # scaleFactor > 1 is zoom "out"
-  domainOffset = numeric.sub(plot.domainCenter, domainCenter)
-  rangeOffset  = numeric.sub(plot.rangeCenter,  rangeCenter)
 
-  plot.domainCenter = numeric.add(domainCenter, numeric.mul(scaleFactor, domainOffset))
-  plot.rangeCenter  = numeric.add(rangeCenter,  numeric.mul(scaleFactor, rangeOffset))
+  domainOffset = util.vector.sub(plot.domainCenter, zoomCenter.domain)
+  rangeOffset  = util.vector.sub(plot.rangeCenter,  zoomCenter.range)
+
+  newDomainCenter = util.vector.add(zoomCenter.domain, util.vector.mul(scaleFactor, domainOffset))
+  newRangeCenter  = util.vector.add(zoomCenter.range,  util.vector.mul(scaleFactor, rangeOffset))
+
+  plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter)
+  plot.rangeCenter  = util.vector.merge(plot.rangeCenter,  newRangeCenter)
 
   plot.scale *= scaleFactor
 

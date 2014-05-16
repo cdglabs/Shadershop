@@ -86,7 +86,6 @@ Plot
 
 
 TODO
-  test vector functions
   refactor Actions.panPlot to new API
   add getDimensions method with hardcoded result
   add toWorld and toPixel methods

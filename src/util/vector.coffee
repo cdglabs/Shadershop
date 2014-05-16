@@ -15,6 +15,10 @@ sub = (x, y) ->
   return null unless x? and y?
   return x - y
 
+mul = (x, y) ->
+  return null unless x? and y?
+  return x * y
+
 vector.add = (a, b) ->
   zipWith(add, a, b)
 
@@ -26,3 +30,9 @@ merge = (original, extension) ->
 
 vector.merge = (original, extension) ->
   zipWith(merge, original, extension)
+
+vector.mul = (scalar, a) ->
+  result = []
+  for aItem in a
+    result.push(mul(scalar, aItem))
+  return result

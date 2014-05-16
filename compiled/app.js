@@ -209,12 +209,14 @@
     return plot.rangeCenter = numeric.add(plot.rangeCenter, rangeOffset);
   };
 
-  Actions.zoomPlot = function(plot, domainCenter, rangeCenter, scaleFactor) {
-    var domainOffset, rangeOffset;
-    domainOffset = numeric.sub(plot.domainCenter, domainCenter);
-    rangeOffset = numeric.sub(plot.rangeCenter, rangeCenter);
-    plot.domainCenter = numeric.add(domainCenter, numeric.mul(scaleFactor, domainOffset));
-    plot.rangeCenter = numeric.add(rangeCenter, numeric.mul(scaleFactor, rangeOffset));
+  Actions.zoomPlot = function(plot, zoomCenter, scaleFactor) {
+    var domainOffset, newDomainCenter, newRangeCenter, rangeOffset;
+    domainOffset = util.vector.sub(plot.domainCenter, zoomCenter.domain);
+    rangeOffset = util.vector.sub(plot.rangeCenter, zoomCenter.range);
+    newDomainCenter = util.vector.add(zoomCenter.domain, util.vector.mul(scaleFactor, domainOffset));
+    newRangeCenter = util.vector.add(zoomCenter.range, util.vector.mul(scaleFactor, rangeOffset));
+    plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter);
+    plot.rangeCenter = util.vector.merge(plot.rangeCenter, newRangeCenter);
     return plot.scale *= scaleFactor;
   };
 
@@ -1665,7 +1667,7 @@
 
 }).call(this);
 }, "util/vector": function(exports, require, module) {(function() {
-  var add, merge, sub, vector, zipWith;
+  var add, merge, mul, sub, vector, zipWith;
 
   util.vector = vector = {};
 
@@ -1694,6 +1696,13 @@
     return x - y;
   };
 
+  mul = function(x, y) {
+    if (!((x != null) && (y != null))) {
+      return null;
+    }
+    return x * y;
+  };
+
   vector.add = function(a, b) {
     return zipWith(add, a, b);
   };
@@ -1712,6 +1721,16 @@
 
   vector.merge = function(original, extension) {
     return zipWith(merge, original, extension);
+  };
+
+  vector.mul = function(scalar, a) {
+    var aItem, result, _i, _len;
+    result = [];
+    for (_i = 0, _len = a.length; _i < _len; _i++) {
+      aItem = a[_i];
+      result.push(mul(scalar, aItem));
+    }
+    return result;
   };
 
 }).call(this);
@@ -1889,16 +1908,18 @@
       })(this));
     },
     _onWheel: function(e) {
-      var domainCenter, rangeCenter, scaleFactor, x, y, _ref;
+      var scaleFactor, x, y, zoomCenter, _ref;
       e.preventDefault();
       _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      domainCenter = [x, 0, 0, 0];
-      rangeCenter = [y, 0, 0, 0];
+      zoomCenter = {
+        domain: [x, null, null, null],
+        range: [y, null, null, null]
+      };
       scaleFactor = 1.1;
       if (e.deltaY < 0) {
         scaleFactor = 1 / scaleFactor;
       }
-      return Actions.zoomPlot(this.fn.plot, domainCenter, rangeCenter, scaleFactor);
+      return Actions.zoomPlot(this.fn.plot, zoomCenter, scaleFactor);
     },
     _changeSelection: function() {
       return Actions.selectChildFn(this._findHitTarget());
