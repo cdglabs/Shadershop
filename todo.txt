@@ -7,7 +7,6 @@ Misc
   Figure out how React context works
   Do something better than util.safeInv
   Tune mousewheel zooming
-  Maybe invisible childFn's shouldn't be selectable
   Delete key
   Undo
   Duplicate
@@ -39,10 +38,61 @@ Inspector
 
 
 Palette
-  CompoundFns get added "around" what's in the current DefinedFn
-  BuiltInFns and DefinedFns get added within the selected ChildFn if it's compound, otherwise after the selected ChildFn
-  Anything added gets selected
-  Anything can also be dragged into the outline to put it in a specific place
+  Insert button
+  Anything can be dragged into the outline to put it in a specific place
+
+
+
+Plot
+  toWorld: (width, height, {x, y}) -> {domain, range}
+    e.g.
+      {domain: [3,null,null,null], range: [4,null,null,null]} or
+      {domain: [2,5,null,null], range: [null,null,null,null]}
+  toPixel: (width, height, {domain, range}) -> {x, y}
+
+  getDimensions: -> [{space, coord}]
+    e.g.
+      [{space: "domain", coord: 0}, {space: "range", coord: 0}] or
+      [{space: "domain", coord: 0}, {space: "domain", coord: 1}]
+
+
+  Actions
+    panPlot  = (plot, originalWorld, currentWorld)
+    zoomPlot = (plot, centerWorld, scaleFactor)
+
+
+  For control points
+    Translate:
+      get:
+        get domainTranslate and rangeTranslate as a single {domain, range} object
+        Plot.toPixel that, put the control point at that place
+      set:
+        Plot.toWorld {x,y} (e.g. {domain: [5,null,null,null], range: [6,null,null,null]})
+        overwrite non-null part of domainTranslate and rangeTranslate
+
+    Make a transform control point for each dimension in the plot, for each
+      get:
+        get translate {domain, range} object
+        get transform for that dimension (e.g. [1,0,0,0])
+        add that to the translate object (using space: "domain" | "range")
+        Plot.toPixel that, put the control point at that place
+      set:
+        Plot.toWorld {x,y} (e.g. {domain: [5,null,null,null], range: [6,null,null,null]})
+        take just the space part of that
+        subtract the space part of the translate {domain, range} object
+        overwrite non-null part of transform
+
+
+
+
+TODO
+  test vector functions
+  refactor Actions.panPlot to new API
+  add getDimensions method with hardcoded result
+  add toWorld and toPixel methods
+  try to get rid of all getBounds calls in MainPlotView
+
+
 
 
 

@@ -1661,6 +1661,59 @@
 
   require("./evaluate");
 
+  require("./vector");
+
+}).call(this);
+}, "util/vector": function(exports, require, module) {(function() {
+  var add, merge, sub, vector, zipWith;
+
+  util.vector = vector = {};
+
+  zipWith = function(f, a, b) {
+    var aItem, bItem, index, result, _i, _len;
+    result = [];
+    for (index = _i = 0, _len = a.length; _i < _len; index = ++_i) {
+      aItem = a[index];
+      bItem = b[index];
+      result.push(f(aItem, bItem));
+    }
+    return result;
+  };
+
+  add = function(x, y) {
+    if (!((x != null) && (y != null))) {
+      return null;
+    }
+    return x + y;
+  };
+
+  sub = function(x, y) {
+    if (!((x != null) && (y != null))) {
+      return null;
+    }
+    return x - y;
+  };
+
+  vector.add = function(a, b) {
+    return zipWith(add, a, b);
+  };
+
+  vector.sub = function(a, b) {
+    return zipWith(sub, a, b);
+  };
+
+  merge = function(original, extension) {
+    if (extension != null) {
+      return extension;
+    } else {
+      return original;
+    }
+  };
+
+  vector.merge = function(original, extension) {
+    return zipWith(merge, original, extension);
+  };
+
 }).call(this);
 }, "view/AppRootView": function(exports, require, module) {(function() {
   R.create("AppRootView", {

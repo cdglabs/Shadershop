@@ -215,3 +215,4 @@ util.onceDragConsummated = (downEvent, callback, notConsummatedCallback=null) ->
 require("./selection")
 require("./canvas")
 require("./evaluate")
+require("./vector")
