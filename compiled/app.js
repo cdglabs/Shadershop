@@ -1767,6 +1767,18 @@
     return result;
   };
 
+  vector.quadrance = function(a) {
+    var aItem, result, _i, _len;
+    result = 0;
+    for (_i = 0, _len = a.length; _i < _len; _i++) {
+      aItem = a[_i];
+      if (aItem != null) {
+        result += aItem * aItem;
+      }
+    }
+    return result;
+  };
+
 }).call(this);
 }, "view/AppRootView": function(exports, require, module) {(function() {
   R.create("AppRootView", {
@@ -1849,32 +1861,25 @@
         y: y
       });
     },
-    _getLocalMouseCoords: function() {
-      var bounds, rect, x, y;
-      rect = this.getDOMNode().getBoundingClientRect();
-      bounds = this.fn.plot.getBounds(rect.width, rect.height);
-      x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax);
-      y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
-      return {
-        x: x,
-        y: y
-      };
-    },
     _findHitTarget: function() {
-      var childFn, distance, evaluated, found, foundDistance, pixelSize, rect, x, y, _i, _len, _ref, _ref1;
-      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, rect, testPoint, _i, _len, _ref, _ref1;
+      _ref = this._getWorldMouseCoords(), domain = _ref.domain, range = _ref.range;
       rect = this.getDOMNode().getBoundingClientRect();
       pixelSize = this.fn.plot.getPixelSize(rect.width, rect.height);
+      testPoint = util.constructVector(config.dimensions, 0);
+      testPoint = util.vector.merge(testPoint, domain);
       found = null;
       foundDistance = config.hitTolerance * pixelSize;
+      foundQuadrance = foundDistance * foundDistance;
       _ref1 = this._getExpandedChildFns();
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         childFn = _ref1[_i];
-        evaluated = childFn.evaluate([x, 0, 0, 0]);
-        distance = Math.abs(y - evaluated[0]);
-        if (distance < foundDistance) {
+        evaluated = childFn.evaluate(testPoint);
+        offset = util.vector.sub(range, evaluated);
+        quadrance = util.vector.quadrance(offset);
+        if (quadrance < foundQuadrance) {
           found = childFn;
-          foundDistance = distance;
+          foundQuadrance = quadrance;
         }
       }
       return found;

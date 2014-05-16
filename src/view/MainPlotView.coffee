@@ -19,29 +19,29 @@ R.create "MainPlotView",
     y = UI.mousePosition.y - rect.top
     return @fn.plot.toWorld(rect.width, rect.height, {x, y})
 
-  _getLocalMouseCoords: ->
-    rect = @getDOMNode().getBoundingClientRect()
-    bounds = @fn.plot.getBounds(rect.width, rect.height)
-    x = util.lerp(UI.mousePosition.x, rect.left, rect.right, bounds.xMin, bounds.xMax)
-    y = util.lerp(UI.mousePosition.y, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
-    return {x, y}
-
   _findHitTarget: ->
-    {x, y} = @_getLocalMouseCoords()
+    {domain, range} = @_getWorldMouseCoords()
 
     rect = @getDOMNode().getBoundingClientRect()
     pixelSize = @fn.plot.getPixelSize(rect.width, rect.height)
 
+    # TODO 0 here should be replaced based on where the projection is.
+    testPoint = util.constructVector(config.dimensions, 0)
+    testPoint = util.vector.merge(testPoint, domain)
+
     found = null
     foundDistance = config.hitTolerance * pixelSize
+    foundQuadrance = foundDistance * foundDistance
 
     for childFn in @_getExpandedChildFns()
-      evaluated = childFn.evaluate([x, 0, 0, 0])
+      evaluated = childFn.evaluate(testPoint)
 
-      distance = Math.abs(y - evaluated[0])
-      if distance < foundDistance
+      offset = util.vector.sub(range, evaluated)
+      quadrance = util.vector.quadrance(offset)
+
+      if quadrance < foundQuadrance
         found = childFn
-        foundDistance = distance
+        foundQuadrance = quadrance
 
     return found
 

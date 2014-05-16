@@ -36,3 +36,10 @@ vector.mul = (scalar, a) ->
   for aItem in a
     result.push(mul(scalar, aItem))
   return result
+
+vector.quadrance = (a) ->
+  result = 0
+  for aItem in a
+    if aItem?
+      result += aItem * aItem
+  return result
