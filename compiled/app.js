@@ -943,6 +943,38 @@
       return 2 * this.scale / minDimension;
     };
 
+    Plot.prototype.getDimensions = function() {
+      return [
+        {
+          space: "domain",
+          coord: 0
+        }, {
+          space: "range",
+          coord: 0
+        }
+      ];
+    };
+
+    Plot.prototype.toWorld = function(width, height, _arg) {
+      var center, dimensions, pixelSize, result, x, xOffset, y, yOffset;
+      x = _arg.x, y = _arg.y;
+      xOffset = x - (width / 2);
+      yOffset = -(y - (height / 2));
+      pixelSize = this.getPixelSize(width, height);
+      center = {
+        domain: this.domainCenter,
+        range: this.rangeCenter
+      };
+      dimensions = this.getDimensions();
+      result = {
+        domain: util.constructVector(config.dimensions, null),
+        range: util.constructVector(config.dimensions, null)
+      };
+      result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + xOffset * pixelSize;
+      result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize;
+      return result;
+    };
+
     return Plot;
 
   })();
@@ -1604,9 +1636,6 @@
 
   util.constructVector = function(dimensions, value) {
     var _i, _results;
-    if (value == null) {
-      value = 0;
-    }
     return (function() {
       _results = [];
       for (var _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; 0 <= dimensions ? _i++ : _i--){ _results.push(_i); }
@@ -1810,6 +1839,16 @@
       recurse(this.fn.childFns);
       return result;
     },
+    _getWorldMouseCoords: function() {
+      var rect, x, y;
+      rect = this.getDOMNode().getBoundingClientRect();
+      x = UI.mousePosition.x - rect.left;
+      y = UI.mousePosition.y - rect.top;
+      return this.fn.plot.toWorld(rect.width, rect.height, {
+        x: x,
+        y: y
+      });
+    },
     _getLocalMouseCoords: function() {
       var bounds, rect, x, y;
       rect = this.getDOMNode().getBoundingClientRect();
@@ -1913,39 +1952,30 @@
       })(this));
     },
     _onWheel: function(e) {
-      var scaleFactor, x, y, zoomCenter, _ref;
+      var scaleFactor, zoomCenter;
       e.preventDefault();
-      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      zoomCenter = {
-        domain: [x, null, null, null],
-        range: [y, null, null, null]
-      };
+      if (Math.abs(e.deltaY) <= 1) {
+        return;
+      }
       scaleFactor = 1.1;
       if (e.deltaY < 0) {
         scaleFactor = 1 / scaleFactor;
       }
+      zoomCenter = this._getWorldMouseCoords();
       return Actions.zoomPlot(this.fn.plot, zoomCenter, scaleFactor);
     },
     _changeSelection: function() {
       return Actions.selectChildFn(this._findHitTarget());
     },
     _startPan: function(e) {
-      var from, x, y, _ref;
-      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
-      from = {
-        domain: [x, null, null, null],
-        range: [y, null, null, null]
-      };
+      var from;
+      from = this._getWorldMouseCoords();
       return UI.dragging = {
         cursor: config.cursor.grabbing,
         onMove: (function(_this) {
           return function(e) {
-            var to, _ref1;
-            _ref1 = _this._getLocalMouseCoords(), x = _ref1.x, y = _ref1.y;
-            to = {
-              domain: [x, null, null, null],
-              range: [y, null, null, null]
-            };
+            var to;
+            to = _this._getWorldMouseCoords();
             return Actions.panPlot(_this.fn.plot, from, to);
           };
         })(this)

@@ -166,7 +166,7 @@ util.glslSetComponent = (expr, dimensions, component, value) ->
   return expr + "[" + component + "]" + " = " + value
 
 
-util.constructVector = (dimensions, value = 0) ->
+util.constructVector = (dimensions, value) ->
   return [0...dimensions].map -> value
 
 

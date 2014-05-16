@@ -206,7 +206,32 @@ class C.Plot
     minDimension = Math.min(width, height)
     return 2 * @scale / minDimension
 
+  getDimensions: ->
+    # TODO: should be based on @type
+    return [
+      {space: "domain", coord: 0}
+      {space: "range",  coord: 0}
+    ]
 
+  toWorld: (width, height, {x, y}) ->
+    xOffset = x - (width / 2)
+    yOffset = -(y - (height / 2))
+
+    pixelSize = @getPixelSize(width, height)
+    center = {
+      domain: @domainCenter
+      range:  @rangeCenter
+    }
+    dimensions = @getDimensions()
+
+    result = {
+      domain: util.constructVector(config.dimensions, null)
+      range:  util.constructVector(config.dimensions, null)
+    }
+    result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + xOffset * pixelSize
+    result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize
+
+    return result
 
 
 class C.AppRoot

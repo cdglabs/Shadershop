@@ -13,6 +13,12 @@ R.create "MainPlotView",
     recurse(@fn.childFns)
     return result
 
+  _getWorldMouseCoords: ->
+    rect = @getDOMNode().getBoundingClientRect()
+    x = UI.mousePosition.x - rect.left
+    y = UI.mousePosition.y - rect.top
+    return @fn.plot.toWorld(rect.width, rect.height, {x, y})
+
   _getLocalMouseCoords: ->
     rect = @getDOMNode().getBoundingClientRect()
     bounds = @fn.plot.getBounds(rect.width, rect.height)
@@ -118,15 +124,11 @@ R.create "MainPlotView",
   _onWheel: (e) ->
     e.preventDefault()
 
-    {x, y} = @_getLocalMouseCoords()
-
-    zoomCenter = {
-      domain: [x, null,null,null]
-      range:  [y, null,null,null]
-    }
-
+    return if Math.abs(e.deltaY) <= 1
     scaleFactor = 1.1
     scaleFactor = 1 / scaleFactor if e.deltaY < 0
+
+    zoomCenter = @_getWorldMouseCoords()
 
     Actions.zoomPlot(@fn.plot, zoomCenter, scaleFactor)
 
@@ -134,20 +136,12 @@ R.create "MainPlotView",
     Actions.selectChildFn(@_findHitTarget())
 
   _startPan: (e) ->
-    {x, y} = @_getLocalMouseCoords()
-    from = {
-      domain: [x, null,null,null]
-      range:  [y, null,null,null]
-    }
+    from = @_getWorldMouseCoords()
 
     UI.dragging = {
       cursor: config.cursor.grabbing
       onMove: (e) =>
-        {x, y} = @_getLocalMouseCoords()
-        to = {
-          domain: [x, null,null,null]
-          range:  [y, null,null,null]
-        }
+        to = @_getWorldMouseCoords()
         Actions.panPlot(@fn.plot, from, to)
     }
 
