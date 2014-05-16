@@ -148,63 +148,67 @@ R.create "MainPlotView",
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 R.create "ChildFnControlsView",
   propTypes:
     childFn: C.ChildFn
     plot: C.Plot
 
-  snap: (value) ->
-    container = @getDOMNode().closest(".PlotContainer")
-    rect = container.getBoundingClientRect()
-
-    bounds = @plot.getBounds(rect.width, rect.height)
-    pixelSize = @plot.getPixelSize(rect.width, rect.height)
-
-    {largeSpacing, smallSpacing} = util.canvas.getSpacing({
-      xMin: bounds.xMin
-      xMax: bounds.xMax
-      yMin: bounds.yMin
-      yMax: bounds.yMax
-      width: rect.width
-      height: rect.height
-    })
-
-    snapTolerance = pixelSize * config.snapTolerance
-
-    nearestSnap = Math.round(value / largeSpacing) * largeSpacing
-    if Math.abs(value - nearestSnap) < snapTolerance
-      value = nearestSnap
-      digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10))
-      precision = Math.pow(10, digitPrecision)
-      return util.floatToString(value, precision)
-
-    digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10))
-    precision = Math.pow(10, digitPrecision)
-
-    return util.floatToString(value, precision)
-
   render: ->
     R.span {},
       R.PointControlView {
-        x: @childFn.domainTranslate[0].getValue()
-        y: @childFn.rangeTranslate[0].getValue()
-        plot: @plot
-        onMove: @_onTranslateChange
-      }
-      R.PointControlView {
-        x: @childFn.domainTranslate[0].getValue() + @childFn.domainTransform[0][0].getValue()
-        y: @childFn.rangeTranslate[0].getValue()  + @childFn.rangeTransform[0][0].getValue()
-        plot: @plot
-        onMove: @_onScaleChange
+        position: @_getTranslatePosition
+        onMove: @_setTranslatePosition
       }
 
-  _onTranslateChange: (x, y) ->
-    Actions.setVariableValueString(@childFn.domainTranslate[0], @snap(x))
-    Actions.setVariableValueString(@childFn.rangeTranslate[0] , @snap(y))
+  _toPixel: (world) ->
+    container = @getDOMNode().closest(".PlotContainer")
+    rect = container.getBoundingClientRect()
+    return @plot.toPixel(rect.width, rect.height, world)
 
-  _onScaleChange: (x, y) ->
-    Actions.setVariableValueString(@childFn.domainTransform[0][0], @snap(x - @childFn.domainTranslate[0].getValue()) )
-    Actions.setVariableValueString(@childFn.rangeTransform[0][0] , @snap(y - @childFn.rangeTranslate[0].getValue())  )
+  _toWorld: (pixel) ->
+    container = @getDOMNode().closest(".PlotContainer")
+    rect = container.getBoundingClientRect()
+    return @plot.toWorld(rect.width, rect.height, pixel)
+
+  _getTranslatePosition: ->
+
+    translate = {
+      domain: @childFn.domainTranslate.map (v) -> v.getValue()
+      range:  @childFn.rangeTranslate.map (v) -> v.getValue()
+    }
+    return @_toPixel(translate)
+
+  _setTranslatePosition: ({x, y}) ->
+    translate = @_toWorld({x, y})
+
+    for value, coord in translate.domain
+      if value?
+        valueString = util.floatToString(value, .01)
+        Actions.setVariableValueString(@childFn.domainTranslate[coord], valueString)
+    for value, coord in translate.range
+      if value?
+        valueString = util.floatToString(value, .01)
+        Actions.setVariableValueString(@childFn.rangeTranslate[coord], valueString)
+
 
 
 
@@ -213,21 +217,15 @@ R.create "ChildFnControlsView",
 
 R.create "PointControlView",
   propTypes:
-    x: Number
-    y: Number
-    plot: C.Plot
+    position: Function
     onMove: Function
 
   _refreshPosition: ->
     el = @getDOMNode()
 
-    container = @getDOMNode().closest(".PlotContainer")
-    rect = container.getBoundingClientRect()
-
-    bounds = @plot.getBounds(rect.width, rect.height)
-
-    el.style.left = util.lerp(@x, bounds.xMin, bounds.xMax, 0, rect.width)  + "px"
-    el.style.top  = util.lerp(@y, bounds.yMin, bounds.yMax, rect.height, 0) + "px"
+    {x, y} = @position()
+    el.style.left = x + "px"
+    el.style.top  = y + "px"
 
   render: ->
     R.div {className: "PointControl", onMouseDown: @_onMouseDown}
@@ -244,11 +242,130 @@ R.create "PointControlView",
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()
 
-    bounds = @plot.getBounds(rect.width, rect.height)
-
     UI.dragging = {
       onMove: (e) =>
-        x = util.lerp(e.clientX, rect.left, rect.right, bounds.xMin, bounds.xMax)
-        y = util.lerp(e.clientY, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
-        @onMove(x, y)
+        x = e.clientX - rect.left
+        y = e.clientY - rect.top
+        @onMove({x, y})
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# R.create "ChildFnControlsView",
+#   propTypes:
+#     childFn: C.ChildFn
+#     plot: C.Plot
+
+#   snap: (value) ->
+#     container = @getDOMNode().closest(".PlotContainer")
+#     rect = container.getBoundingClientRect()
+
+#     bounds = @plot.getBounds(rect.width, rect.height)
+#     pixelSize = @plot.getPixelSize(rect.width, rect.height)
+
+#     {largeSpacing, smallSpacing} = util.canvas.getSpacing({
+#       xMin: bounds.xMin
+#       xMax: bounds.xMax
+#       yMin: bounds.yMin
+#       yMax: bounds.yMax
+#       width: rect.width
+#       height: rect.height
+#     })
+
+#     snapTolerance = pixelSize * config.snapTolerance
+
+#     nearestSnap = Math.round(value / largeSpacing) * largeSpacing
+#     if Math.abs(value - nearestSnap) < snapTolerance
+#       value = nearestSnap
+#       digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10))
+#       precision = Math.pow(10, digitPrecision)
+#       return util.floatToString(value, precision)
+
+#     digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10))
+#     precision = Math.pow(10, digitPrecision)
+
+#     return util.floatToString(value, precision)
+
+#   render: ->
+#     R.span {},
+#       R.PointControlView {
+#         x: @childFn.domainTranslate[0].getValue()
+#         y: @childFn.rangeTranslate[0].getValue()
+#         plot: @plot
+#         onMove: @_onTranslateChange
+#       }
+#       R.PointControlView {
+#         x: @childFn.domainTranslate[0].getValue() + @childFn.domainTransform[0][0].getValue()
+#         y: @childFn.rangeTranslate[0].getValue()  + @childFn.rangeTransform[0][0].getValue()
+#         plot: @plot
+#         onMove: @_onScaleChange
+#       }
+
+#   _onTranslateChange: (x, y) ->
+#     Actions.setVariableValueString(@childFn.domainTranslate[0], @snap(x))
+#     Actions.setVariableValueString(@childFn.rangeTranslate[0] , @snap(y))
+
+#   _onScaleChange: (x, y) ->
+#     Actions.setVariableValueString(@childFn.domainTransform[0][0], @snap(x - @childFn.domainTranslate[0].getValue()) )
+#     Actions.setVariableValueString(@childFn.rangeTransform[0][0] , @snap(y - @childFn.rangeTranslate[0].getValue())  )
+
+
+# R.create "PointControlView",
+#   propTypes:
+#     x: Number
+#     y: Number
+#     plot: C.Plot
+#     onMove: Function
+
+#   _refreshPosition: ->
+#     el = @getDOMNode()
+
+#     container = @getDOMNode().closest(".PlotContainer")
+#     rect = container.getBoundingClientRect()
+
+#     bounds = @plot.getBounds(rect.width, rect.height)
+
+#     el.style.left = util.lerp(@x, bounds.xMin, bounds.xMax, 0, rect.width)  + "px"
+#     el.style.top  = util.lerp(@y, bounds.yMin, bounds.yMax, rect.height, 0) + "px"
+
+#   render: ->
+#     R.div {className: "PointControl", onMouseDown: @_onMouseDown}
+
+#   componentDidMount: ->
+#     @_refreshPosition()
+
+#   componentDidUpdate: ->
+#     @_refreshPosition()
+
+#   _onMouseDown: (e) ->
+#     util.preventDefault(e)
+
+#     container = @getDOMNode().closest(".PlotContainer")
+#     rect = container.getBoundingClientRect()
+
+#     bounds = @plot.getBounds(rect.width, rect.height)
+
+#     UI.dragging = {
+#       onMove: (e) =>
+#         x = util.lerp(e.clientX, rect.left, rect.right, bounds.xMin, bounds.xMax)
+#         y = util.lerp(e.clientY, rect.bottom, rect.top, bounds.yMin, bounds.yMax)
+#         @onMove(x, y)
+#     }

@@ -2016,70 +2016,77 @@
       childFn: C.ChildFn,
       plot: C.Plot
     },
-    snap: function(value) {
-      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      bounds = this.plot.getBounds(rect.width, rect.height);
-      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
-      _ref = util.canvas.getSpacing({
-        xMin: bounds.xMin,
-        xMax: bounds.xMax,
-        yMin: bounds.yMin,
-        yMax: bounds.yMax,
-        width: rect.width,
-        height: rect.height
-      }), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
-      snapTolerance = pixelSize * config.snapTolerance;
-      nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
-      if (Math.abs(value - nearestSnap) < snapTolerance) {
-        value = nearestSnap;
-        digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10));
-        precision = Math.pow(10, digitPrecision);
-        return util.floatToString(value, precision);
-      }
-      digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10));
-      precision = Math.pow(10, digitPrecision);
-      return util.floatToString(value, precision);
-    },
     render: function() {
       return R.span({}, R.PointControlView({
-        x: this.childFn.domainTranslate[0].getValue(),
-        y: this.childFn.rangeTranslate[0].getValue(),
-        plot: this.plot,
-        onMove: this._onTranslateChange
-      }), R.PointControlView({
-        x: this.childFn.domainTranslate[0].getValue() + this.childFn.domainTransform[0][0].getValue(),
-        y: this.childFn.rangeTranslate[0].getValue() + this.childFn.rangeTransform[0][0].getValue(),
-        plot: this.plot,
-        onMove: this._onScaleChange
+        position: this._getTranslatePosition,
+        onMove: this._setTranslatePosition
       }));
     },
-    _onTranslateChange: function(x, y) {
-      Actions.setVariableValueString(this.childFn.domainTranslate[0], this.snap(x));
-      return Actions.setVariableValueString(this.childFn.rangeTranslate[0], this.snap(y));
+    _toPixel: function(world) {
+      var container, rect;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      return this.plot.toPixel(rect.width, rect.height, world);
     },
-    _onScaleChange: function(x, y) {
-      Actions.setVariableValueString(this.childFn.domainTransform[0][0], this.snap(x - this.childFn.domainTranslate[0].getValue()));
-      return Actions.setVariableValueString(this.childFn.rangeTransform[0][0], this.snap(y - this.childFn.rangeTranslate[0].getValue()));
+    _toWorld: function(pixel) {
+      var container, rect;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      return this.plot.toWorld(rect.width, rect.height, pixel);
+    },
+    _getTranslatePosition: function() {
+      var translate;
+      translate = {
+        domain: this.childFn.domainTranslate.map(function(v) {
+          return v.getValue();
+        }),
+        range: this.childFn.rangeTranslate.map(function(v) {
+          return v.getValue();
+        })
+      };
+      return this._toPixel(translate);
+    },
+    _setTranslatePosition: function(_arg) {
+      var coord, translate, value, valueString, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      x = _arg.x, y = _arg.y;
+      translate = this._toWorld({
+        x: x,
+        y: y
+      });
+      _ref = translate.domain;
+      for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
+        value = _ref[coord];
+        if (value != null) {
+          valueString = util.floatToString(value, .01);
+          Actions.setVariableValueString(this.childFn.domainTranslate[coord], valueString);
+        }
+      }
+      _ref1 = translate.range;
+      _results = [];
+      for (coord = _j = 0, _len1 = _ref1.length; _j < _len1; coord = ++_j) {
+        value = _ref1[coord];
+        if (value != null) {
+          valueString = util.floatToString(value, .01);
+          _results.push(Actions.setVariableValueString(this.childFn.rangeTranslate[coord], valueString));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     }
   });
 
   R.create("PointControlView", {
     propTypes: {
-      x: Number,
-      y: Number,
-      plot: C.Plot,
+      position: Function,
       onMove: Function
     },
     _refreshPosition: function() {
-      var bounds, container, el, rect;
+      var el, x, y, _ref;
       el = this.getDOMNode();
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      bounds = this.plot.getBounds(rect.width, rect.height);
-      el.style.left = util.lerp(this.x, bounds.xMin, bounds.xMax, 0, rect.width) + "px";
-      return el.style.top = util.lerp(this.y, bounds.yMin, bounds.yMax, rect.height, 0) + "px";
+      _ref = this.position(), x = _ref.x, y = _ref.y;
+      el.style.left = x + "px";
+      return el.style.top = y + "px";
     },
     render: function() {
       return R.div({
@@ -2094,18 +2101,20 @@
       return this._refreshPosition();
     },
     _onMouseDown: function(e) {
-      var bounds, container, rect;
+      var container, rect;
       util.preventDefault(e);
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
-      bounds = this.plot.getBounds(rect.width, rect.height);
       return UI.dragging = {
         onMove: (function(_this) {
           return function(e) {
             var x, y;
-            x = util.lerp(e.clientX, rect.left, rect.right, bounds.xMin, bounds.xMax);
-            y = util.lerp(e.clientY, rect.bottom, rect.top, bounds.yMin, bounds.yMax);
-            return _this.onMove(x, y);
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+            return _this.onMove({
+              x: x,
+              y: y
+            });
           };
         })(this)
       };
