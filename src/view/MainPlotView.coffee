@@ -134,17 +134,21 @@ R.create "MainPlotView",
     Actions.selectChildFn(@_findHitTarget())
 
   _startPan: (e) ->
-    originalMouseCoords = @_getLocalMouseCoords()
+    {x, y} = @_getLocalMouseCoords()
+    from = {
+      domain: [x, null,null,null]
+      range:  [y, null,null,null]
+    }
 
     UI.dragging = {
       cursor: config.cursor.grabbing
       onMove: (e) =>
-        currentMouseCoords = @_getLocalMouseCoords()
-
-        dx = currentMouseCoords.x - originalMouseCoords.x
-        dy = currentMouseCoords.y - originalMouseCoords.y
-
-        Actions.panPlot(@fn.plot, [-dx, 0,0,0], [-dy, 0,0,0])
+        {x, y} = @_getLocalMouseCoords()
+        to = {
+          domain: [x, null,null,null]
+          range:  [y, null,null,null]
+        }
+        Actions.panPlot(@fn.plot, from, to)
     }
 
 

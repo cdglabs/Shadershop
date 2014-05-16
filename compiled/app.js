@@ -204,9 +204,14 @@
     return Compiler.setDirty();
   };
 
-  Actions.panPlot = function(plot, domainOffset, rangeOffset) {
-    plot.domainCenter = numeric.add(plot.domainCenter, domainOffset);
-    return plot.rangeCenter = numeric.add(plot.rangeCenter, rangeOffset);
+  Actions.panPlot = function(plot, from, to) {
+    var domainOffset, newDomainCenter, newRangeCenter, rangeOffset;
+    domainOffset = util.vector.sub(from.domain, to.domain);
+    rangeOffset = util.vector.sub(from.range, to.range);
+    newDomainCenter = util.vector.add(plot.domainCenter, domainOffset);
+    newRangeCenter = util.vector.add(plot.rangeCenter, rangeOffset);
+    plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter);
+    return plot.rangeCenter = util.vector.merge(plot.rangeCenter, newRangeCenter);
   };
 
   Actions.zoomPlot = function(plot, zoomCenter, scaleFactor) {
@@ -1925,17 +1930,23 @@
       return Actions.selectChildFn(this._findHitTarget());
     },
     _startPan: function(e) {
-      var originalMouseCoords;
-      originalMouseCoords = this._getLocalMouseCoords();
+      var from, x, y, _ref;
+      _ref = this._getLocalMouseCoords(), x = _ref.x, y = _ref.y;
+      from = {
+        domain: [x, null, null, null],
+        range: [y, null, null, null]
+      };
       return UI.dragging = {
         cursor: config.cursor.grabbing,
         onMove: (function(_this) {
           return function(e) {
-            var currentMouseCoords, dx, dy;
-            currentMouseCoords = _this._getLocalMouseCoords();
-            dx = currentMouseCoords.x - originalMouseCoords.x;
-            dy = currentMouseCoords.y - originalMouseCoords.y;
-            return Actions.panPlot(_this.fn.plot, [-dx, 0, 0, 0], [-dy, 0, 0, 0]);
+            var to, _ref1;
+            _ref1 = _this._getLocalMouseCoords(), x = _ref1.x, y = _ref1.y;
+            to = {
+              domain: [x, null, null, null],
+              range: [y, null, null, null]
+            };
+            return Actions.panPlot(_this.fn.plot, from, to);
           };
         })(this)
       };

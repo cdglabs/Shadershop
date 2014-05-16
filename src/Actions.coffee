@@ -121,9 +121,15 @@ Actions.setChildFnVisible = (childFn, newVisible) ->
 # Manipulating Plots
 # =============================================================================
 
-Actions.panPlot = (plot, domainOffset, rangeOffset) ->
-  plot.domainCenter = numeric.add(plot.domainCenter, domainOffset)
-  plot.rangeCenter  = numeric.add(plot.rangeCenter,  rangeOffset)
+Actions.panPlot = (plot, from, to) ->
+  domainOffset = util.vector.sub(from.domain, to.domain)
+  rangeOffset  = util.vector.sub(from.range,  to.range)
+
+  newDomainCenter = util.vector.add(plot.domainCenter, domainOffset)
+  newRangeCenter  = util.vector.add(plot.rangeCenter,  rangeOffset)
+
+  plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter)
+  plot.rangeCenter  = util.vector.merge(plot.rangeCenter,  newRangeCenter)
 
 Actions.zoomPlot = (plot, zoomCenter, scaleFactor) ->
   # scaleFactor > 1 is zoom "out"
