@@ -42,22 +42,27 @@ R.create "ShaderOverlayView",
 
       shaderView = shaderEl.dataFor
       exprs = shaderView.exprs
-      bounds = shaderView.plot.getBounds(rect.width, rect.height)
+      plot = shaderView.plot
+      bounds = plot.getBounds(rect.width, rect.height)
 
       numSamples = rect.width / config.resolution
 
       for expr in exprs
-        name = expr.exprString
+        name = plot.type + "," + expr.exprString
         unless @programs[name]
 
-          createCartesianProgram(@glod, name, name)
-          # createColorMapProgram(@glod, name, name)
+          if plot.type == "cartesian"
+            createCartesianProgram(@glod, name, expr.exprString)
+          else if plot.type == "colorMap"
+            createColorMapProgram(@glod, name, expr.exprString)
 
           @programs[name] = true
         usedPrograms[name] = true
 
-        drawCartesianProgram(@glod, name, numSamples, expr.color, bounds)
-        # drawColorMapProgram(@glod, name, bounds)
+        if plot.type == "cartesian"
+          drawCartesianProgram(@glod, name, numSamples, expr.color, bounds)
+        else if plot.type == "colorMap"
+          drawColorMapProgram(@glod, name, bounds)
 
     # Delete unused programs
     for own name, junk of @programs

@@ -208,10 +208,16 @@ class C.Plot
 
   getDimensions: ->
     # TODO: should be based on @type
-    return [
-      {space: "domain", coord: 0}
-      {space: "range",  coord: 0}
-    ]
+    if @type == "cartesian"
+      return [
+        {space: "domain", coord: 0}
+        {space: "range",  coord: 0}
+      ]
+    else if @type == "colorMap"
+      return [
+        {space: "domain", coord: 0}
+        {space: "domain", coord: 1}
+      ]
 
   toWorld: (width, height, {x, y}) ->
     pixelSize = @getPixelSize(width, height)

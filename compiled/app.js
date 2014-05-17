@@ -944,15 +944,27 @@
     };
 
     Plot.prototype.getDimensions = function() {
-      return [
-        {
-          space: "domain",
-          coord: 0
-        }, {
-          space: "range",
-          coord: 0
-        }
-      ];
+      if (this.type === "cartesian") {
+        return [
+          {
+            space: "domain",
+            coord: 0
+          }, {
+            space: "range",
+            coord: 0
+          }
+        ];
+      } else if (this.type === "colorMap") {
+        return [
+          {
+            space: "domain",
+            coord: 0
+          }, {
+            space: "domain",
+            coord: 1
+          }
+        ];
+      }
     };
 
     Plot.prototype.toWorld = function(width, height, _arg) {
@@ -2860,7 +2872,7 @@
       }
     },
     draw: function() {
-      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, plot, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -2877,17 +2889,26 @@
         setViewport(this.glod, rect, clippingRect);
         shaderView = shaderEl.dataFor;
         exprs = shaderView.exprs;
-        bounds = shaderView.plot.getBounds(rect.width, rect.height);
+        plot = shaderView.plot;
+        bounds = plot.getBounds(rect.width, rect.height);
         numSamples = rect.width / config.resolution;
         for (_j = 0, _len1 = exprs.length; _j < _len1; _j++) {
           expr = exprs[_j];
-          name = expr.exprString;
+          name = plot.type + "," + expr.exprString;
           if (!this.programs[name]) {
-            createCartesianProgram(this.glod, name, name);
+            if (plot.type === "cartesian") {
+              createCartesianProgram(this.glod, name, expr.exprString);
+            } else if (plot.type === "colorMap") {
+              createColorMapProgram(this.glod, name, expr.exprString);
+            }
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
-          drawCartesianProgram(this.glod, name, numSamples, expr.color, bounds);
+          if (plot.type === "cartesian") {
+            drawCartesianProgram(this.glod, name, numSamples, expr.color, bounds);
+          } else if (plot.type === "colorMap") {
+            drawColorMapProgram(this.glod, name, bounds);
+          }
         }
       }
       _ref = this.programs;
