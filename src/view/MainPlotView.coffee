@@ -178,6 +178,11 @@ R.create "ChildFnControlsView",
         position: @_getTranslatePosition
         onMove: @_setTranslatePosition
       }
+      for dimension in @plot.getDimensions()
+        R.PointControlView {
+          position: @_getTransformPosition(dimension)
+          onMove: @_setTransformPosition(dimension)
+        }
 
   _toPixel: (world) ->
     container = @getDOMNode().closest(".PlotContainer")
@@ -190,7 +195,6 @@ R.create "ChildFnControlsView",
     return @plot.toWorld(rect.width, rect.height, pixel)
 
   _getTranslatePosition: ->
-
     translate = {
       domain: @childFn.domainTranslate.map (v) -> v.getValue()
       range:  @childFn.rangeTranslate.map (v) -> v.getValue()
@@ -209,6 +213,46 @@ R.create "ChildFnControlsView",
         valueString = util.floatToString(value, .01)
         Actions.setVariableValueString(@childFn.rangeTranslate[coord], valueString)
 
+  _getTransformPosition: (dimension) ->
+    =>
+      translate = {
+        domain: @childFn.domainTranslate.map (v) -> v.getValue()
+        range:  @childFn.rangeTranslate.map (v) -> v.getValue()
+      }
+      if dimension.space == "domain"
+        transform = @childFn.domainTransform[dimension.coord].map (v) -> v.getValue()
+        point = {
+          domain: util.vector.add(translate.domain, transform)
+          range: translate.range
+        }
+      else if dimension.space == "range"
+        transform = @childFn.rangeTransform[dimension.coord].map (v) -> v.getValue()
+        point = {
+          domain: translate.domain
+          range: util.vector.add(translate.range, transform)
+        }
+      return @_toPixel(point)
+
+  _setTransformPosition: (dimension) ->
+    ({x, y}) =>
+      translate = {
+        domain: @childFn.domainTranslate.map (v) -> v.getValue()
+        range:  @childFn.rangeTranslate.map (v) -> v.getValue()
+      }
+      point = @_toWorld({x, y})
+      transform = util.vector.sub(point[dimension.space], translate[dimension.space])
+
+      relevantTransformVariables = if dimension.space == "domain"
+        @childFn.domainTransform[dimension.coord]
+      else
+        @childFn.rangeTransform[dimension.coord]
+
+      relevantTransform = relevantTransformVariables.map (v) -> v.getValue()
+
+      transform = util.vector.merge(relevantTransform, transform)
+      for value, coord in transform
+        valueString = util.floatToString(value, .01)
+        Actions.setVariableValueString(relevantTransformVariables[coord], valueString)
 
 
 

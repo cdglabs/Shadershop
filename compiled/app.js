@@ -2017,10 +2017,23 @@
       plot: C.Plot
     },
     render: function() {
+      var dimension;
       return R.span({}, R.PointControlView({
         position: this._getTranslatePosition,
         onMove: this._setTranslatePosition
-      }));
+      }), (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.plot.getDimensions();
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimension = _ref[_i];
+          _results.push(R.PointControlView({
+            position: this._getTransformPosition(dimension),
+            onMove: this._setTransformPosition(dimension)
+          }));
+        }
+        return _results;
+      }).call(this));
     },
     _toPixel: function(world) {
       var container, rect;
@@ -2073,6 +2086,72 @@
         }
       }
       return _results;
+    },
+    _getTransformPosition: function(dimension) {
+      return (function(_this) {
+        return function() {
+          var point, transform, translate;
+          translate = {
+            domain: _this.childFn.domainTranslate.map(function(v) {
+              return v.getValue();
+            }),
+            range: _this.childFn.rangeTranslate.map(function(v) {
+              return v.getValue();
+            })
+          };
+          if (dimension.space === "domain") {
+            transform = _this.childFn.domainTransform[dimension.coord].map(function(v) {
+              return v.getValue();
+            });
+            point = {
+              domain: util.vector.add(translate.domain, transform),
+              range: translate.range
+            };
+          } else if (dimension.space === "range") {
+            transform = _this.childFn.rangeTransform[dimension.coord].map(function(v) {
+              return v.getValue();
+            });
+            point = {
+              domain: translate.domain,
+              range: util.vector.add(translate.range, transform)
+            };
+          }
+          return _this._toPixel(point);
+        };
+      })(this);
+    },
+    _setTransformPosition: function(dimension) {
+      return (function(_this) {
+        return function(_arg) {
+          var coord, point, relevantTransform, relevantTransformVariables, transform, translate, value, valueString, x, y, _i, _len, _results;
+          x = _arg.x, y = _arg.y;
+          translate = {
+            domain: _this.childFn.domainTranslate.map(function(v) {
+              return v.getValue();
+            }),
+            range: _this.childFn.rangeTranslate.map(function(v) {
+              return v.getValue();
+            })
+          };
+          point = _this._toWorld({
+            x: x,
+            y: y
+          });
+          transform = util.vector.sub(point[dimension.space], translate[dimension.space]);
+          relevantTransformVariables = dimension.space === "domain" ? _this.childFn.domainTransform[dimension.coord] : _this.childFn.rangeTransform[dimension.coord];
+          relevantTransform = relevantTransformVariables.map(function(v) {
+            return v.getValue();
+          });
+          transform = util.vector.merge(relevantTransform, transform);
+          _results = [];
+          for (coord = _i = 0, _len = transform.length; _i < _len; coord = ++_i) {
+            value = transform[coord];
+            valueString = util.floatToString(value, .01);
+            _results.push(Actions.setVariableValueString(relevantTransformVariables[coord], valueString));
+          }
+          return _results;
+        };
+      })(this);
     }
   });
 
