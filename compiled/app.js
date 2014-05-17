@@ -204,6 +204,11 @@
     return Compiler.setDirty();
   };
 
+  Actions.setBasisVector = function(childFn, space, coord, valueStrings) {
+    childFn.setBasisVector(space, coord, valueStrings);
+    return Compiler.setDirty();
+  };
+
   Actions.panPlot = function(plot, from, to) {
     var domainOffset, newDomainCenter, newRangeCenter, rangeOffset;
     domainOffset = util.vector.sub(from.domain, to.domain);
@@ -871,6 +876,26 @@
           return v.getValue();
         });
       });
+    };
+
+    ChildFn.prototype.getBasisVector = function(space, coord) {
+      var matrix, row, vector, _i, _ref;
+      matrix = (space === "domain" ? this.domainTransform : this.rangeTransform);
+      vector = [];
+      for (row = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
+        vector.push(matrix[row][coord].getValue());
+      }
+      return vector;
+    };
+
+    ChildFn.prototype.setBasisVector = function(space, coord, valueStrings) {
+      var matrix, row, _i, _ref, _results;
+      matrix = (space === "domain" ? this.domainTransform : this.rangeTransform);
+      _results = [];
+      for (row = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
+        _results.push(matrix[row][coord].valueString = valueStrings[row]);
+      }
+      return _results;
     };
 
     ChildFn.prototype.evaluate = function(x) {
@@ -2128,7 +2153,7 @@
     _getTransformPosition: function(dimension) {
       return (function(_this) {
         return function() {
-          var point, transform, translate;
+          var basisVector, point, translate;
           translate = {
             domain: _this.childFn.domainTranslate.map(function(v) {
               return v.getValue();
@@ -2137,21 +2162,16 @@
               return v.getValue();
             })
           };
+          basisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
           if (dimension.space === "domain") {
-            transform = _this.childFn.domainTransform[dimension.coord].map(function(v) {
-              return v.getValue();
-            });
             point = {
-              domain: util.vector.add(translate.domain, transform),
+              domain: util.vector.add(translate.domain, basisVector),
               range: translate.range
             };
           } else if (dimension.space === "range") {
-            transform = _this.childFn.rangeTransform[dimension.coord].map(function(v) {
-              return v.getValue();
-            });
             point = {
               domain: translate.domain,
-              range: util.vector.add(translate.range, transform)
+              range: util.vector.add(translate.range, basisVector)
             };
           }
           return _this._toPixel(point);
@@ -2161,7 +2181,7 @@
     _setTransformPosition: function(dimension) {
       return (function(_this) {
         return function(_arg) {
-          var coord, point, relevantTransform, relevantTransformVariables, transform, translate, value, valueString, x, y, _i, _len, _results;
+          var movedBasisVector, newBasisVector, oldBasisVector, point, translate, valueStrings, x, y;
           x = _arg.x, y = _arg.y;
           translate = {
             domain: _this.childFn.domainTranslate.map(function(v) {
@@ -2175,19 +2195,13 @@
             x: x,
             y: y
           });
-          transform = util.vector.sub(point[dimension.space], translate[dimension.space]);
-          relevantTransformVariables = dimension.space === "domain" ? _this.childFn.domainTransform[dimension.coord] : _this.childFn.rangeTransform[dimension.coord];
-          relevantTransform = relevantTransformVariables.map(function(v) {
-            return v.getValue();
+          movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space]);
+          oldBasisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
+          newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector);
+          valueStrings = newBasisVector.map(function(value) {
+            return _this._snap(value);
           });
-          transform = util.vector.merge(relevantTransform, transform);
-          _results = [];
-          for (coord = _i = 0, _len = transform.length; _i < _len; coord = ++_i) {
-            value = transform[coord];
-            valueString = _this._snap(value, .01);
-            _results.push(Actions.setVariableValueString(relevantTransformVariables[coord], valueString));
-          }
-          return _results;
+          return Actions.setBasisVector(_this.childFn, dimension.space, dimension.coord, valueStrings);
         };
       })(this);
     }

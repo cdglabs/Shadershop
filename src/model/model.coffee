@@ -140,6 +140,18 @@ class C.ChildFn extends C.Fn
       row.map (v) ->
         v.getValue()
 
+  getBasisVector: (space, coord) ->
+    matrix = (if space == "domain" then @domainTransform else @rangeTransform)
+    vector = []
+    for row in [0...config.dimensions]
+      vector.push matrix[row][coord].getValue()
+    return vector
+
+  setBasisVector: (space, coord, valueStrings) ->
+    matrix = (if space == "domain" then @domainTransform else @rangeTransform)
+    for row in [0...config.dimensions]
+      matrix[row][coord].valueString = valueStrings[row]
+
   evaluate: (x) ->
     domainTranslate    = @getDomainTranslate()
     domainTransformInv = util.safeInv(@getDomainTransform())

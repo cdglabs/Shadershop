@@ -51,10 +51,7 @@ Palette
 
 Get Grid and canvas.getSpacing using better Plot API
 
-Fix bug with transform manipulating the wrong thing...
-
-
-
+Fix bug with panning, etc. on colorMap
 
 
 

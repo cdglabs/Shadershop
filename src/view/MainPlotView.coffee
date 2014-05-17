@@ -250,17 +250,18 @@ R.create "ChildFnControlsView",
         domain: @childFn.domainTranslate.map (v) -> v.getValue()
         range:  @childFn.rangeTranslate.map (v) -> v.getValue()
       }
+
+      basisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
+
       if dimension.space == "domain"
-        transform = @childFn.domainTransform[dimension.coord].map (v) -> v.getValue()
         point = {
-          domain: util.vector.add(translate.domain, transform)
+          domain: util.vector.add(translate.domain, basisVector)
           range: translate.range
         }
       else if dimension.space == "range"
-        transform = @childFn.rangeTransform[dimension.coord].map (v) -> v.getValue()
         point = {
           domain: translate.domain
-          range: util.vector.add(translate.range, transform)
+          range: util.vector.add(translate.range, basisVector)
         }
       return @_toPixel(point)
 
@@ -271,19 +272,15 @@ R.create "ChildFnControlsView",
         range:  @childFn.rangeTranslate.map (v) -> v.getValue()
       }
       point = @_toWorld({x, y})
-      transform = util.vector.sub(point[dimension.space], translate[dimension.space])
 
-      relevantTransformVariables = if dimension.space == "domain"
-        @childFn.domainTransform[dimension.coord]
-      else
-        @childFn.rangeTransform[dimension.coord]
+      movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space])
 
-      relevantTransform = relevantTransformVariables.map (v) -> v.getValue()
+      oldBasisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
+      newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector)
 
-      transform = util.vector.merge(relevantTransform, transform)
-      for value, coord in transform
-        valueString = @_snap(value, .01)
-        Actions.setVariableValueString(relevantTransformVariables[coord], valueString)
+      valueStrings = newBasisVector.map (value) => @_snap(value)
+
+      Actions.setBasisVector(@childFn, dimension.space, dimension.coord, valueStrings)
 
 
 

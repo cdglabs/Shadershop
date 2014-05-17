@@ -116,6 +116,10 @@ Actions.setChildFnVisible = (childFn, newVisible) ->
   ensureSelectedChildFnVisible()
   Compiler.setDirty()
 
+Actions.setBasisVector = (childFn, space, coord, valueStrings) ->
+  childFn.setBasisVector(space, coord, valueStrings)
+  Compiler.setDirty()
+
 
 # =============================================================================
 # Manipulating Plots
