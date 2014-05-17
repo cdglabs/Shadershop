@@ -2047,6 +2047,32 @@
       rect = container.getBoundingClientRect();
       return this.plot.toWorld(rect.width, rect.height, pixel);
     },
+    _snap: function(value) {
+      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      bounds = this.plot.getBounds(rect.width, rect.height);
+      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
+      _ref = util.canvas.getSpacing({
+        xMin: bounds.xMin,
+        xMax: bounds.xMax,
+        yMin: bounds.yMin,
+        yMax: bounds.yMax,
+        width: rect.width,
+        height: rect.height
+      }), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
+      snapTolerance = pixelSize * config.snapTolerance;
+      nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
+      if (Math.abs(value - nearestSnap) < snapTolerance) {
+        value = nearestSnap;
+        digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10));
+        precision = Math.pow(10, digitPrecision);
+        return util.floatToString(value, precision);
+      }
+      digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10));
+      precision = Math.pow(10, digitPrecision);
+      return util.floatToString(value, precision);
+    },
     _getTranslatePosition: function() {
       var translate;
       translate = {
@@ -2070,7 +2096,7 @@
       for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
         value = _ref[coord];
         if (value != null) {
-          valueString = util.floatToString(value, .01);
+          valueString = this._snap(value, .01);
           Actions.setVariableValueString(this.childFn.domainTranslate[coord], valueString);
         }
       }
@@ -2079,7 +2105,7 @@
       for (coord = _j = 0, _len1 = _ref1.length; _j < _len1; coord = ++_j) {
         value = _ref1[coord];
         if (value != null) {
-          valueString = util.floatToString(value, .01);
+          valueString = this._snap(value, .01);
           _results.push(Actions.setVariableValueString(this.childFn.rangeTranslate[coord], valueString));
         } else {
           _results.push(void 0);
@@ -2146,7 +2172,7 @@
           _results = [];
           for (coord = _i = 0, _len = transform.length; _i < _len; coord = ++_i) {
             value = transform[coord];
-            valueString = util.floatToString(value, .01);
+            valueString = _this._snap(value, .01);
             _results.push(Actions.setVariableValueString(relevantTransformVariables[coord], valueString));
           }
           return _results;
