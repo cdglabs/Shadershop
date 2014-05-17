@@ -40,6 +40,21 @@ Inspector
 Palette
   Insert button
   Anything can be dragged into the outline to put it in a specific place
+  Maybe
+    + insert buttons in outline like before
+    select multiple and then click "add", "multiply", etc. to group those
+
+
+
+
+
+
+Get Grid and canvas.getSpacing using better Plot API
+Test with color map
+
+
+
+
 
 
 
