@@ -16,7 +16,7 @@ PaletteThumbnailSize = 48px
 pointControlSize = 12px
 
 ShaderOverlayZIndex = 10
-PointControlZIndex = 20
+PlotControlZIndex = 20
 
 
 
@@ -222,10 +222,22 @@ canvas, .Shader
   border-radius 0.5 * pointControlSize
   background-color highlightColor
   opacity 0.25
-  z-index PointControlZIndex
+  z-index PlotControlZIndex
   &:hover
     opacity 1
 
+.SettingsButton
+  position absolute
+  top SpacingSize*2
+  right SpacingSize*2
+  z-index PlotControlZIndex
+  font-size 20px
+  color tint(highlightColor, 50%)
+  text-shadow 0px 1px 3px rgba(0,0,0,0.5)
+  cursor pointer
+  opacity 0.5
+  &:hover
+    opacity 1
 
 // ============================================================================
 // Outline

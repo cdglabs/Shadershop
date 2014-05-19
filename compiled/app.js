@@ -1988,7 +1988,12 @@
       }), UI.selectedChildFn ? R.ChildFnControlsView({
         childFn: UI.selectedChildFn,
         plot: this.fn.plot
-      }) : void 0));
+      }) : void 0, R.div({
+        className: "SettingsButton Interactive",
+        onClick: this._onSettingsButtonClick
+      }, R.div({
+        className: "icon-cog"
+      }))));
     },
     _onMouseMove: function() {
       return Actions.hoverChildFn(this._findHitTarget());
@@ -1997,7 +2002,7 @@
       return Actions.hoverChildFn(null);
     },
     _onMouseDown: function(e) {
-      if (e.target.closest(".PointControl")) {
+      if (e.target.closest(".Interactive")) {
         return;
       }
       util.preventDefault(e);
@@ -2037,6 +2042,13 @@
           };
         })(this)
       };
+    },
+    _onSettingsButtonClick: function() {
+      if (this.fn.plot.type === "cartesian") {
+        return this.fn.plot.type = "colorMap";
+      } else {
+        return this.fn.plot.type = "cartesian";
+      }
     }
   });
 
@@ -2047,7 +2059,9 @@
     },
     render: function() {
       var dimension;
-      return R.span({}, R.PointControlView({
+      return R.span({
+        className: "Interactive"
+      }, R.PointControlView({
         position: this._getTranslatePosition,
         onMove: this._setTranslatePosition
       }), (function() {

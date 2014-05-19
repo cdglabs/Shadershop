@@ -159,6 +159,20 @@ canvas,
 .PointControl:hover {
   opacity: 1;
 }
+.SettingsButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  font-size: 20px;
+  color: #7fcce5;
+  text-shadow: 0px 1px 3px rgba(0,0,0,0.5);
+  cursor: pointer;
+  opacity: 0.5;
+}
+.SettingsButton:hover {
+  opacity: 1;
+}
 .Outline .Scroller > .OutlineChildren {
   margin-left: 0px;
 }

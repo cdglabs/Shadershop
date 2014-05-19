@@ -106,6 +106,10 @@ R.create "MainPlotView",
             plot: @fn.plot
           }
 
+        # Settings Button
+        R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
+          R.div {className: "icon-cog"}
+
   _onMouseMove: ->
     Actions.hoverChildFn(@_findHitTarget())
 
@@ -113,7 +117,7 @@ R.create "MainPlotView",
     Actions.hoverChildFn(null)
 
   _onMouseDown: (e) ->
-    return if e.target.closest(".PointControl")
+    return if e.target.closest(".Interactive")
     util.preventDefault(e)
 
     @_startPan(e)
@@ -145,6 +149,12 @@ R.create "MainPlotView",
         Actions.panPlot(@fn.plot, from, to)
     }
 
+  _onSettingsButtonClick: ->
+    # TODO: will be more than just a toggle...
+    if @fn.plot.type == "cartesian"
+      @fn.plot.type = "colorMap"
+    else
+      @fn.plot.type = "cartesian"
 
 
 
@@ -173,7 +183,7 @@ R.create "ChildFnControlsView",
     plot: C.Plot
 
   render: ->
-    R.span {},
+    R.span {className: "Interactive"},
       R.PointControlView {
         position: @_getTranslatePosition
         onMove: @_setTranslatePosition
