@@ -1,3 +1,5 @@
 
 .icon-eye:before { content: '\e800'; } /* '' */
 .icon-pencil:before { content: '\e801'; } /* '' */
+.icon-list-add:before { content: '\e802'; } /* '' */
+.icon-cog:before { content: '\e803'; } /* '' */

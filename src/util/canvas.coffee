@@ -34,17 +34,10 @@ drawLine = (ctx, [x1, y1], [x2, y2]) ->
   ctx.lineTo(x2, y2)
   ctx.stroke()
 
-getSpacing = (opts) ->
-  {xMin, xMax, yMin, yMax} = opts
-  width = opts.width ? config.mainPlotWidth
-  height = opts.height ? config.mainPlotHeight
-
-  xSize = xMax - xMin
-  ySize = yMax - yMin
-
-  xMinSpacing = (xSize / width ) * config.minGridSpacing
-  yMinSpacing = (ySize / height) * config.minGridSpacing
-  minSpacing = Math.max(xMinSpacing, yMinSpacing)
+getSpacing = (pixelSize) ->
+  # minSpacing is the minimum distance, in world coordinates, between major
+  # grid lines.
+  minSpacing = pixelSize * config.minGridSpacing
 
   ###
   need to determine:
@@ -69,10 +62,11 @@ drawGrid = (ctx, opts) ->
   xMax = opts.xMax
   yMin = opts.yMin
   yMax = opts.yMax
+  pixelSize = opts.pixelSize
 
   {cxMin, cxMax, cyMin, cyMax, width, height} = canvasBounds(ctx)
 
-  {largeSpacing, smallSpacing} = getSpacing({xMin, xMax, yMin, yMax, width, height})
+  {largeSpacing, smallSpacing} = getSpacing(pixelSize)
 
   toLocal = ([cx, cy]) ->
     [

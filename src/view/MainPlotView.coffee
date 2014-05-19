@@ -201,14 +201,7 @@ R.create "ChildFnControlsView",
     bounds = @plot.getBounds(rect.width, rect.height)
     pixelSize = @plot.getPixelSize(rect.width, rect.height)
 
-    {largeSpacing, smallSpacing} = util.canvas.getSpacing({
-      xMin: bounds.xMin
-      xMax: bounds.xMax
-      yMin: bounds.yMin
-      yMax: bounds.yMax
-      width: rect.width
-      height: rect.height
-    })
+    {largeSpacing, smallSpacing} = util.canvas.getSpacing(pixelSize)
 
     snapTolerance = pixelSize * config.snapTolerance
 

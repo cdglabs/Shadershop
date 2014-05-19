@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'shadershopfont';
-  src: url('../font/shadershopfont.eot?97861124');
-  src: url('../font/shadershopfont.eot?97861124#iefix') format('embedded-opentype'),
-       url('../font/shadershopfont.woff?97861124') format('woff'),
-       url('../font/shadershopfont.ttf?97861124') format('truetype'),
-       url('../font/shadershopfont.svg?97861124#shadershopfont') format('svg');
+  src: url('../font/shadershopfont.eot?16722285');
+  src: url('../font/shadershopfont.eot?16722285#iefix') format('embedded-opentype'),
+       url('../font/shadershopfont.woff?16722285') format('woff'),
+       url('../font/shadershopfont.ttf?16722285') format('truetype'),
+       url('../font/shadershopfont.svg?16722285#shadershopfont') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -14,7 +14,7 @@
 @media screen and (-webkit-min-device-pixel-ratio:0) {
   @font-face {
     font-family: 'shadershopfont';
-    src: url('../font/shadershopfont.svg?97861124#shadershopfont') format('svg');
+    src: url('../font/shadershopfont.svg?16722285#shadershopfont') format('svg');
   }
 }
 */
@@ -52,3 +52,5 @@
  
 .icon-eye:before { content: '\e800'; } /* '' */
 .icon-pencil:before { content: '\e801'; } /* '' */
+.icon-list-add:before { content: '\e802'; } /* '' */
+.icon-cog:before { content: '\e803'; } /* '' */

@@ -202,15 +202,21 @@ class C.Plot
     @type = "cartesian"
 
   getBounds: (width, height) ->
-    # TODO: This will be removed at some point...
-    minDimension = Math.min(width, height)
-    w = width  / minDimension
-    h = height / minDimension
+    pixelSize = @getPixelSize(width, height)
+    center = {
+      domain: @domainCenter
+      range:  @rangeCenter
+    }
+    dimensions = @getDimensions()
+
+    xPixelCenter = center[dimensions[0].space][dimensions[0].coord]
+    yPixelCenter = center[dimensions[1].space][dimensions[1].coord]
+
     return {
-      xMin: @domainCenter[0] - @scale * w
-      xMax: @domainCenter[0] + @scale * w
-      yMin: @rangeCenter[0]  - @scale * h
-      yMax: @rangeCenter[0]  + @scale * h
+      xMin: xPixelCenter - pixelSize*width/2
+      xMax: xPixelCenter + pixelSize*width/2
+      yMin: yPixelCenter - pixelSize*height/2
+      yMax: yPixelCenter + pixelSize*height/2
     }
 
   getPixelSize: (width, height) ->
@@ -219,7 +225,6 @@ class C.Plot
     return 2 * @scale / minDimension
 
   getDimensions: ->
-    # TODO: should be based on @type
     if @type == "cartesian"
       return [
         {space: "domain", coord: 0}

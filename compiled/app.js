@@ -950,15 +950,20 @@
     }
 
     Plot.prototype.getBounds = function(width, height) {
-      var h, minDimension, w;
-      minDimension = Math.min(width, height);
-      w = width / minDimension;
-      h = height / minDimension;
+      var center, dimensions, pixelSize, xPixelCenter, yPixelCenter;
+      pixelSize = this.getPixelSize(width, height);
+      center = {
+        domain: this.domainCenter,
+        range: this.rangeCenter
+      };
+      dimensions = this.getDimensions();
+      xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
+      yPixelCenter = center[dimensions[1].space][dimensions[1].coord];
       return {
-        xMin: this.domainCenter[0] - this.scale * w,
-        xMax: this.domainCenter[0] + this.scale * w,
-        yMin: this.rangeCenter[0] - this.scale * h,
-        yMax: this.rangeCenter[0] + this.scale * h
+        xMin: xPixelCenter - pixelSize * width / 2,
+        xMax: xPixelCenter + pixelSize * width / 2,
+        yMin: yPixelCenter - pixelSize * height / 2,
+        yMax: yPixelCenter + pixelSize * height / 2
       };
     };
 
@@ -1112,16 +1117,9 @@
     return ctx.stroke();
   };
 
-  getSpacing = function(opts) {
-    var div, height, largeSpacing, minSpacing, smallSpacing, width, xMax, xMin, xMinSpacing, xSize, yMax, yMin, yMinSpacing, ySize, z, _ref, _ref1;
-    xMin = opts.xMin, xMax = opts.xMax, yMin = opts.yMin, yMax = opts.yMax;
-    width = (_ref = opts.width) != null ? _ref : config.mainPlotWidth;
-    height = (_ref1 = opts.height) != null ? _ref1 : config.mainPlotHeight;
-    xSize = xMax - xMin;
-    ySize = yMax - yMin;
-    xMinSpacing = (xSize / width) * config.minGridSpacing;
-    yMinSpacing = (ySize / height) * config.minGridSpacing;
-    minSpacing = Math.max(xMinSpacing, yMinSpacing);
+  getSpacing = function(pixelSize) {
+    var div, largeSpacing, minSpacing, smallSpacing, z;
+    minSpacing = pixelSize * config.minGridSpacing;
 
     /*
     need to determine:
@@ -1145,20 +1143,14 @@
   };
 
   drawGrid = function(ctx, opts) {
-    var axesColor, axesOpacity, color, cx, cxMax, cxMin, cy, cyMax, cyMin, fromLocal, height, labelColor, labelDistance, labelOpacity, largeSpacing, majorColor, majorOpacity, minorColor, minorOpacity, smallSpacing, text, textHeight, toLocal, width, x, xMax, xMin, y, yMax, yMin, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var axesColor, axesOpacity, color, cx, cxMax, cxMin, cy, cyMax, cyMin, fromLocal, height, labelColor, labelDistance, labelOpacity, largeSpacing, majorColor, majorOpacity, minorColor, minorOpacity, pixelSize, smallSpacing, text, textHeight, toLocal, width, x, xMax, xMin, y, yMax, yMin, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     xMin = opts.xMin;
     xMax = opts.xMax;
     yMin = opts.yMin;
     yMax = opts.yMax;
+    pixelSize = opts.pixelSize;
     _ref = canvasBounds(ctx), cxMin = _ref.cxMin, cxMax = _ref.cxMax, cyMin = _ref.cyMin, cyMax = _ref.cyMax, width = _ref.width, height = _ref.height;
-    _ref1 = getSpacing({
-      xMin: xMin,
-      xMax: xMax,
-      yMin: yMin,
-      yMax: yMax,
-      width: width,
-      height: height
-    }), largeSpacing = _ref1.largeSpacing, smallSpacing = _ref1.smallSpacing;
+    _ref1 = getSpacing(pixelSize), largeSpacing = _ref1.largeSpacing, smallSpacing = _ref1.smallSpacing;
     toLocal = function(_arg) {
       var cx, cy;
       cx = _arg[0], cy = _arg[1];
@@ -2090,14 +2082,7 @@
       rect = container.getBoundingClientRect();
       bounds = this.plot.getBounds(rect.width, rect.height);
       pixelSize = this.plot.getPixelSize(rect.width, rect.height);
-      _ref = util.canvas.getSpacing({
-        xMin: bounds.xMin,
-        xMax: bounds.xMax,
-        yMin: bounds.yMin,
-        yMax: bounds.yMax,
-        width: rect.width,
-        height: rect.height
-      }), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
+      _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
       snapTolerance = pixelSize * config.snapTolerance;
       nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
       if (Math.abs(value - nearestSnap) < snapTolerance) {
@@ -3150,7 +3135,8 @@
         xMin: xMin,
         xMax: xMax,
         yMin: yMin,
-        yMax: yMax
+        yMax: yMax,
+        pixelSize: this.plot.getPixelSize(canvas.width, canvas.height)
       });
     },
     shouldComponentUpdate: function(nextProps) {

@@ -49,59 +49,14 @@ Palette
 
 
 
-Get Grid and canvas.getSpacing using better Plot API
+Get Grid using better Plot API
 
-Fix bug with panning, etc. on colorMap
-
-
-
-
-Plot
-  toWorld: (width, height, {x, y}) -> {domain, range}
-    e.g.
-      {domain: [3,null,null,null], range: [4,null,null,null]} or
-      {domain: [2,5,null,null], range: [null,null,null,null]}
-  toPixel: (width, height, {domain, range}) -> {x, y}
-
-  getDimensions: -> [{space, coord}]
-    e.g.
-      [{space: "domain", coord: 0}, {space: "range", coord: 0}] or
-      [{space: "domain", coord: 0}, {space: "domain", coord: 1}]
+Get ShaderOverlayView using better Plot API
+  Be able to use any coordinates (right now d0, r0 is hardcoded for cartesian, and d0, d1, r0 is hardcoded for colorMap)
 
 
-  Actions
-    panPlot  = (plot, from, to)
-    zoomPlot = (plot, zoomCenter, scaleFactor)
+Button to switch between cartesian and colorMap plots in MainPlotView
+  For colorMap, only draw the main plot
+  Try out better color scale for colorMap
 
-
-  For control points
-    Translate:
-      get:
-        get domainTranslate and rangeTranslate as a single {domain, range} object
-        Plot.toPixel that, put the control point at that place
-      set:
-        Plot.toWorld {x,y} (e.g. {domain: [5,null,null,null], range: [6,null,null,null]})
-        overwrite non-null part of domainTranslate and rangeTranslate
-
-    Make a transform control point for each dimension in the plot, for each
-      get:
-        get translate {domain, range} object
-        get transform for that dimension (e.g. [1,0,0,0])
-        add that to the translate object (using space: "domain" | "range")
-        Plot.toPixel that, put the control point at that place
-      set:
-        Plot.toWorld {x,y} (e.g. {domain: [5,null,null,null], range: [6,null,null,null]})
-        take just the space part of that
-        subtract the space part of the translate {domain, range} object
-        overwrite non-null part of transform
-
-
-
-
-TODO
-  try to get rid of all getBounds calls in MainPlotView
-
-
-
-
-
+Instead of a @scale property in Plot, just have pixelSize. Make UI.thumbnailScale for the thumbnails.
