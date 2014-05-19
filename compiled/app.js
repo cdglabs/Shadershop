@@ -402,6 +402,8 @@
     snapTolerance: 7,
     outlineIndent: 16,
     gridColor: "204,194,163",
+    colorMapPositive: ".84, .75, .47",
+    colorMapNegative: ".47, .56, .84",
     style: {
       main: {
         strokeStyle: "#333",
@@ -3034,7 +3036,7 @@
   createColorMapProgram = function(glod, name, expr) {
     var fragment, vertex;
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\n\nvoid main() {\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float screenXMin, screenXMax, screenYMin, screenYMax;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(gl_FragCoord.x, screenXMin, screenXMax, xMin, xMax),\n    lerp(gl_FragCoord.y, screenYMin, screenYMax, yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  gl_FragColor = vec4(vec3(y.x), 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float screenXMin, screenXMax, screenYMin, screenYMax;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(gl_FragCoord.x, screenXMin, screenXMax, xMin, xMax),\n    lerp(gl_FragCoord.y, screenYMin, screenYMax, yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  float value = y.x;\n  float normvalue = abs(value);\n  vec3 color;\n  if (value > 0.) {\n    color = mix(vec3(1., 1., 1.), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(1., 1., 1.), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 

@@ -43,6 +43,7 @@ Palette
   Maybe
     + insert buttons in outline like before
     select multiple and then click "add", "multiply", etc. to group those
+  Some way to delete definitions
 
 
 
@@ -59,3 +60,9 @@ Try out better color scale for colorMap
 Instead of a @scale property in Plot, just have pixelSize. Make UI.thumbnailScale for the thumbnails.
 
 Send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
+
+
+Priority
+  projections, to make the 2D noise example easier
+  something better than inspector
+  something better for making compound fn's

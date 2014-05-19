@@ -30,6 +30,11 @@ window.config = config = {
 
   gridColor: "204,194,163"
 
+  # colorMapPositive: ".80, .69, .36"
+  # colorMapNegative: ".36, .47, .80"
+  colorMapPositive: ".84, .75, .47"
+  colorMapNegative: ".47, .56, .84"
+
 
   style: {
     main: {
