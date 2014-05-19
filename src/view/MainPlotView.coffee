@@ -48,41 +48,50 @@ R.create "MainPlotView",
   render: ->
     exprs = []
 
-    expandedChildFns = @_getExpandedChildFns()
+    if @fn.plot.type == "colorMap"
 
-    # Child Fns
-    for childFn in expandedChildFns
+      # Main
       exprs.push {
-        exprString: Compiler.getExprString(childFn, "x")
-        color: config.color.child
+        exprString: Compiler.getExprString(@fn, "x")
       }
 
-    # Hovered
-    if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
+    else
+
+      expandedChildFns = @_getExpandedChildFns()
+
+      # Child Fns
+      for childFn in expandedChildFns
+        exprs.push {
+          exprString: Compiler.getExprString(childFn, "x")
+          color: config.color.child
+        }
+
+      # Hovered
+      if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
+        exprs.push {
+          exprString: Compiler.getExprString(UI.hoveredChildFn, "x")
+          color: config.color.hovered
+        }
+
+      # Main
       exprs.push {
-        exprString: Compiler.getExprString(UI.hoveredChildFn, "x")
-        color: config.color.hovered
+        exprString: Compiler.getExprString(@fn, "x")
+        color: config.color.main
       }
 
-    # Main
-    exprs.push {
-      exprString: Compiler.getExprString(@fn, "x")
-      color: config.color.main
-    }
+      # Selected
+      if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
+        exprs.push {
+          exprString: Compiler.getExprString(UI.selectedChildFn, "x")
+          color: config.color.selected
+        }
 
-    # Selected
-    if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
-      exprs.push {
-        exprString: Compiler.getExprString(UI.selectedChildFn, "x")
-        color: config.color.selected
-      }
-
-    # Remove redundant exprs
-    exprs = _.reject exprs, (expr, exprIndex) ->
-      for i in [exprIndex+1 ... exprs.length]
-        if exprs[i].exprString == expr.exprString
-          return true
-      return false
+      # Remove redundant exprs
+      exprs = _.reject exprs, (expr, exprIndex) ->
+        for i in [exprIndex+1 ... exprs.length]
+          if exprs[i].exprString == expr.exprString
+            return true
+        return false
 
     R.div {
       className: "MainPlot",

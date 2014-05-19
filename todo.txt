@@ -54,9 +54,8 @@ Get Grid using better Plot API
 Get ShaderOverlayView using better Plot API
   Be able to use any coordinates (right now d0, r0 is hardcoded for cartesian, and d0, d1, r0 is hardcoded for colorMap)
 
-
-Button to switch between cartesian and colorMap plots in MainPlotView
-  For colorMap, only draw the main plot
-  Try out better color scale for colorMap
+Try out better color scale for colorMap
 
 Instead of a @scale property in Plot, just have pixelSize. Make UI.thumbnailScale for the thumbnails.
+
+Send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster

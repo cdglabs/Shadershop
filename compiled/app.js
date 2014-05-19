@@ -1939,39 +1939,45 @@
     render: function() {
       var childFn, expandedChildFns, exprs, _i, _len;
       exprs = [];
-      expandedChildFns = this._getExpandedChildFns();
-      for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
-        childFn = expandedChildFns[_i];
+      if (this.fn.plot.type === "colorMap") {
         exprs.push({
-          exprString: Compiler.getExprString(childFn, "x"),
-          color: config.color.child
+          exprString: Compiler.getExprString(this.fn, "x")
         });
-      }
-      if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
-        exprs.push({
-          exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
-          color: config.color.hovered
-        });
-      }
-      exprs.push({
-        exprString: Compiler.getExprString(this.fn, "x"),
-        color: config.color.main
-      });
-      if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
-        exprs.push({
-          exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
-          color: config.color.selected
-        });
-      }
-      exprs = _.reject(exprs, function(expr, exprIndex) {
-        var i, _j, _ref, _ref1;
-        for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
-          if (exprs[i].exprString === expr.exprString) {
-            return true;
-          }
+      } else {
+        expandedChildFns = this._getExpandedChildFns();
+        for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
+          childFn = expandedChildFns[_i];
+          exprs.push({
+            exprString: Compiler.getExprString(childFn, "x"),
+            color: config.color.child
+          });
         }
-        return false;
-      });
+        if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
+          exprs.push({
+            exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
+            color: config.color.hovered
+          });
+        }
+        exprs.push({
+          exprString: Compiler.getExprString(this.fn, "x"),
+          color: config.color.main
+        });
+        if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
+          exprs.push({
+            exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
+            color: config.color.selected
+          });
+        }
+        exprs = _.reject(exprs, function(expr, exprIndex) {
+          var i, _j, _ref, _ref1;
+          for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
+            if (exprs[i].exprString === expr.exprString) {
+              return true;
+            }
+          }
+          return false;
+        });
+      }
       return R.div({
         className: "MainPlot",
         onMouseDown: this._onMouseDown,
