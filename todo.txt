@@ -57,8 +57,6 @@ Get ShaderOverlayView using better Plot API
 
 Try out better color scale for colorMap
 
-? Instead of a @scale property in Plot, just have pixelSize. Make UI.thumbnailScale for the thumbnails.
-
 Send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
 
 
@@ -72,11 +70,15 @@ Priority
 
 
 
+Cleanup:
+
+  getPixelSize no longer needs to send in width/height
+
+  Things would be cleaner if toPixel and toWorld worked with the pixel frame centered. This way width and height wouldn't need to be passed in.
 
 
 
-
-
+Need to sync pixelSize, domainCenter, rangeCenter over the whole PlotLayout.
 
 
 
