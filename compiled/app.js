@@ -2382,15 +2382,15 @@
       fn: C.DefinedFn
     },
     render: function() {
-      var h, plot, plotLocations, w, x, y;
+      var h, index, plot, plotLocations, w, x, y;
       plotLocations = this.fn.plotLayout.getPlotLocations();
       return R.div({
         className: "PlotLayout"
       }, (function() {
         var _i, _len, _ref, _results;
         _results = [];
-        for (_i = 0, _len = plotLocations.length; _i < _len; _i++) {
-          _ref = plotLocations[_i], plot = _ref.plot, x = _ref.x, y = _ref.y, w = _ref.w, h = _ref.h;
+        for (index = _i = 0, _len = plotLocations.length; _i < _len; index = ++_i) {
+          _ref = plotLocations[index], plot = _ref.plot, x = _ref.x, y = _ref.y, w = _ref.w, h = _ref.h;
           _results.push(R.div({
             className: "PlotLocation",
             style: {
@@ -2398,7 +2398,8 @@
               top: y * 100 + "%",
               width: w * 100 + "%",
               height: h * 100 + "%"
-            }
+            },
+            key: index
           }, R.PlotView({
             fn: this.fn,
             plot: plot
@@ -2600,7 +2601,7 @@
       plot: C.Plot
     },
     render: function() {
-      var dimension;
+      var dimension, index;
       return R.div({
         className: "Interactive PointControlContainer"
       }, R.PointControlView({
@@ -2610,11 +2611,12 @@
         var _i, _len, _ref, _results;
         _ref = this.plot.getDimensions();
         _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          dimension = _ref[_i];
+        for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
+          dimension = _ref[index];
           _results.push(R.PointControlView({
             position: this._getTransformPosition(dimension),
-            onMove: this._setTransformPosition(dimension)
+            onMove: this._setTransformPosition(dimension),
+            key: index
           }));
         }
         return _results;

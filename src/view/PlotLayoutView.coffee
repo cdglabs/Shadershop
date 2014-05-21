@@ -6,7 +6,7 @@ R.create "PlotLayoutView",
     plotLocations = @fn.plotLayout.getPlotLocations()
 
     R.div {className: "PlotLayout"},
-      for {plot, x, y, w, h} in plotLocations
+      for {plot, x, y, w, h}, index in plotLocations
         R.div {
           className: "PlotLocation"
           style: {
@@ -15,6 +15,7 @@ R.create "PlotLayoutView",
             width:  w * 100 + "%"
             height: h * 100 + "%"
           }
+          key: index
         },
           R.PlotView {
             fn: @fn
@@ -226,10 +227,11 @@ R.create "ChildFnControlsView",
         position: @_getTranslatePosition()
         onMove: @_setTranslatePosition
       }
-      for dimension in @plot.getDimensions()
+      for dimension, index in @plot.getDimensions()
         R.PointControlView {
           position: @_getTransformPosition(dimension)
           onMove: @_setTransformPosition(dimension)
+          key: index
         }
 
   _snap: (value) ->
