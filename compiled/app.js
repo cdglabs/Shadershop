@@ -457,7 +457,7 @@
 
 }).call(this);
 }, "main": function(exports, require, module) {(function() {
-  var animateLoop, debouncedSaveState, dirty, dirtyEventNames, eventName, json, refreshView, saveState, setDirty, storageName, _i, _len;
+  var debouncedSaveState, eventName, json, refresh, refreshEventNames, refreshView, saveState, storageName, willRefreshNextFrame, _i, _len;
 
   require("./config");
 
@@ -507,19 +507,18 @@
 
   debouncedSaveState = _.debounce(saveState, 400);
 
-  dirty = true;
+  willRefreshNextFrame = false;
 
-  animateLoop = function() {
-    requestAnimationFrame(animateLoop);
-    if (dirty) {
+  refresh = function() {
+    if (willRefreshNextFrame) {
+      return;
+    }
+    willRefreshNextFrame = true;
+    return requestAnimationFrame(function() {
       refreshView();
       debouncedSaveState();
-      return dirty = false;
-    }
-  };
-
-  setDirty = function() {
-    return dirty = true;
+      return willRefreshNextFrame = false;
+    });
   };
 
   refreshView = function() {
@@ -530,14 +529,14 @@
     }), appRootEl);
   };
 
-  dirtyEventNames = ["mousedown", "mousemove", "mouseup", "keydown", "scroll", "change", "wheel", "mousewheel"];
+  refreshEventNames = ["mousedown", "mousemove", "mouseup", "keydown", "scroll", "change", "wheel", "mousewheel"];
 
-  for (_i = 0, _len = dirtyEventNames.length; _i < _len; _i++) {
-    eventName = dirtyEventNames[_i];
-    window.addEventListener(eventName, setDirty);
+  for (_i = 0, _len = refreshEventNames.length; _i < _len; _i++) {
+    eventName = refreshEventNames[_i];
+    window.addEventListener(eventName, refresh);
   }
 
-  animateLoop();
+  refresh();
 
   if (location.protocol === "file:" && navigator.userAgent.indexOf("Firefox") === -1) {
     setInterval(function() {

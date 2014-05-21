@@ -53,23 +53,23 @@ require("./UI")
 
 debouncedSaveState = _.debounce(saveState, 400)
 
-dirty = true
-
-animateLoop = ->
-  requestAnimationFrame(animateLoop)
-  if dirty
+willRefreshNextFrame = false
+refresh = ->
+  return if willRefreshNextFrame
+  willRefreshNextFrame = true
+  requestAnimationFrame ->
     refreshView()
+    # saveState()
     debouncedSaveState()
-    dirty = false
-
-setDirty = ->
-  dirty = true
+    willRefreshNextFrame = false
 
 refreshView = ->
   appRootEl = document.querySelector("#AppRoot")
   React.renderComponent(R.AppRootView({appRoot}), appRootEl)
 
-dirtyEventNames = [
+
+
+refreshEventNames = [
   "mousedown"
   "mousemove"
   "mouseup"
@@ -80,10 +80,10 @@ dirtyEventNames = [
   "mousewheel"
 ]
 
-for eventName in dirtyEventNames
-  window.addEventListener(eventName, setDirty)
+for eventName in refreshEventNames
+  window.addEventListener(eventName, refresh)
 
-animateLoop()
+refresh()
 
 
 # =============================================================================
