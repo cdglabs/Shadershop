@@ -3,11 +3,23 @@ R.create "PlotLayoutView",
     fn: C.DefinedFn
 
   render: ->
-    plot = @fn.plotLayout.getMainPlot()
-    R.PlotView {
-      fn: @fn
-      plot: plot
-    }
+    plotLocations = @fn.plotLayout.getPlotLocations()
+
+    R.div {className: "PlotLayout"},
+      for {plot, x, y, w, h} in plotLocations
+        R.div {
+          className: "PlotLocation"
+          style: {
+            left:   x * 100 + "%"
+            top:    y * 100 + "%"
+            width:  w * 100 + "%"
+            height: h * 100 + "%"
+          }
+        },
+          R.PlotView {
+            fn: @fn
+            plot: plot
+          }
 
 
 

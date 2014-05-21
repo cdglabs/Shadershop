@@ -203,7 +203,7 @@ class C.PlotLayout
   getMainPlot: ->
     return @plots[1]
 
-  getPlots: ->
+  getPlotLocations: ->
     # returns [{plot, x, y, w, h}] dimensions as fractions
     return [
       {

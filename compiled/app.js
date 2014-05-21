@@ -952,7 +952,7 @@
       return this.plots[1];
     };
 
-    PlotLayout.prototype.getPlots = function() {
+    PlotLayout.prototype.getPlotLocations = function() {
       return [
         {
           plot: this.plots[0],
@@ -2366,12 +2366,30 @@
       fn: C.DefinedFn
     },
     render: function() {
-      var plot;
-      plot = this.fn.plotLayout.getMainPlot();
-      return R.PlotView({
-        fn: this.fn,
-        plot: plot
-      });
+      var h, plot, plotLocations, w, x, y;
+      plotLocations = this.fn.plotLayout.getPlotLocations();
+      return R.div({
+        className: "PlotLayout"
+      }, (function() {
+        var _i, _len, _ref, _results;
+        _results = [];
+        for (_i = 0, _len = plotLocations.length; _i < _len; _i++) {
+          _ref = plotLocations[_i], plot = _ref.plot, x = _ref.x, y = _ref.y, w = _ref.w, h = _ref.h;
+          _results.push(R.div({
+            className: "PlotLocation",
+            style: {
+              left: x * 100 + "%",
+              top: y * 100 + "%",
+              width: w * 100 + "%",
+              height: h * 100 + "%"
+            }
+          }, R.PlotView({
+            fn: this.fn,
+            plot: plot
+          })));
+        }
+        return _results;
+      }).call(this));
     }
   });
 

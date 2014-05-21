@@ -30,7 +30,7 @@ canvas,
   z-index: 10;
   pointer-events: none;
 }
-.MainPlot {
+.PlotLayout {
   position: absolute;
   top: 0px;
   left: 180px;
@@ -135,6 +135,9 @@ canvas,
   margin: 6px 0px;
   padding: 6px;
   text-align: center;
+}
+.PlotLocation {
+  position: absolute;
 }
 .PlotContainer {
   position: absolute;
