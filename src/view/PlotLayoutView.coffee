@@ -120,30 +120,30 @@ R.create "PlotView",
         return false
 
     R.div {
-      className: "MainPlot",
+      className: "PlotContainer",
       onMouseDown: @_onMouseDown,
       onWheel: @_onWheel,
       onMouseMove: @_onMouseMove,
       onMouseLeave: @_onMouseLeave
     },
-      R.div {className: "PlotContainer"},
-        # Grid
-        R.GridView {plot: @plot}
+      # Grid
+      R.GridView {plot: @plot, isThumbnail: false}
 
-        R.ShaderCartesianView {
+      R.ShaderCartesianView {
+        plot: @plot
+        exprs: exprs
+        isThumbnail: false
+      }
+
+      if UI.selectedChildFn
+        R.ChildFnControlsView {
+          childFn: UI.selectedChildFn
           plot: @plot
-          exprs: exprs
         }
 
-        if UI.selectedChildFn
-          R.ChildFnControlsView {
-            childFn: UI.selectedChildFn
-            plot: @plot
-          }
-
-        # Settings Button
-        R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
-          R.div {className: "icon-cog"}
+      # Settings Button
+      R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
+        R.div {className: "icon-cog"}
 
   _onMouseMove: ->
     Actions.hoverChildFn(@_findHitTarget())
@@ -243,7 +243,6 @@ R.create "ChildFnControlsView",
     container = @getDOMNode().closest(".PlotContainer")
     rect = container.getBoundingClientRect()
 
-    bounds = @plot.getBounds(rect.width, rect.height)
     pixelSize = @plot.getPixelSize(rect.width, rect.height)
 
     {largeSpacing, smallSpacing} = util.canvas.getSpacing(pixelSize)

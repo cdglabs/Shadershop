@@ -230,12 +230,13 @@ class C.Plot
   constructor: ->
     @domainCenter = util.constructVector(config.dimensions, 0)
     @rangeCenter = util.constructVector(config.dimensions, 0)
-    @scale = 5 # minimum distance that can be "seen" from the center
+
+    @pixelSize = .01
 
     @type = "cartesian"
 
-  getBounds: (width, height) ->
-    pixelSize = @getPixelSize(width, height)
+  getScaledBounds: (width, height, scaleFactor) ->
+    pixelSize = @pixelSize
     center = {
       domain: @domainCenter
       range:  @rangeCenter
@@ -246,16 +247,14 @@ class C.Plot
     yPixelCenter = center[dimensions[1].space][dimensions[1].coord]
 
     return {
-      xMin: xPixelCenter - pixelSize*width/2
-      xMax: xPixelCenter + pixelSize*width/2
-      yMin: yPixelCenter - pixelSize*height/2
-      yMax: yPixelCenter + pixelSize*height/2
+      xMin: xPixelCenter - pixelSize * (width/2)  * scaleFactor
+      xMax: xPixelCenter + pixelSize * (width/2)  * scaleFactor
+      yMin: yPixelCenter - pixelSize * (height/2) * scaleFactor
+      yMax: yPixelCenter + pixelSize * (height/2) * scaleFactor
     }
 
-  getPixelSize: (width, height) ->
-    # How "wide" a pixel is in world coordinates
-    minDimension = Math.min(width, height)
-    return 2 * @scale / minDimension
+  getPixelSize: ->
+    return @pixelSize
 
   getDimensions: ->
     if @type == "cartesian"

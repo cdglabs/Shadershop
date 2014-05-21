@@ -7,10 +7,11 @@ R.create "ThumbnailPlotLayoutView",
     plot = @plotLayout.getMainPlot()
 
     R.div {className: "PlotContainer"},
-      R.GridView {plot: plot}
+      R.GridView {plot: plot, isThumbnail: true}
 
       R.ShaderCartesianView {
         plot: plot
+        isThumbnail: true
         exprs: [
           {
             exprString: Compiler.getExprString(@fn, "x")

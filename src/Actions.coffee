@@ -147,7 +147,7 @@ Actions.zoomPlot = (plot, zoomCenter, scaleFactor) ->
   plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter)
   plot.rangeCenter  = util.vector.merge(plot.rangeCenter,  newRangeCenter)
 
-  plot.scale *= scaleFactor
+  plot.pixelSize *= scaleFactor
 
 
 # =============================================================================

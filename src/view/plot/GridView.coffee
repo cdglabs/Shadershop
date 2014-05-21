@@ -1,11 +1,18 @@
 R.create "GridView",
   propTypes:
     plot: C.Plot
+    isThumbnail: Boolean
 
   drawFn: (canvas) ->
     ctx = canvas.getContext("2d")
 
-    {xMin, xMax, yMin, yMax} = @plot.getBounds(canvas.width, canvas.height)
+    if @isThumbnail
+      scaleFactor = window.innerHeight / canvas.height
+    else
+      scaleFactor = 1
+
+    bounds = @plot.getScaledBounds(canvas.width, canvas.height, scaleFactor)
+    {xMin, xMax, yMin, yMax} = bounds
 
     util.canvas.clear(ctx)
 
@@ -14,7 +21,7 @@ R.create "GridView",
       xMax: xMax
       yMin: yMin
       yMax: yMax
-      pixelSize: @plot.getPixelSize(canvas.width, canvas.height)
+      pixelSize: @plot.getPixelSize(canvas.width, canvas.height) * scaleFactor
 
   shouldComponentUpdate: (nextProps) ->
     return true

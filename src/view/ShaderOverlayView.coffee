@@ -43,7 +43,14 @@ R.create "ShaderOverlayView",
       shaderView = shaderEl.dataFor
       exprs = shaderView.exprs
       plot = shaderView.plot
-      bounds = plot.getBounds(rect.width, rect.height)
+
+      if shaderView.isThumbnail
+        scaleFactor = window.innerHeight / rect.height # kinda hacky?
+      else
+        scaleFactor = 1
+
+      bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor)
+
 
       numSamples = rect.width / config.resolution
 

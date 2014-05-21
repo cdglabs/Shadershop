@@ -227,7 +227,7 @@
     newRangeCenter = util.vector.add(zoomCenter.range, util.vector.mul(scaleFactor, rangeOffset));
     plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter);
     plot.rangeCenter = util.vector.merge(plot.rangeCenter, newRangeCenter);
-    return plot.scale *= scaleFactor;
+    return plot.pixelSize *= scaleFactor;
   };
 
   Actions.selectFn = function(fn) {
@@ -978,13 +978,13 @@
     function Plot() {
       this.domainCenter = util.constructVector(config.dimensions, 0);
       this.rangeCenter = util.constructVector(config.dimensions, 0);
-      this.scale = 5;
+      this.pixelSize = .01;
       this.type = "cartesian";
     }
 
-    Plot.prototype.getBounds = function(width, height) {
+    Plot.prototype.getScaledBounds = function(width, height, scaleFactor) {
       var center, dimensions, pixelSize, xPixelCenter, yPixelCenter;
-      pixelSize = this.getPixelSize(width, height);
+      pixelSize = this.pixelSize;
       center = {
         domain: this.domainCenter,
         range: this.rangeCenter
@@ -993,17 +993,15 @@
       xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
       yPixelCenter = center[dimensions[1].space][dimensions[1].coord];
       return {
-        xMin: xPixelCenter - pixelSize * width / 2,
-        xMax: xPixelCenter + pixelSize * width / 2,
-        yMin: yPixelCenter - pixelSize * height / 2,
-        yMax: yPixelCenter + pixelSize * height / 2
+        xMin: xPixelCenter - pixelSize * (width / 2) * scaleFactor,
+        xMax: xPixelCenter + pixelSize * (width / 2) * scaleFactor,
+        yMin: yPixelCenter - pixelSize * (height / 2) * scaleFactor,
+        yMax: yPixelCenter + pixelSize * (height / 2) * scaleFactor
       };
     };
 
-    Plot.prototype.getPixelSize = function(width, height) {
-      var minDimension;
-      minDimension = Math.min(width, height);
-      return 2 * this.scale / minDimension;
+    Plot.prototype.getPixelSize = function() {
+      return this.pixelSize;
     };
 
     Plot.prototype.getDimensions = function() {
@@ -2497,18 +2495,18 @@
         });
       }
       return R.div({
-        className: "MainPlot",
+        className: "PlotContainer",
         onMouseDown: this._onMouseDown,
         onWheel: this._onWheel,
         onMouseMove: this._onMouseMove,
         onMouseLeave: this._onMouseLeave
-      }, R.div({
-        className: "PlotContainer"
       }, R.GridView({
-        plot: this.plot
+        plot: this.plot,
+        isThumbnail: false
       }), R.ShaderCartesianView({
         plot: this.plot,
-        exprs: exprs
+        exprs: exprs,
+        isThumbnail: false
       }), UI.selectedChildFn ? R.ChildFnControlsView({
         childFn: UI.selectedChildFn,
         plot: this.plot
@@ -2517,7 +2515,7 @@
         onClick: this._onSettingsButtonClick
       }, R.div({
         className: "icon-cog"
-      }))));
+      })));
     },
     _onMouseMove: function() {
       return Actions.hoverChildFn(this._findHitTarget());
@@ -2615,10 +2613,9 @@
       return this.plot.toWorld(rect.width, rect.height, pixel);
     },
     _snap: function(value) {
-      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
+      var container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
       container = this.getDOMNode().closest(".PlotContainer");
       rect = container.getBoundingClientRect();
-      bounds = this.plot.getBounds(rect.width, rect.height);
       pixelSize = this.plot.getPixelSize(rect.width, rect.height);
       _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
       snapTolerance = pixelSize * config.snapTolerance;
@@ -2957,7 +2954,7 @@
       }
     },
     draw: function() {
-      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, plot, rect, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -2975,7 +2972,12 @@
         shaderView = shaderEl.dataFor;
         exprs = shaderView.exprs;
         plot = shaderView.plot;
-        bounds = plot.getBounds(rect.width, rect.height);
+        if (shaderView.isThumbnail) {
+          scaleFactor = window.innerHeight / rect.height;
+        } else {
+          scaleFactor = 1;
+        }
+        bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor);
         numSamples = rect.width / config.resolution;
         for (_j = 0, _len1 = exprs.length; _j < _len1; _j++) {
           expr = exprs[_j];
@@ -3134,9 +3136,11 @@
       return R.div({
         className: "PlotContainer"
       }, R.GridView({
-        plot: plot
+        plot: plot,
+        isThumbnail: true
       }), R.ShaderCartesianView({
         plot: plot,
+        isThumbnail: true,
         exprs: [
           {
             exprString: Compiler.getExprString(this.fn, "x"),
@@ -3212,19 +3216,26 @@
 }, "view/plot/GridView": function(exports, require, module) {(function() {
   R.create("GridView", {
     propTypes: {
-      plot: C.Plot
+      plot: C.Plot,
+      isThumbnail: Boolean
     },
     drawFn: function(canvas) {
-      var ctx, xMax, xMin, yMax, yMin, _ref;
+      var bounds, ctx, scaleFactor, xMax, xMin, yMax, yMin;
       ctx = canvas.getContext("2d");
-      _ref = this.plot.getBounds(canvas.width, canvas.height), xMin = _ref.xMin, xMax = _ref.xMax, yMin = _ref.yMin, yMax = _ref.yMax;
+      if (this.isThumbnail) {
+        scaleFactor = window.innerHeight / canvas.height;
+      } else {
+        scaleFactor = 1;
+      }
+      bounds = this.plot.getScaledBounds(canvas.width, canvas.height, scaleFactor);
+      xMin = bounds.xMin, xMax = bounds.xMax, yMin = bounds.yMin, yMax = bounds.yMax;
       util.canvas.clear(ctx);
       return util.canvas.drawGrid(ctx, {
         xMin: xMin,
         xMax: xMax,
         yMin: yMin,
         yMax: yMax,
-        pixelSize: this.plot.getPixelSize(canvas.width, canvas.height)
+        pixelSize: this.plot.getPixelSize(canvas.width, canvas.height) * scaleFactor
       });
     },
     shouldComponentUpdate: function(nextProps) {
@@ -3242,7 +3253,8 @@
   R.create("ShaderCartesianView", {
     propTypes: {
       plot: C.Plot,
-      exprs: Array
+      exprs: Array,
+      isThumbnail: Boolean
     },
     render: function() {
       return R.div({
