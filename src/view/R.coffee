@@ -122,8 +122,8 @@ require("./AppRootView")
 require("./ShaderOverlayView")
 
 require("./PaletteView")
-require("./MainPlotView")
-require("./ThumbnailPlotView")
+require("./PlotLayoutView")
+require("./ThumbnailPlotLayoutView")
 require("./OutlineView")
 require("./VariableView")
 

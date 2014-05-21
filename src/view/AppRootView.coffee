@@ -13,7 +13,7 @@ R.create "AppRootView",
 
   render: ->
     R.div {},
-      R.MainPlotView {fn: UI.selectedFn}
+      R.PlotLayoutView {fn: UI.selectedFn}
       R.PaletteView {appRoot: @appRoot}
       R.OutlineView {definedFn: UI.selectedFn}
       R.DraggingView {}

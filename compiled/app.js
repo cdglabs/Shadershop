@@ -821,7 +821,7 @@
     function DefinedFn() {
       DefinedFn.__super__.constructor.call(this);
       this.combiner = "last";
-      this.plot = new C.Plot();
+      this.plotLayout = new C.PlotLayout();
     }
 
     return DefinedFn;
@@ -942,6 +942,37 @@
     return ChildFn;
 
   })(C.Fn);
+
+  C.PlotLayout = (function() {
+    function PlotLayout() {
+      this.plots = [new C.Plot(), new C.Plot()];
+    }
+
+    PlotLayout.prototype.getMainPlot = function() {
+      return this.plots[1];
+    };
+
+    PlotLayout.prototype.getPlots = function() {
+      return [
+        {
+          plot: this.plots[0],
+          x: 0,
+          y: 0,
+          w: 1,
+          h: 0.3
+        }, {
+          plot: this.plots[1],
+          x: 0,
+          y: 0.3,
+          w: 1,
+          h: 0.7
+        }
+      ];
+    };
+
+    return PlotLayout;
+
+  })();
 
   C.Plot = (function() {
     function Plot() {
@@ -1071,7 +1102,7 @@
     sin: numeric.sin
   };
 
-  builtIn.defaultPlot = new C.Plot();
+  builtIn.defaultPlotLayout = new C.PlotLayout();
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
@@ -1849,7 +1880,7 @@
       return this.refreshShaderOverlay();
     },
     render: function() {
-      return R.div({}, R.MainPlotView({
+      return R.div({}, R.PlotLayoutView({
         fn: UI.selectedFn
       }), R.PaletteView({
         appRoot: this.appRoot
@@ -1873,389 +1904,6 @@
       }, UI.dragging.render()) : void 0, UI.dragging ? R.div({
         className: "DraggingOverlay"
       }) : void 0);
-    }
-  });
-
-}).call(this);
-}, "view/MainPlotView": function(exports, require, module) {(function() {
-  R.create("MainPlotView", {
-    propTypes: {
-      fn: C.DefinedFn
-    },
-    _getExpandedChildFns: function() {
-      var recurse, result;
-      result = [];
-      recurse = function(childFns) {
-        var childFn, _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = childFns.length; _i < _len; _i++) {
-          childFn = childFns[_i];
-          if (!childFn.visible) {
-            continue;
-          }
-          result.push(childFn);
-          if (UI.isChildFnExpanded(childFn) && childFn.fn instanceof C.CompoundFn) {
-            _results.push(recurse(childFn.fn.childFns));
-          } else {
-            _results.push(void 0);
-          }
-        }
-        return _results;
-      };
-      recurse(this.fn.childFns);
-      return result;
-    },
-    _getWorldMouseCoords: function() {
-      var rect, x, y;
-      rect = this.getDOMNode().getBoundingClientRect();
-      x = UI.mousePosition.x - rect.left;
-      y = UI.mousePosition.y - rect.top;
-      return this.fn.plot.toWorld(rect.width, rect.height, {
-        x: x,
-        y: y
-      });
-    },
-    _findHitTarget: function() {
-      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, rect, testPoint, _i, _len, _ref, _ref1;
-      _ref = this._getWorldMouseCoords(), domain = _ref.domain, range = _ref.range;
-      rect = this.getDOMNode().getBoundingClientRect();
-      pixelSize = this.fn.plot.getPixelSize(rect.width, rect.height);
-      testPoint = util.constructVector(config.dimensions, 0);
-      testPoint = util.vector.merge(testPoint, domain);
-      found = null;
-      foundDistance = config.hitTolerance * pixelSize;
-      foundQuadrance = foundDistance * foundDistance;
-      _ref1 = this._getExpandedChildFns();
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        childFn = _ref1[_i];
-        evaluated = childFn.evaluate(testPoint);
-        offset = util.vector.sub(range, evaluated);
-        quadrance = util.vector.quadrance(offset);
-        if (quadrance < foundQuadrance) {
-          found = childFn;
-          foundQuadrance = quadrance;
-        }
-      }
-      return found;
-    },
-    render: function() {
-      var childFn, expandedChildFns, exprs, _i, _len;
-      exprs = [];
-      if (this.fn.plot.type === "colorMap") {
-        exprs.push({
-          exprString: Compiler.getExprString(this.fn, "x")
-        });
-      } else {
-        expandedChildFns = this._getExpandedChildFns();
-        for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
-          childFn = expandedChildFns[_i];
-          exprs.push({
-            exprString: Compiler.getExprString(childFn, "x"),
-            color: config.color.child
-          });
-        }
-        if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
-          exprs.push({
-            exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
-            color: config.color.hovered
-          });
-        }
-        exprs.push({
-          exprString: Compiler.getExprString(this.fn, "x"),
-          color: config.color.main
-        });
-        if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
-          exprs.push({
-            exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
-            color: config.color.selected
-          });
-        }
-        exprs = _.reject(exprs, function(expr, exprIndex) {
-          var i, _j, _ref, _ref1;
-          for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
-            if (exprs[i].exprString === expr.exprString) {
-              return true;
-            }
-          }
-          return false;
-        });
-      }
-      return R.div({
-        className: "MainPlot",
-        onMouseDown: this._onMouseDown,
-        onWheel: this._onWheel,
-        onMouseMove: this._onMouseMove,
-        onMouseLeave: this._onMouseLeave
-      }, R.div({
-        className: "PlotContainer"
-      }, R.GridView({
-        plot: this.fn.plot
-      }), R.ShaderCartesianView({
-        plot: this.fn.plot,
-        exprs: exprs
-      }), UI.selectedChildFn ? R.ChildFnControlsView({
-        childFn: UI.selectedChildFn,
-        plot: this.fn.plot
-      }) : void 0, R.div({
-        className: "SettingsButton Interactive",
-        onClick: this._onSettingsButtonClick
-      }, R.div({
-        className: "icon-cog"
-      }))));
-    },
-    _onMouseMove: function() {
-      return Actions.hoverChildFn(this._findHitTarget());
-    },
-    _onMouseLeave: function() {
-      return Actions.hoverChildFn(null);
-    },
-    _onMouseDown: function(e) {
-      if (e.target.closest(".Interactive")) {
-        return;
-      }
-      util.preventDefault(e);
-      this._startPan(e);
-      return util.onceDragConsummated(e, null, (function(_this) {
-        return function() {
-          return _this._changeSelection();
-        };
-      })(this));
-    },
-    _onWheel: function(e) {
-      var scaleFactor, zoomCenter;
-      e.preventDefault();
-      if (Math.abs(e.deltaY) <= 1) {
-        return;
-      }
-      scaleFactor = 1.1;
-      if (e.deltaY < 0) {
-        scaleFactor = 1 / scaleFactor;
-      }
-      zoomCenter = this._getWorldMouseCoords();
-      return Actions.zoomPlot(this.fn.plot, zoomCenter, scaleFactor);
-    },
-    _changeSelection: function() {
-      return Actions.selectChildFn(this._findHitTarget());
-    },
-    _startPan: function(e) {
-      var from;
-      from = this._getWorldMouseCoords();
-      return UI.dragging = {
-        cursor: config.cursor.grabbing,
-        onMove: (function(_this) {
-          return function(e) {
-            var to;
-            to = _this._getWorldMouseCoords();
-            return Actions.panPlot(_this.fn.plot, from, to);
-          };
-        })(this)
-      };
-    },
-    _onSettingsButtonClick: function() {
-      if (this.fn.plot.type === "cartesian") {
-        return this.fn.plot.type = "colorMap";
-      } else {
-        return this.fn.plot.type = "cartesian";
-      }
-    }
-  });
-
-  R.create("ChildFnControlsView", {
-    propTypes: {
-      childFn: C.ChildFn,
-      plot: C.Plot
-    },
-    render: function() {
-      var dimension;
-      return R.span({
-        className: "Interactive"
-      }, R.PointControlView({
-        position: this._getTranslatePosition,
-        onMove: this._setTranslatePosition
-      }), (function() {
-        var _i, _len, _ref, _results;
-        _ref = this.plot.getDimensions();
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          dimension = _ref[_i];
-          _results.push(R.PointControlView({
-            position: this._getTransformPosition(dimension),
-            onMove: this._setTransformPosition(dimension)
-          }));
-        }
-        return _results;
-      }).call(this));
-    },
-    _toPixel: function(world) {
-      var container, rect;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      return this.plot.toPixel(rect.width, rect.height, world);
-    },
-    _toWorld: function(pixel) {
-      var container, rect;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      return this.plot.toWorld(rect.width, rect.height, pixel);
-    },
-    _snap: function(value) {
-      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      bounds = this.plot.getBounds(rect.width, rect.height);
-      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
-      _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
-      snapTolerance = pixelSize * config.snapTolerance;
-      nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
-      if (Math.abs(value - nearestSnap) < snapTolerance) {
-        value = nearestSnap;
-        digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10));
-        precision = Math.pow(10, digitPrecision);
-        return util.floatToString(value, precision);
-      }
-      digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10));
-      precision = Math.pow(10, digitPrecision);
-      return util.floatToString(value, precision);
-    },
-    _getTranslatePosition: function() {
-      var translate;
-      translate = {
-        domain: this.childFn.domainTranslate.map(function(v) {
-          return v.getValue();
-        }),
-        range: this.childFn.rangeTranslate.map(function(v) {
-          return v.getValue();
-        })
-      };
-      return this._toPixel(translate);
-    },
-    _setTranslatePosition: function(_arg) {
-      var coord, translate, value, valueString, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
-      x = _arg.x, y = _arg.y;
-      translate = this._toWorld({
-        x: x,
-        y: y
-      });
-      _ref = translate.domain;
-      for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
-        value = _ref[coord];
-        if (value != null) {
-          valueString = this._snap(value, .01);
-          Actions.setVariableValueString(this.childFn.domainTranslate[coord], valueString);
-        }
-      }
-      _ref1 = translate.range;
-      _results = [];
-      for (coord = _j = 0, _len1 = _ref1.length; _j < _len1; coord = ++_j) {
-        value = _ref1[coord];
-        if (value != null) {
-          valueString = this._snap(value, .01);
-          _results.push(Actions.setVariableValueString(this.childFn.rangeTranslate[coord], valueString));
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
-    },
-    _getTransformPosition: function(dimension) {
-      return (function(_this) {
-        return function() {
-          var basisVector, point, translate;
-          translate = {
-            domain: _this.childFn.domainTranslate.map(function(v) {
-              return v.getValue();
-            }),
-            range: _this.childFn.rangeTranslate.map(function(v) {
-              return v.getValue();
-            })
-          };
-          basisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
-          if (dimension.space === "domain") {
-            point = {
-              domain: util.vector.add(translate.domain, basisVector),
-              range: translate.range
-            };
-          } else if (dimension.space === "range") {
-            point = {
-              domain: translate.domain,
-              range: util.vector.add(translate.range, basisVector)
-            };
-          }
-          return _this._toPixel(point);
-        };
-      })(this);
-    },
-    _setTransformPosition: function(dimension) {
-      return (function(_this) {
-        return function(_arg) {
-          var movedBasisVector, newBasisVector, oldBasisVector, point, translate, valueStrings, x, y;
-          x = _arg.x, y = _arg.y;
-          translate = {
-            domain: _this.childFn.domainTranslate.map(function(v) {
-              return v.getValue();
-            }),
-            range: _this.childFn.rangeTranslate.map(function(v) {
-              return v.getValue();
-            })
-          };
-          point = _this._toWorld({
-            x: x,
-            y: y
-          });
-          movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space]);
-          oldBasisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
-          newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector);
-          valueStrings = newBasisVector.map(function(value) {
-            return _this._snap(value);
-          });
-          return Actions.setBasisVector(_this.childFn, dimension.space, dimension.coord, valueStrings);
-        };
-      })(this);
-    }
-  });
-
-  R.create("PointControlView", {
-    propTypes: {
-      position: Function,
-      onMove: Function
-    },
-    _refreshPosition: function() {
-      var el, x, y, _ref;
-      el = this.getDOMNode();
-      _ref = this.position(), x = _ref.x, y = _ref.y;
-      el.style.left = x + "px";
-      return el.style.top = y + "px";
-    },
-    render: function() {
-      return R.div({
-        className: "PointControl",
-        onMouseDown: this._onMouseDown
-      });
-    },
-    componentDidMount: function() {
-      return this._refreshPosition();
-    },
-    componentDidUpdate: function() {
-      return this._refreshPosition();
-    },
-    _onMouseDown: function(e) {
-      var container, rect;
-      util.preventDefault(e);
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      return UI.dragging = {
-        onMove: (function(_this) {
-          return function(e) {
-            var x, y;
-            x = e.clientX - rect.left;
-            y = e.clientY - rect.top;
-            return _this.onMove({
-              x: x,
-              y: y
-            });
-          };
-        })(this)
-      };
     }
   });
 
@@ -2506,12 +2154,12 @@
       childFn: C.ChildFn
     },
     render: function() {
-      var plot;
-      plot = UI.selectedFn.plot;
+      var plotLayout;
+      plotLayout = UI.selectedFn.plotLayout;
       return R.div({
         className: "OutlineThumbnail"
-      }, R.ThumbnailPlotView({
-        plot: plot,
+      }, R.ThumbnailPlotLayoutView({
+        plotLayout: plotLayout,
         fn: this.childFn
       }));
     }
@@ -2671,11 +2319,11 @@
       fn: C.Fn
     },
     render: function() {
-      var className, plot;
+      var className, plotLayout;
       if (this.fn instanceof C.BuiltInFn) {
-        plot = builtIn.defaultPlot;
+        plotLayout = builtIn.defaultPlotLayout;
       } else {
-        plot = this.fn.plot;
+        plotLayout = this.fn.plotLayout;
       }
       className = R.cx({
         Definition: true,
@@ -2684,8 +2332,8 @@
       return R.div({
         className: className,
         onMouseDown: this._onMouseDown
-      }, R.ThumbnailPlotView({
-        plot: plot,
+      }, R.ThumbnailPlotLayoutView({
+        plotLayout: plotLayout,
         fn: this.fn
       }), R.LabelView({
         fn: this.fn
@@ -2708,6 +2356,404 @@
         };
       })(this);
       return util.onceDragConsummated(e, addChildFn, selectFn);
+    }
+  });
+
+}).call(this);
+}, "view/PlotLayoutView": function(exports, require, module) {(function() {
+  R.create("PlotLayoutView", {
+    propTypes: {
+      fn: C.DefinedFn
+    },
+    render: function() {
+      var plot;
+      plot = this.fn.plotLayout.getMainPlot();
+      return R.PlotView({
+        fn: this.fn,
+        plot: plot
+      });
+    }
+  });
+
+  R.create("PlotView", {
+    propTypes: {
+      fn: C.DefinedFn,
+      plot: C.Plot
+    },
+    _getExpandedChildFns: function() {
+      var recurse, result;
+      result = [];
+      recurse = function(childFns) {
+        var childFn, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = childFns.length; _i < _len; _i++) {
+          childFn = childFns[_i];
+          if (!childFn.visible) {
+            continue;
+          }
+          result.push(childFn);
+          if (UI.isChildFnExpanded(childFn) && childFn.fn instanceof C.CompoundFn) {
+            _results.push(recurse(childFn.fn.childFns));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+      recurse(this.fn.childFns);
+      return result;
+    },
+    _getWorldMouseCoords: function() {
+      var rect, x, y;
+      rect = this.getDOMNode().getBoundingClientRect();
+      x = UI.mousePosition.x - rect.left;
+      y = UI.mousePosition.y - rect.top;
+      return this.plot.toWorld(rect.width, rect.height, {
+        x: x,
+        y: y
+      });
+    },
+    _findHitTarget: function() {
+      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, rect, testPoint, _i, _len, _ref, _ref1;
+      _ref = this._getWorldMouseCoords(), domain = _ref.domain, range = _ref.range;
+      rect = this.getDOMNode().getBoundingClientRect();
+      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
+      testPoint = util.constructVector(config.dimensions, 0);
+      testPoint = util.vector.merge(testPoint, domain);
+      found = null;
+      foundDistance = config.hitTolerance * pixelSize;
+      foundQuadrance = foundDistance * foundDistance;
+      _ref1 = this._getExpandedChildFns();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        childFn = _ref1[_i];
+        evaluated = childFn.evaluate(testPoint);
+        offset = util.vector.sub(range, evaluated);
+        quadrance = util.vector.quadrance(offset);
+        if (quadrance < foundQuadrance) {
+          found = childFn;
+          foundQuadrance = quadrance;
+        }
+      }
+      return found;
+    },
+    render: function() {
+      var childFn, expandedChildFns, exprs, _i, _len;
+      exprs = [];
+      if (this.plot.type === "colorMap") {
+        exprs.push({
+          exprString: Compiler.getExprString(this.fn, "x")
+        });
+      } else {
+        expandedChildFns = this._getExpandedChildFns();
+        for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
+          childFn = expandedChildFns[_i];
+          exprs.push({
+            exprString: Compiler.getExprString(childFn, "x"),
+            color: config.color.child
+          });
+        }
+        if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
+          exprs.push({
+            exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
+            color: config.color.hovered
+          });
+        }
+        exprs.push({
+          exprString: Compiler.getExprString(this.fn, "x"),
+          color: config.color.main
+        });
+        if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
+          exprs.push({
+            exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
+            color: config.color.selected
+          });
+        }
+        exprs = _.reject(exprs, function(expr, exprIndex) {
+          var i, _j, _ref, _ref1;
+          for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
+            if (exprs[i].exprString === expr.exprString) {
+              return true;
+            }
+          }
+          return false;
+        });
+      }
+      return R.div({
+        className: "MainPlot",
+        onMouseDown: this._onMouseDown,
+        onWheel: this._onWheel,
+        onMouseMove: this._onMouseMove,
+        onMouseLeave: this._onMouseLeave
+      }, R.div({
+        className: "PlotContainer"
+      }, R.GridView({
+        plot: this.plot
+      }), R.ShaderCartesianView({
+        plot: this.plot,
+        exprs: exprs
+      }), UI.selectedChildFn ? R.ChildFnControlsView({
+        childFn: UI.selectedChildFn,
+        plot: this.plot
+      }) : void 0, R.div({
+        className: "SettingsButton Interactive",
+        onClick: this._onSettingsButtonClick
+      }, R.div({
+        className: "icon-cog"
+      }))));
+    },
+    _onMouseMove: function() {
+      return Actions.hoverChildFn(this._findHitTarget());
+    },
+    _onMouseLeave: function() {
+      return Actions.hoverChildFn(null);
+    },
+    _onMouseDown: function(e) {
+      if (e.target.closest(".Interactive")) {
+        return;
+      }
+      util.preventDefault(e);
+      this._startPan(e);
+      return util.onceDragConsummated(e, null, (function(_this) {
+        return function() {
+          return _this._changeSelection();
+        };
+      })(this));
+    },
+    _onWheel: function(e) {
+      var scaleFactor, zoomCenter;
+      e.preventDefault();
+      if (Math.abs(e.deltaY) <= 1) {
+        return;
+      }
+      scaleFactor = 1.1;
+      if (e.deltaY < 0) {
+        scaleFactor = 1 / scaleFactor;
+      }
+      zoomCenter = this._getWorldMouseCoords();
+      return Actions.zoomPlot(this.plot, zoomCenter, scaleFactor);
+    },
+    _changeSelection: function() {
+      return Actions.selectChildFn(this._findHitTarget());
+    },
+    _startPan: function(e) {
+      var from;
+      from = this._getWorldMouseCoords();
+      return UI.dragging = {
+        cursor: config.cursor.grabbing,
+        onMove: (function(_this) {
+          return function(e) {
+            var to;
+            to = _this._getWorldMouseCoords();
+            return Actions.panPlot(_this.plot, from, to);
+          };
+        })(this)
+      };
+    },
+    _onSettingsButtonClick: function() {
+      if (this.plot.type === "cartesian") {
+        return this.plot.type = "colorMap";
+      } else {
+        return this.plot.type = "cartesian";
+      }
+    }
+  });
+
+  R.create("ChildFnControlsView", {
+    propTypes: {
+      childFn: C.ChildFn,
+      plot: C.Plot
+    },
+    render: function() {
+      var dimension;
+      return R.span({
+        className: "Interactive"
+      }, R.PointControlView({
+        position: this._getTranslatePosition,
+        onMove: this._setTranslatePosition
+      }), (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.plot.getDimensions();
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimension = _ref[_i];
+          _results.push(R.PointControlView({
+            position: this._getTransformPosition(dimension),
+            onMove: this._setTransformPosition(dimension)
+          }));
+        }
+        return _results;
+      }).call(this));
+    },
+    _toPixel: function(world) {
+      var container, rect;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      return this.plot.toPixel(rect.width, rect.height, world);
+    },
+    _toWorld: function(pixel) {
+      var container, rect;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      return this.plot.toWorld(rect.width, rect.height, pixel);
+    },
+    _snap: function(value) {
+      var bounds, container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      bounds = this.plot.getBounds(rect.width, rect.height);
+      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
+      _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
+      snapTolerance = pixelSize * config.snapTolerance;
+      nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
+      if (Math.abs(value - nearestSnap) < snapTolerance) {
+        value = nearestSnap;
+        digitPrecision = Math.floor(Math.log(largeSpacing) / Math.log(10));
+        precision = Math.pow(10, digitPrecision);
+        return util.floatToString(value, precision);
+      }
+      digitPrecision = Math.floor(Math.log(pixelSize) / Math.log(10));
+      precision = Math.pow(10, digitPrecision);
+      return util.floatToString(value, precision);
+    },
+    _getTranslatePosition: function() {
+      var translate;
+      translate = {
+        domain: this.childFn.domainTranslate.map(function(v) {
+          return v.getValue();
+        }),
+        range: this.childFn.rangeTranslate.map(function(v) {
+          return v.getValue();
+        })
+      };
+      return this._toPixel(translate);
+    },
+    _setTranslatePosition: function(_arg) {
+      var coord, translate, value, valueString, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      x = _arg.x, y = _arg.y;
+      translate = this._toWorld({
+        x: x,
+        y: y
+      });
+      _ref = translate.domain;
+      for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
+        value = _ref[coord];
+        if (value != null) {
+          valueString = this._snap(value, .01);
+          Actions.setVariableValueString(this.childFn.domainTranslate[coord], valueString);
+        }
+      }
+      _ref1 = translate.range;
+      _results = [];
+      for (coord = _j = 0, _len1 = _ref1.length; _j < _len1; coord = ++_j) {
+        value = _ref1[coord];
+        if (value != null) {
+          valueString = this._snap(value, .01);
+          _results.push(Actions.setVariableValueString(this.childFn.rangeTranslate[coord], valueString));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    },
+    _getTransformPosition: function(dimension) {
+      return (function(_this) {
+        return function() {
+          var basisVector, point, translate;
+          translate = {
+            domain: _this.childFn.domainTranslate.map(function(v) {
+              return v.getValue();
+            }),
+            range: _this.childFn.rangeTranslate.map(function(v) {
+              return v.getValue();
+            })
+          };
+          basisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
+          if (dimension.space === "domain") {
+            point = {
+              domain: util.vector.add(translate.domain, basisVector),
+              range: translate.range
+            };
+          } else if (dimension.space === "range") {
+            point = {
+              domain: translate.domain,
+              range: util.vector.add(translate.range, basisVector)
+            };
+          }
+          return _this._toPixel(point);
+        };
+      })(this);
+    },
+    _setTransformPosition: function(dimension) {
+      return (function(_this) {
+        return function(_arg) {
+          var movedBasisVector, newBasisVector, oldBasisVector, point, translate, valueStrings, x, y;
+          x = _arg.x, y = _arg.y;
+          translate = {
+            domain: _this.childFn.domainTranslate.map(function(v) {
+              return v.getValue();
+            }),
+            range: _this.childFn.rangeTranslate.map(function(v) {
+              return v.getValue();
+            })
+          };
+          point = _this._toWorld({
+            x: x,
+            y: y
+          });
+          movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space]);
+          oldBasisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
+          newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector);
+          valueStrings = newBasisVector.map(function(value) {
+            return _this._snap(value);
+          });
+          return Actions.setBasisVector(_this.childFn, dimension.space, dimension.coord, valueStrings);
+        };
+      })(this);
+    }
+  });
+
+  R.create("PointControlView", {
+    propTypes: {
+      position: Function,
+      onMove: Function
+    },
+    _refreshPosition: function() {
+      var el, x, y, _ref;
+      el = this.getDOMNode();
+      _ref = this.position(), x = _ref.x, y = _ref.y;
+      el.style.left = x + "px";
+      return el.style.top = y + "px";
+    },
+    render: function() {
+      return R.div({
+        className: "PointControl",
+        onMouseDown: this._onMouseDown
+      });
+    },
+    componentDidMount: function() {
+      return this._refreshPosition();
+    },
+    componentDidUpdate: function() {
+      return this._refreshPosition();
+    },
+    _onMouseDown: function(e) {
+      var container, rect;
+      util.preventDefault(e);
+      container = this.getDOMNode().closest(".PlotContainer");
+      rect = container.getBoundingClientRect();
+      return UI.dragging = {
+        onMove: (function(_this) {
+          return function(e) {
+            var x, y;
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+            return _this.onMove({
+              x: x,
+              y: y
+            });
+          };
+        })(this)
+      };
     }
   });
 
@@ -2847,9 +2893,9 @@
 
   require("./PaletteView");
 
-  require("./MainPlotView");
+  require("./PlotLayoutView");
 
-  require("./ThumbnailPlotView");
+  require("./ThumbnailPlotLayoutView");
 
   require("./OutlineView");
 
@@ -3058,19 +3104,21 @@
   };
 
 }).call(this);
-}, "view/ThumbnailPlotView": function(exports, require, module) {(function() {
-  R.create("ThumbnailPlotView", {
+}, "view/ThumbnailPlotLayoutView": function(exports, require, module) {(function() {
+  R.create("ThumbnailPlotLayoutView", {
     propTypes: {
-      plot: C.Plot,
+      plotLayout: C.PlotLayout,
       fn: C.Fn
     },
     render: function() {
+      var plot;
+      plot = this.plotLayout.getMainPlot();
       return R.div({
         className: "PlotContainer"
       }, R.GridView({
-        plot: this.plot
+        plot: plot
       }), R.ShaderCartesianView({
-        plot: this.plot,
+        plot: plot,
         exprs: [
           {
             exprString: Compiler.getExprString(this.fn, "x"),

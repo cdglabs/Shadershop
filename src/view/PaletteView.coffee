@@ -33,9 +33,9 @@ R.create "DefinitionView",
 
   render: ->
     if @fn instanceof C.BuiltInFn
-      plot = builtIn.defaultPlot
+      plotLayout = builtIn.defaultPlotLayout
     else
-      plot = @fn.plot
+      plotLayout = @fn.plotLayout
 
     className = R.cx {
       Definition: true
@@ -46,7 +46,7 @@ R.create "DefinitionView",
       className: className
       onMouseDown: @_onMouseDown
     },
-      R.ThumbnailPlotView {plot, fn: @fn}
+      R.ThumbnailPlotLayoutView {plotLayout, fn: @fn}
       R.LabelView {
         fn: @fn
       }

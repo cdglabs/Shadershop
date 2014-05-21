@@ -1,14 +1,16 @@
-R.create "ThumbnailPlotView",
+R.create "ThumbnailPlotLayoutView",
   propTypes:
-    plot: C.Plot
+    plotLayout: C.PlotLayout
     fn: C.Fn
 
   render: ->
+    plot = @plotLayout.getMainPlot()
+
     R.div {className: "PlotContainer"},
-      R.GridView {plot: @plot}
+      R.GridView {plot: plot}
 
       R.ShaderCartesianView {
-        plot: @plot
+        plot: plot
         exprs: [
           {
             exprString: Compiler.getExprString(@fn, "x")

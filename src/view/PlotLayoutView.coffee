@@ -1,6 +1,20 @@
-R.create "MainPlotView",
+R.create "PlotLayoutView",
   propTypes:
     fn: C.DefinedFn
+
+  render: ->
+    plot = @fn.plotLayout.getMainPlot()
+    R.PlotView {
+      fn: @fn
+      plot: plot
+    }
+
+
+
+R.create "PlotView",
+  propTypes:
+    fn: C.DefinedFn
+    plot: C.Plot
 
   _getExpandedChildFns: ->
     result = []
@@ -17,13 +31,13 @@ R.create "MainPlotView",
     rect = @getDOMNode().getBoundingClientRect()
     x = UI.mousePosition.x - rect.left
     y = UI.mousePosition.y - rect.top
-    return @fn.plot.toWorld(rect.width, rect.height, {x, y})
+    return @plot.toWorld(rect.width, rect.height, {x, y})
 
   _findHitTarget: ->
     {domain, range} = @_getWorldMouseCoords()
 
     rect = @getDOMNode().getBoundingClientRect()
-    pixelSize = @fn.plot.getPixelSize(rect.width, rect.height)
+    pixelSize = @plot.getPixelSize(rect.width, rect.height)
 
     # TODO 0 here should be replaced based on where the projection is.
     testPoint = util.constructVector(config.dimensions, 0)
@@ -48,7 +62,7 @@ R.create "MainPlotView",
   render: ->
     exprs = []
 
-    if @fn.plot.type == "colorMap"
+    if @plot.type == "colorMap"
 
       # Main
       exprs.push {
@@ -102,17 +116,17 @@ R.create "MainPlotView",
     },
       R.div {className: "PlotContainer"},
         # Grid
-        R.GridView {plot: @fn.plot}
+        R.GridView {plot: @plot}
 
         R.ShaderCartesianView {
-          plot: @fn.plot
+          plot: @plot
           exprs: exprs
         }
 
         if UI.selectedChildFn
           R.ChildFnControlsView {
             childFn: UI.selectedChildFn
-            plot: @fn.plot
+            plot: @plot
           }
 
         # Settings Button
@@ -143,7 +157,7 @@ R.create "MainPlotView",
 
     zoomCenter = @_getWorldMouseCoords()
 
-    Actions.zoomPlot(@fn.plot, zoomCenter, scaleFactor)
+    Actions.zoomPlot(@plot, zoomCenter, scaleFactor)
 
   _changeSelection: ->
     Actions.selectChildFn(@_findHitTarget())
@@ -155,15 +169,15 @@ R.create "MainPlotView",
       cursor: config.cursor.grabbing
       onMove: (e) =>
         to = @_getWorldMouseCoords()
-        Actions.panPlot(@fn.plot, from, to)
+        Actions.panPlot(@plot, from, to)
     }
 
   _onSettingsButtonClick: ->
     # TODO: will be more than just a toggle...
-    if @fn.plot.type == "cartesian"
-      @fn.plot.type = "colorMap"
+    if @plot.type == "cartesian"
+      @plot.type = "colorMap"
     else
-      @fn.plot.type = "cartesian"
+      @plot.type = "cartesian"
 
 
 

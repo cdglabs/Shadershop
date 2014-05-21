@@ -105,7 +105,7 @@ class C.DefinedFn extends C.CompoundFn
   constructor: ->
     super()
     @combiner = "last"
-    @plot = new C.Plot()
+    @plotLayout = new C.PlotLayout()
 
 
 
@@ -189,6 +189,39 @@ class C.ChildFn extends C.Fn
 
   _zeroVectorString: util.glslString(util.constructVector(config.dimensions, 0))
   _identityMatrixString: util.glslString(numeric.identity(config.dimensions))
+
+
+
+
+
+
+class C.PlotLayout
+  constructor: ->
+    # TODO: Hardcoded two plots on top of each other
+    @plots = [new C.Plot(), new C.Plot()]
+
+  getMainPlot: ->
+    return @plots[1]
+
+  getPlots: ->
+    # returns [{plot, x, y, w, h}] dimensions as fractions
+    return [
+      {
+        plot: @plots[0]
+        x: 0
+        y: 0
+        w: 1
+        h: 0.3
+      }
+      {
+        plot: @plots[1]
+        x: 0
+        y: 0.3
+        w: 1
+        h: 0.7
+      }
+    ]
+
 
 
 
@@ -306,4 +339,4 @@ builtIn.fnEvaluators = {
   sin: numeric.sin
 }
 
-builtIn.defaultPlot = new C.Plot()
+builtIn.defaultPlotLayout = new C.PlotLayout()
