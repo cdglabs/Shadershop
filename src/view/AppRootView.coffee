@@ -16,6 +16,7 @@ R.create "AppRootView",
       R.PlotLayoutView {fn: UI.selectedFn}
       R.PaletteView {appRoot: @appRoot}
       R.OutlineView {definedFn: UI.selectedFn}
+      R.DebugView {}
       R.DraggingView {}
       R.ShaderOverlayView {ref: "shaderOverlay"}
 
@@ -34,3 +35,16 @@ R.create "DraggingView",
           UI.dragging.render()
       if UI.dragging
         R.div {className: "DraggingOverlay"}
+
+
+R.create "DebugView",
+  render: ->
+    R.div {
+      style: {
+        position: "absolute"
+        bottom: 10
+        left: 10
+        zIndex: 99999
+      }
+    },
+      R.button {onClick: reset}, "Reset"

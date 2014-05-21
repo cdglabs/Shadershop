@@ -1901,7 +1901,7 @@
         appRoot: this.appRoot
       }), R.OutlineView({
         definedFn: UI.selectedFn
-      }), R.DraggingView({}), R.ShaderOverlayView({
+      }), R.DebugView({}), R.DraggingView({}), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
     }
@@ -1919,6 +1919,21 @@
       }, UI.dragging.render()) : void 0, UI.dragging ? R.div({
         className: "DraggingOverlay"
       }) : void 0);
+    }
+  });
+
+  R.create("DebugView", {
+    render: function() {
+      return R.div({
+        style: {
+          position: "absolute",
+          bottom: 10,
+          left: 10,
+          zIndex: 99999
+        }
+      }, R.button({
+        onClick: reset
+      }, "Reset"));
     }
   });
 
