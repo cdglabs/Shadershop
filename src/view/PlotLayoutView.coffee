@@ -49,8 +49,7 @@ R.create "PlotView",
   _findHitTarget: ->
     {domain, range} = @_getWorldMouseCoords()
 
-    rect = @getDOMNode().getBoundingClientRect()
-    pixelSize = @plot.getPixelSize(rect.width, rect.height)
+    pixelSize = @plot.getPixelSize()
 
     # TODO 0 here should be replaced based on where the projection is.
     testPoint = util.constructVector(config.dimensions, 0)
@@ -231,10 +230,7 @@ R.create "ChildFnControlsView",
         }
 
   _snap: (value) ->
-    container = @getDOMNode().closest(".PlotContainer")
-    rect = container.getBoundingClientRect()
-
-    pixelSize = @plot.getPixelSize(rect.width, rect.height)
+    pixelSize = @plot.getPixelSize()
 
     {largeSpacing, smallSpacing} = util.canvas.getSpacing(pixelSize)
 

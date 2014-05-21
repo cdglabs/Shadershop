@@ -21,7 +21,7 @@ R.create "GridView",
       xMax: xMax
       yMin: yMin
       yMax: yMax
-      pixelSize: @plot.getPixelSize(canvas.width, canvas.height) * scaleFactor
+      pixelSize: @plot.getPixelSize() * scaleFactor
 
   shouldComponentUpdate: (nextProps) ->
     return true

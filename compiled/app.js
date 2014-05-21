@@ -2427,10 +2427,9 @@
       });
     },
     _findHitTarget: function() {
-      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, rect, testPoint, _i, _len, _ref, _ref1;
+      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, testPoint, _i, _len, _ref, _ref1;
       _ref = this._getWorldMouseCoords(), domain = _ref.domain, range = _ref.range;
-      rect = this.getDOMNode().getBoundingClientRect();
-      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
+      pixelSize = this.plot.getPixelSize();
       testPoint = util.constructVector(config.dimensions, 0);
       testPoint = util.vector.merge(testPoint, domain);
       found = null;
@@ -2598,10 +2597,8 @@
       }).call(this));
     },
     _snap: function(value) {
-      var container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      pixelSize = this.plot.getPixelSize(rect.width, rect.height);
+      var digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, smallSpacing, snapTolerance, _ref;
+      pixelSize = this.plot.getPixelSize();
       _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
       snapTolerance = pixelSize * config.snapTolerance;
       nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
@@ -3208,7 +3205,7 @@
         xMax: xMax,
         yMin: yMin,
         yMax: yMax,
-        pixelSize: this.plot.getPixelSize(canvas.width, canvas.height) * scaleFactor
+        pixelSize: this.plot.getPixelSize() * scaleFactor
       });
     },
     shouldComponentUpdate: function(nextProps) {

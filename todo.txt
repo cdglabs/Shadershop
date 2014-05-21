@@ -70,12 +70,6 @@ Priority
 
 
 
-Cleanup:
-
-  getPixelSize no longer needs to send in width/height
-
-  Things would be cleaner if toPixel and toWorld worked with the pixel frame centered. This way width and height wouldn't need to be passed in.
-
 
 
 Need to sync pixelSize, domainCenter, rangeCenter over the whole PlotLayout.
