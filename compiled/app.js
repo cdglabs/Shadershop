@@ -1028,30 +1028,28 @@
       }
     };
 
-    Plot.prototype.toWorld = function(width, height, _arg) {
-      var center, dimensions, pixelSize, result, x, xOffset, y, yOffset;
+    Plot.prototype.toWorld = function(_arg) {
+      var center, dimensions, pixelSize, result, x, y;
       x = _arg.x, y = _arg.y;
-      pixelSize = this.getPixelSize(width, height);
+      pixelSize = this.getPixelSize();
       center = {
         domain: this.domainCenter,
         range: this.rangeCenter
       };
       dimensions = this.getDimensions();
-      xOffset = x - width / 2;
-      yOffset = -(y - height / 2);
       result = {
         domain: util.constructVector(config.dimensions, null),
         range: util.constructVector(config.dimensions, null)
       };
-      result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + xOffset * pixelSize;
-      result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize;
+      result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + x * pixelSize;
+      result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + y * pixelSize;
       return result;
     };
 
-    Plot.prototype.toPixel = function(width, height, _arg) {
-      var center, dimensions, domain, offset, pixelSize, range, x, xOffset, y, yOffset;
+    Plot.prototype.toPixel = function(_arg) {
+      var center, dimensions, domain, offset, pixelSize, range, x, y;
       domain = _arg.domain, range = _arg.range;
-      pixelSize = this.getPixelSize(width, height);
+      pixelSize = this.getPixelSize();
       center = {
         domain: this.domainCenter,
         range: this.rangeCenter
@@ -1061,10 +1059,8 @@
         domain: util.vector.sub(domain, center.domain),
         range: util.vector.sub(range, center.range)
       };
-      xOffset = offset[dimensions[0].space][dimensions[0].coord] / pixelSize;
-      yOffset = offset[dimensions[1].space][dimensions[1].coord] / pixelSize;
-      x = width / 2 + xOffset;
-      y = height / 2 - yOffset;
+      x = offset[dimensions[0].space][dimensions[0].coord] / pixelSize;
+      y = offset[dimensions[1].space][dimensions[1].coord] / pixelSize;
       return {
         x: x,
         y: y
@@ -2422,9 +2418,10 @@
     _getWorldMouseCoords: function() {
       var rect, x, y;
       rect = this.getDOMNode().getBoundingClientRect();
-      x = UI.mousePosition.x - rect.left;
-      y = UI.mousePosition.y - rect.top;
-      return this.plot.toWorld(rect.width, rect.height, {
+      x = UI.mousePosition.x - (rect.left + rect.width / 2);
+      y = UI.mousePosition.y - (rect.top + rect.height / 2);
+      y *= -1;
+      return this.plot.toWorld({
         x: x,
         y: y
       });
@@ -2581,10 +2578,10 @@
     },
     render: function() {
       var dimension;
-      return R.span({
-        className: "Interactive"
+      return R.div({
+        className: "Interactive PointControlContainer"
       }, R.PointControlView({
-        position: this._getTranslatePosition,
+        position: this._getTranslatePosition(),
         onMove: this._setTranslatePosition
       }), (function() {
         var _i, _len, _ref, _results;
@@ -2599,18 +2596,6 @@
         }
         return _results;
       }).call(this));
-    },
-    _toPixel: function(world) {
-      var container, rect;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      return this.plot.toPixel(rect.width, rect.height, world);
-    },
-    _toWorld: function(pixel) {
-      var container, rect;
-      container = this.getDOMNode().closest(".PlotContainer");
-      rect = container.getBoundingClientRect();
-      return this.plot.toWorld(rect.width, rect.height, pixel);
     },
     _snap: function(value) {
       var container, digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, rect, smallSpacing, snapTolerance, _ref;
@@ -2640,12 +2625,12 @@
           return v.getValue();
         })
       };
-      return this._toPixel(translate);
+      return this.plot.toPixel(translate);
     },
     _setTranslatePosition: function(_arg) {
       var coord, translate, value, valueString, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
       x = _arg.x, y = _arg.y;
-      translate = this._toWorld({
+      translate = this.plot.toWorld({
         x: x,
         y: y
       });
@@ -2671,32 +2656,28 @@
       return _results;
     },
     _getTransformPosition: function(dimension) {
-      return (function(_this) {
-        return function() {
-          var basisVector, point, translate;
-          translate = {
-            domain: _this.childFn.domainTranslate.map(function(v) {
-              return v.getValue();
-            }),
-            range: _this.childFn.rangeTranslate.map(function(v) {
-              return v.getValue();
-            })
-          };
-          basisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
-          if (dimension.space === "domain") {
-            point = {
-              domain: util.vector.add(translate.domain, basisVector),
-              range: translate.range
-            };
-          } else if (dimension.space === "range") {
-            point = {
-              domain: translate.domain,
-              range: util.vector.add(translate.range, basisVector)
-            };
-          }
-          return _this._toPixel(point);
+      var basisVector, point, translate;
+      translate = {
+        domain: this.childFn.domainTranslate.map(function(v) {
+          return v.getValue();
+        }),
+        range: this.childFn.rangeTranslate.map(function(v) {
+          return v.getValue();
+        })
+      };
+      basisVector = this.childFn.getBasisVector(dimension.space, dimension.coord);
+      if (dimension.space === "domain") {
+        point = {
+          domain: util.vector.add(translate.domain, basisVector),
+          range: translate.range
         };
-      })(this);
+      } else if (dimension.space === "range") {
+        point = {
+          domain: translate.domain,
+          range: util.vector.add(translate.range, basisVector)
+        };
+      }
+      return this.plot.toPixel(point);
     },
     _setTransformPosition: function(dimension) {
       return (function(_this) {
@@ -2711,7 +2692,7 @@
               return v.getValue();
             })
           };
-          point = _this._toWorld({
+          point = _this.plot.toWorld({
             x: x,
             y: y
           });
@@ -2729,32 +2710,23 @@
 
   R.create("PointControlView", {
     propTypes: {
-      position: Function,
+      position: Object,
       onMove: Function
-    },
-    _refreshPosition: function() {
-      var el, x, y, _ref;
-      el = this.getDOMNode();
-      _ref = this.position(), x = _ref.x, y = _ref.y;
-      el.style.left = x + "px";
-      return el.style.top = y + "px";
     },
     render: function() {
       return R.div({
         className: "PointControl",
-        onMouseDown: this._onMouseDown
+        onMouseDown: this._onMouseDown,
+        style: {
+          left: this.position.x,
+          top: -this.position.y
+        }
       });
-    },
-    componentDidMount: function() {
-      return this._refreshPosition();
-    },
-    componentDidUpdate: function() {
-      return this._refreshPosition();
     },
     _onMouseDown: function(e) {
       var container, rect;
       util.preventDefault(e);
-      container = this.getDOMNode().closest(".PlotContainer");
+      container = this.getDOMNode().closest(".PointControlContainer");
       rect = container.getBoundingClientRect();
       return UI.dragging = {
         onMove: (function(_this) {
@@ -2762,6 +2734,7 @@
             var x, y;
             x = e.clientX - rect.left;
             y = e.clientY - rect.top;
+            y *= -1;
             return _this.onMove({
               x: x,
               y: y

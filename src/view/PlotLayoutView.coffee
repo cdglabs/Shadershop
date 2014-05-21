@@ -41,9 +41,10 @@ R.create "PlotView",
 
   _getWorldMouseCoords: ->
     rect = @getDOMNode().getBoundingClientRect()
-    x = UI.mousePosition.x - rect.left
-    y = UI.mousePosition.y - rect.top
-    return @plot.toWorld(rect.width, rect.height, {x, y})
+    x = UI.mousePosition.x - (rect.left + rect.width/2)
+    y = UI.mousePosition.y - (rect.top + rect.height/2)
+    y *= -1
+    return @plot.toWorld({x, y})
 
   _findHitTarget: ->
     {domain, range} = @_getWorldMouseCoords()
@@ -218,9 +219,9 @@ R.create "ChildFnControlsView",
     plot: C.Plot
 
   render: ->
-    R.span {className: "Interactive"},
+    R.div {className: "Interactive PointControlContainer"},
       R.PointControlView {
-        position: @_getTranslatePosition
+        position: @_getTranslatePosition()
         onMove: @_setTranslatePosition
       }
       for dimension in @plot.getDimensions()
@@ -228,16 +229,6 @@ R.create "ChildFnControlsView",
           position: @_getTransformPosition(dimension)
           onMove: @_setTransformPosition(dimension)
         }
-
-  _toPixel: (world) ->
-    container = @getDOMNode().closest(".PlotContainer")
-    rect = container.getBoundingClientRect()
-    return @plot.toPixel(rect.width, rect.height, world)
-
-  _toWorld: (pixel) ->
-    container = @getDOMNode().closest(".PlotContainer")
-    rect = container.getBoundingClientRect()
-    return @plot.toWorld(rect.width, rect.height, pixel)
 
   _snap: (value) ->
     container = @getDOMNode().closest(".PlotContainer")
@@ -267,10 +258,10 @@ R.create "ChildFnControlsView",
       domain: @childFn.domainTranslate.map (v) -> v.getValue()
       range:  @childFn.rangeTranslate.map (v) -> v.getValue()
     }
-    return @_toPixel(translate)
+    return @plot.toPixel(translate)
 
   _setTranslatePosition: ({x, y}) ->
-    translate = @_toWorld({x, y})
+    translate = @plot.toWorld({x, y})
 
     for value, coord in translate.domain
       if value?
@@ -282,25 +273,24 @@ R.create "ChildFnControlsView",
         Actions.setVariableValueString(@childFn.rangeTranslate[coord], valueString)
 
   _getTransformPosition: (dimension) ->
-    =>
-      translate = {
-        domain: @childFn.domainTranslate.map (v) -> v.getValue()
-        range:  @childFn.rangeTranslate.map (v) -> v.getValue()
+    translate = {
+      domain: @childFn.domainTranslate.map (v) -> v.getValue()
+      range:  @childFn.rangeTranslate.map (v) -> v.getValue()
+    }
+
+    basisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
+
+    if dimension.space == "domain"
+      point = {
+        domain: util.vector.add(translate.domain, basisVector)
+        range: translate.range
       }
-
-      basisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
-
-      if dimension.space == "domain"
-        point = {
-          domain: util.vector.add(translate.domain, basisVector)
-          range: translate.range
-        }
-      else if dimension.space == "range"
-        point = {
-          domain: translate.domain
-          range: util.vector.add(translate.range, basisVector)
-        }
-      return @_toPixel(point)
+    else if dimension.space == "range"
+      point = {
+        domain: translate.domain
+        range: util.vector.add(translate.range, basisVector)
+      }
+    return @plot.toPixel(point)
 
   _setTransformPosition: (dimension) ->
     ({x, y}) =>
@@ -308,7 +298,7 @@ R.create "ChildFnControlsView",
         domain: @childFn.domainTranslate.map (v) -> v.getValue()
         range:  @childFn.rangeTranslate.map (v) -> v.getValue()
       }
-      point = @_toWorld({x, y})
+      point = @plot.toWorld({x, y})
 
       movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space])
 
@@ -326,35 +316,30 @@ R.create "ChildFnControlsView",
 
 R.create "PointControlView",
   propTypes:
-    position: Function
+    position: Object # {x, y} in the Pixel frame
     onMove: Function
 
-  _refreshPosition: ->
-    el = @getDOMNode()
-
-    {x, y} = @position()
-    el.style.left = x + "px"
-    el.style.top  = y + "px"
-
   render: ->
-    R.div {className: "PointControl", onMouseDown: @_onMouseDown}
-
-  componentDidMount: ->
-    @_refreshPosition()
-
-  componentDidUpdate: ->
-    @_refreshPosition()
+    R.div {
+      className: "PointControl",
+      onMouseDown: @_onMouseDown
+      style: {
+        left: @position.x
+        top: -@position.y
+      }
+    }
 
   _onMouseDown: (e) ->
     util.preventDefault(e)
 
-    container = @getDOMNode().closest(".PlotContainer")
+    container = @getDOMNode().closest(".PointControlContainer")
     rect = container.getBoundingClientRect()
 
     UI.dragging = {
       onMove: (e) =>
         x = e.clientX - rect.left
         y = e.clientY - rect.top
+        y *= -1
         @onMove({x, y})
     }
 

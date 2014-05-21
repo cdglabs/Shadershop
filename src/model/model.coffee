@@ -268,28 +268,28 @@ class C.Plot
         {space: "domain", coord: 1}
       ]
 
-  toWorld: (width, height, {x, y}) ->
-    pixelSize = @getPixelSize(width, height)
+  # The Pixel frame ({x, y}) has 0,0 at the center of the canvas and y
+  # positive going up.
+
+  toWorld: ({x, y}) ->
+    pixelSize = @getPixelSize()
     center = {
       domain: @domainCenter
       range:  @rangeCenter
     }
     dimensions = @getDimensions()
 
-    xOffset = x - width/2
-    yOffset = -(y - height/2)
-
     result = {
       domain: util.constructVector(config.dimensions, null)
       range:  util.constructVector(config.dimensions, null)
     }
-    result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + xOffset * pixelSize
-    result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + yOffset * pixelSize
+    result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + x * pixelSize
+    result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + y * pixelSize
 
     return result
 
-  toPixel: (width, height, {domain, range}) ->
-    pixelSize = @getPixelSize(width, height)
+  toPixel: ({domain, range}) ->
+    pixelSize = @getPixelSize()
     center = {
       domain: @domainCenter
       range:  @rangeCenter
@@ -301,11 +301,8 @@ class C.Plot
       range:  util.vector.sub(range,  center.range)
     }
 
-    xOffset = offset[dimensions[0].space][dimensions[0].coord] / pixelSize
-    yOffset = offset[dimensions[1].space][dimensions[1].coord] / pixelSize
-
-    x = width/2 + xOffset
-    y = height/2 - yOffset
+    x = offset[dimensions[0].space][dimensions[0].coord] / pixelSize
+    y = offset[dimensions[1].space][dimensions[1].coord] / pixelSize
 
     return {x, y}
 

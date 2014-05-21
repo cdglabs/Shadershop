@@ -148,6 +148,11 @@ canvas,
   background-color: #faf8f2;
   overflow: hidden;
 }
+.PointControlContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
 .PointControl {
   position: absolute;
   width: 12px;
