@@ -33,10 +33,9 @@ getExpandedChildFns = ->
   recurse(UI.selectedFn.childFns)
   return result
 
-ensureSelectedChildFnVisible = ->
-  if UI.selectedChildFn
-    if !_.contains(getExpandedChildFns(), UI.selectedChildFn)
-      UI.selectedChildFn = null
+ensureSelectedChildFnsVisible = ->
+  expandedChildFns = getExpandedChildFns()
+  UI.selectedChildFns = _.intersection(UI.selectedChildFns, expandedChildFns)
 
 
 Actions.addDefinedFn = ->
@@ -46,14 +45,14 @@ Actions.addDefinedFn = ->
   Actions.selectFn(fn)
 
 Actions.addChildFn = (fn) ->
-  if UI.selectedChildFn
-    possibleParent = UI.selectedChildFn.fn
-    takesChildren = (possibleParent instanceof C.CompoundFn and UI.isChildFnExpanded(UI.selectedChildFn))
+  if UI.selectedChildFns.length == 1
+    possibleParent = UI.selectedChildFns[0].fn
+    takesChildren = (possibleParent instanceof C.CompoundFn and UI.isChildFnExpanded(UI.selectedChildFns[0]))
     if takesChildren
       parent = possibleParent
       index = parent.childFns.length
     else
-      {parent, index} = findParentIndexOf(UI.selectedChildFn)
+      {parent, index} = findParentIndexOf(UI.selectedChildFns[0])
       index = index + 1 # insert it after the selectedChildFn
 
   else
@@ -75,17 +74,46 @@ Actions.addChildFn = (fn) ->
   return {childFn, parent, index}
 
 Actions.addCompoundFn = ->
-  fn = new C.CompoundFn()
-  fn.childFns = UI.selectedFn.childFns
-  childFn = new C.ChildFn(fn)
-  UI.selectedFn.childFns = [childFn]
+  compoundFn = new C.CompoundFn()
+  compoundFnContainer = new C.ChildFn(compoundFn)
+
+  # Figure out where to add it
+  childFnInfos = []
+  for childFn in UI.selectedChildFns
+    {parent, index} = findParentIndexOf(childFn)
+    childFnInfos.push {parent, index, childFn}
+
+  if childFnInfos.length > 0
+    commonParent = childFnInfos[0].parent
+    if _.all(childFnInfos, (childFnInfo) -> childFnInfo.parent == commonParent)
+      # UI.selectedChildFns meets all criteria to be wrapped
+      childFnInfos = _.sortBy(childFnInfos, "index")
+
+      # Remove them from current location and into compoundFn
+      for childFnInfo in childFnInfos
+        Actions.removeChildFn(commonParent, childFnInfo.childFn)
+        compoundFn.childFns.push(childFnInfo.childFn)
+
+      # Insert compoundFnContainer
+      index = childFnInfos[0].index
+      commonParent.childFns.splice(index, 0, compoundFnContainer)
+
+      Actions.selectChildFn(compoundFnContainer)
+      return
+
+  # UI.selectedChildFns did not meet the criteria, wrap the compoundFn around
+  # everything.
+
+  compoundFn.childFns = UI.selectedFn.childFns
+  UI.selectedFn.childFns = [compoundFnContainer]
+  Actions.selectChildFn(compoundFnContainer)
   Compiler.setDirty()
 
 Actions.removeChildFn = (parentCompoundFn, childFn) ->
   index = parentCompoundFn.childFns.indexOf(childFn)
   return if index == -1
   parentCompoundFn.childFns.splice(index, 1)
-  ensureSelectedChildFnVisible()
+  ensureSelectedChildFnsVisible()
   Compiler.setDirty()
 
 Actions.insertChildFn = (parentCompoundFn, childFn, index) ->
@@ -113,7 +141,7 @@ Actions.toggleChildFnVisible = (childFn) ->
 
 Actions.setChildFnVisible = (childFn, newVisible) ->
   childFn.visible = newVisible
-  ensureSelectedChildFnVisible()
+  ensureSelectedChildFnsVisible()
   Compiler.setDirty()
 
 Actions.setBasisVector = (childFn, space, coord, valueStrings) ->
@@ -168,11 +196,21 @@ Actions.zoomPlotLayout = (plotLayout, zoomCenter, scaleFactor) ->
 Actions.selectFn = (fn) ->
   return unless fn instanceof C.DefinedFn
   UI.selectedFn = fn
-  UI.selectedChildFn = null
+  UI.selectedChildFns = []
 
 Actions.selectChildFn = (childFn) ->
-  UI.selectedChildFn = childFn
-  ensureSelectedChildFnVisible()
+  if childFn == null
+    UI.selectedChildFns = []
+  else
+    UI.selectedChildFns = [childFn]
+  ensureSelectedChildFnsVisible()
+
+Actions.toggleSelectChildFn = (childFn) ->
+  if _.contains(UI.selectedChildFns, childFn)
+    UI.selectedChildFns = _.without(UI.selectedChildFns, childFn)
+  else
+    UI.selectedChildFns.push(childFn)
+  ensureSelectedChildFnsVisible()
 
 Actions.hoverChildFn = (childFn) ->
   UI.hoveredChildFn = childFn
@@ -184,7 +222,7 @@ Actions.toggleChildFnExpanded = (childFn) ->
 Actions.setChildFnExpanded = (childFn, expanded) ->
   id = C.id(childFn)
   UI.expandedChildFns[id] = expanded
-  ensureSelectedChildFnVisible()
+  ensureSelectedChildFnsVisible()
 
 
 

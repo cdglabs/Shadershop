@@ -6,7 +6,7 @@ window.UI = UI = new class
 
     @selectedFn = _.last(appRoot.fns)
 
-    @selectedChildFn = null
+    @selectedChildFns = []
     @hoveredChildFn = null
 
     @expandedChildFns = {}

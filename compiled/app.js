@@ -49,7 +49,7 @@
   }
   return this.require.define;
 }).call(this)({"Actions": function(exports, require, module) {(function() {
-  var Actions, ensureSelectedChildFnVisible, findParentIndexOf, getExpandedChildFns;
+  var Actions, ensureSelectedChildFnsVisible, findParentIndexOf, getExpandedChildFns;
 
   window.Actions = Actions = {};
 
@@ -102,12 +102,10 @@
     return result;
   };
 
-  ensureSelectedChildFnVisible = function() {
-    if (UI.selectedChildFn) {
-      if (!_.contains(getExpandedChildFns(), UI.selectedChildFn)) {
-        return UI.selectedChildFn = null;
-      }
-    }
+  ensureSelectedChildFnsVisible = function() {
+    var expandedChildFns;
+    expandedChildFns = getExpandedChildFns();
+    return UI.selectedChildFns = _.intersection(UI.selectedChildFns, expandedChildFns);
   };
 
   Actions.addDefinedFn = function() {
@@ -120,14 +118,14 @@
 
   Actions.addChildFn = function(fn) {
     var childFn, index, onlyChild, parent, possibleParent, takesChildren, _ref;
-    if (UI.selectedChildFn) {
-      possibleParent = UI.selectedChildFn.fn;
-      takesChildren = possibleParent instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFn);
+    if (UI.selectedChildFns.length === 1) {
+      possibleParent = UI.selectedChildFns[0].fn;
+      takesChildren = possibleParent instanceof C.CompoundFn && UI.isChildFnExpanded(UI.selectedChildFns[0]);
       if (takesChildren) {
         parent = possibleParent;
         index = parent.childFns.length;
       } else {
-        _ref = findParentIndexOf(UI.selectedChildFn), parent = _ref.parent, index = _ref.index;
+        _ref = findParentIndexOf(UI.selectedChildFns[0]), parent = _ref.parent, index = _ref.index;
         index = index + 1;
       }
     } else {
@@ -156,11 +154,40 @@
   };
 
   Actions.addCompoundFn = function() {
-    var childFn, fn;
-    fn = new C.CompoundFn();
-    fn.childFns = UI.selectedFn.childFns;
-    childFn = new C.ChildFn(fn);
-    UI.selectedFn.childFns = [childFn];
+    var childFn, childFnInfo, childFnInfos, commonParent, compoundFn, compoundFnContainer, index, parent, _i, _j, _len, _len1, _ref, _ref1;
+    compoundFn = new C.CompoundFn();
+    compoundFnContainer = new C.ChildFn(compoundFn);
+    childFnInfos = [];
+    _ref = UI.selectedChildFns;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      childFn = _ref[_i];
+      _ref1 = findParentIndexOf(childFn), parent = _ref1.parent, index = _ref1.index;
+      childFnInfos.push({
+        parent: parent,
+        index: index,
+        childFn: childFn
+      });
+    }
+    if (childFnInfos.length > 0) {
+      commonParent = childFnInfos[0].parent;
+      if (_.all(childFnInfos, function(childFnInfo) {
+        return childFnInfo.parent === commonParent;
+      })) {
+        childFnInfos = _.sortBy(childFnInfos, "index");
+        for (_j = 0, _len1 = childFnInfos.length; _j < _len1; _j++) {
+          childFnInfo = childFnInfos[_j];
+          Actions.removeChildFn(commonParent, childFnInfo.childFn);
+          compoundFn.childFns.push(childFnInfo.childFn);
+        }
+        index = childFnInfos[0].index;
+        commonParent.childFns.splice(index, 0, compoundFnContainer);
+        Actions.selectChildFn(compoundFnContainer);
+        return;
+      }
+    }
+    compoundFn.childFns = UI.selectedFn.childFns;
+    UI.selectedFn.childFns = [compoundFnContainer];
+    Actions.selectChildFn(compoundFnContainer);
     return Compiler.setDirty();
   };
 
@@ -171,7 +198,7 @@
       return;
     }
     parentCompoundFn.childFns.splice(index, 1);
-    ensureSelectedChildFnVisible();
+    ensureSelectedChildFnsVisible();
     return Compiler.setDirty();
   };
 
@@ -200,7 +227,7 @@
 
   Actions.setChildFnVisible = function(childFn, newVisible) {
     childFn.visible = newVisible;
-    ensureSelectedChildFnVisible();
+    ensureSelectedChildFnsVisible();
     return Compiler.setDirty();
   };
 
@@ -257,12 +284,25 @@
       return;
     }
     UI.selectedFn = fn;
-    return UI.selectedChildFn = null;
+    return UI.selectedChildFns = [];
   };
 
   Actions.selectChildFn = function(childFn) {
-    UI.selectedChildFn = childFn;
-    return ensureSelectedChildFnVisible();
+    if (childFn === null) {
+      UI.selectedChildFns = [];
+    } else {
+      UI.selectedChildFns = [childFn];
+    }
+    return ensureSelectedChildFnsVisible();
+  };
+
+  Actions.toggleSelectChildFn = function(childFn) {
+    if (_.contains(UI.selectedChildFns, childFn)) {
+      UI.selectedChildFns = _.without(UI.selectedChildFns, childFn);
+    } else {
+      UI.selectedChildFns.push(childFn);
+    }
+    return ensureSelectedChildFnsVisible();
   };
 
   Actions.hoverChildFn = function(childFn) {
@@ -279,7 +319,7 @@
     var id;
     id = C.id(childFn);
     UI.expandedChildFns[id] = expanded;
-    return ensureSelectedChildFnVisible();
+    return ensureSelectedChildFnsVisible();
   };
 
 }).call(this);
@@ -321,7 +361,7 @@
       };
       this.autofocus = null;
       this.selectedFn = _.last(appRoot.fns);
-      this.selectedChildFn = null;
+      this.selectedChildFns = [];
       this.hoveredChildFn = null;
       this.expandedChildFns = {};
       this.registerEvents();
@@ -1956,8 +1996,8 @@
       }), R.div({
         className: "TextButton",
         onClick: this._onAddButtonClick
-      }, "Add"), UI.selectedChildFn ? R.OutlineControlsView({
-        fn: UI.selectedChildFn
+      }, "Add"), UI.selectedChildFns.length === 1 ? R.OutlineControlsView({
+        fn: UI.selectedChildFns[0]
       }) : void 0));
     },
     _onAddButtonClick: function() {
@@ -2005,7 +2045,7 @@
       }
       canHaveChildren = this.childFn.fn instanceof C.CompoundFn;
       expanded = UI.isChildFnExpanded(this.childFn);
-      selected = this.childFn === UI.selectedChildFn;
+      selected = _.contains(UI.selectedChildFns, this.childFn);
       hovered = this.childFn === UI.hoveredChildFn;
       itemClassName = R.cx({
         OutlineItem: true,
@@ -2056,7 +2096,11 @@
       if (e.target.closest(".Interactive, select, [contenteditable]")) {
         return;
       }
-      Actions.selectChildFn(this.childFn);
+      if (key.command || key.shift) {
+        Actions.toggleSelectChildFn(this.childFn);
+      } else {
+        Actions.selectChildFn(this.childFn);
+      }
       util.preventDefault(e);
       el = this.getDOMNode();
       rect = el.getMarginRect();
@@ -2486,7 +2530,7 @@
       return found;
     },
     render: function() {
-      var childFn, expandedChildFns, exprs, _i, _len;
+      var childFn, expandedChildFns, exprs, _i, _j, _len, _len1, _ref;
       exprs = [];
       if (this.plot.type === "colorMap") {
         exprs.push({
@@ -2511,15 +2555,17 @@
           exprString: Compiler.getExprString(this.fn, "x"),
           color: config.color.main
         });
-        if (UI.selectedChildFn && _.contains(expandedChildFns, UI.selectedChildFn)) {
+        _ref = UI.selectedChildFns;
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          childFn = _ref[_j];
           exprs.push({
-            exprString: Compiler.getExprString(UI.selectedChildFn, "x"),
+            exprString: Compiler.getExprString(childFn, "x"),
             color: config.color.selected
           });
         }
         exprs = _.reject(exprs, function(expr, exprIndex) {
-          var i, _j, _ref, _ref1;
-          for (i = _j = _ref = exprIndex + 1, _ref1 = exprs.length; _ref <= _ref1 ? _j < _ref1 : _j > _ref1; i = _ref <= _ref1 ? ++_j : --_j) {
+          var i, _k, _ref1, _ref2;
+          for (i = _k = _ref1 = exprIndex + 1, _ref2 = exprs.length; _ref1 <= _ref2 ? _k < _ref2 : _k > _ref2; i = _ref1 <= _ref2 ? ++_k : --_k) {
             if (exprs[i].exprString === expr.exprString) {
               return true;
             }
@@ -2540,8 +2586,8 @@
         plot: this.plot,
         exprs: exprs,
         isThumbnail: false
-      }), UI.selectedChildFn ? R.ChildFnControlsView({
-        childFn: UI.selectedChildFn,
+      }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
+        childFn: UI.selectedChildFns[0],
         plot: this.plot
       }) : void 0, R.div({
         className: "SettingsButton Interactive",

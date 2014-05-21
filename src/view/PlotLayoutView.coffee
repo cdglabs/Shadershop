@@ -107,9 +107,9 @@ R.create "PlotView",
       }
 
       # Selected
-      if UI.selectedChildFn and _.contains(expandedChildFns, UI.selectedChildFn)
+      for childFn in UI.selectedChildFns
         exprs.push {
-          exprString: Compiler.getExprString(UI.selectedChildFn, "x")
+          exprString: Compiler.getExprString(childFn, "x")
           color: config.color.selected
         }
 
@@ -136,9 +136,9 @@ R.create "PlotView",
         isThumbnail: false
       }
 
-      if UI.selectedChildFn
+      if UI.selectedChildFns.length == 1
         R.ChildFnControlsView {
-          childFn: UI.selectedChildFn
+          childFn: UI.selectedChildFns[0]
           plot: @plot
         }
 

@@ -18,8 +18,8 @@ R.create "OutlineView",
 
         R.div {className: "TextButton", onClick: @_onAddButtonClick}, "Add"
 
-        if UI.selectedChildFn
-          R.OutlineControlsView {fn: UI.selectedChildFn}
+        if UI.selectedChildFns.length == 1
+          R.OutlineControlsView {fn: UI.selectedChildFns[0]}
 
   _onAddButtonClick: ->
     Actions.addCompoundFn()
@@ -52,7 +52,7 @@ R.create "OutlineItemView",
 
     canHaveChildren = @childFn.fn instanceof C.CompoundFn
     expanded = UI.isChildFnExpanded(@childFn)
-    selected = (@childFn == UI.selectedChildFn)
+    selected = _.contains(UI.selectedChildFns, @childFn)
     hovered = (@childFn == UI.hoveredChildFn)
 
     itemClassName = R.cx {
@@ -98,7 +98,10 @@ R.create "OutlineItemView",
   _onRowMouseDown: (e) ->
     return if e.target.closest(".Interactive, select, [contenteditable]")
 
-    Actions.selectChildFn(@childFn)
+    if key.command or key.shift
+      Actions.toggleSelectChildFn(@childFn)
+    else
+      Actions.selectChildFn(@childFn)
 
     util.preventDefault(e)
 
