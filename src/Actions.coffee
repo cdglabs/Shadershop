@@ -150,6 +150,17 @@ Actions.zoomPlot = (plot, zoomCenter, scaleFactor) ->
   plot.pixelSize *= scaleFactor
 
 
+# HACK: This duplicates information but I'll do it until I figure out a proper
+# data model for PlotLayout, Plot, etc.
+
+Actions.panPlotLayout = (plotLayout, from, to) ->
+  for plot in plotLayout.plots
+    Actions.panPlot(plot, from, to)
+
+Actions.zoomPlotLayout = (plotLayout, zoomCenter, scaleFactor) ->
+  for plot in plotLayout.plots
+    Actions.zoomPlot(plot, zoomCenter, scaleFactor)
+
 # =============================================================================
 # Changing UI state (selection, hover, expanded)
 # =============================================================================

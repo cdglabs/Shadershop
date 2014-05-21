@@ -169,7 +169,8 @@ R.create "PlotView",
 
     zoomCenter = @_getWorldMouseCoords()
 
-    Actions.zoomPlot(@plot, zoomCenter, scaleFactor)
+    plotLayout = @fn.plotLayout
+    Actions.zoomPlotLayout(plotLayout, zoomCenter, scaleFactor)
 
   _changeSelection: ->
     Actions.selectChildFn(@_findHitTarget())
@@ -181,7 +182,9 @@ R.create "PlotView",
       cursor: config.cursor.grabbing
       onMove: (e) =>
         to = @_getWorldMouseCoords()
-        Actions.panPlot(@plot, from, to)
+
+        plotLayout = @fn.plotLayout
+        Actions.panPlotLayout(plotLayout, from, to)
     }
 
   _onSettingsButtonClick: ->

@@ -230,6 +230,28 @@
     return plot.pixelSize *= scaleFactor;
   };
 
+  Actions.panPlotLayout = function(plotLayout, from, to) {
+    var plot, _i, _len, _ref, _results;
+    _ref = plotLayout.plots;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      plot = _ref[_i];
+      _results.push(Actions.panPlot(plot, from, to));
+    }
+    return _results;
+  };
+
+  Actions.zoomPlotLayout = function(plotLayout, zoomCenter, scaleFactor) {
+    var plot, _i, _len, _ref, _results;
+    _ref = plotLayout.plots;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      plot = _ref[_i];
+      _results.push(Actions.zoomPlot(plot, zoomCenter, scaleFactor));
+    }
+    return _results;
+  };
+
   Actions.selectFn = function(fn) {
     if (!(fn instanceof C.DefinedFn)) {
       return;
@@ -2532,7 +2554,7 @@
       })(this));
     },
     _onWheel: function(e) {
-      var scaleFactor, zoomCenter;
+      var plotLayout, scaleFactor, zoomCenter;
       e.preventDefault();
       if (Math.abs(e.deltaY) <= 1) {
         return;
@@ -2542,7 +2564,8 @@
         scaleFactor = 1 / scaleFactor;
       }
       zoomCenter = this._getWorldMouseCoords();
-      return Actions.zoomPlot(this.plot, zoomCenter, scaleFactor);
+      plotLayout = this.fn.plotLayout;
+      return Actions.zoomPlotLayout(plotLayout, zoomCenter, scaleFactor);
     },
     _changeSelection: function() {
       return Actions.selectChildFn(this._findHitTarget());
@@ -2554,9 +2577,10 @@
         cursor: config.cursor.grabbing,
         onMove: (function(_this) {
           return function(e) {
-            var to;
+            var plotLayout, to;
             to = _this._getWorldMouseCoords();
-            return Actions.panPlot(_this.plot, from, to);
+            plotLayout = _this.fn.plotLayout;
+            return Actions.panPlotLayout(plotLayout, from, to);
           };
         })(this)
       };

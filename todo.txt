@@ -59,6 +59,8 @@ Try out better color scale for colorMap
 
 Send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
 
+The way the transform control points are selected for a plot is awkward (e.g. for a domain-rotated 2D function on a cartesian slice.)
+
 
 Priority
   projections, to make the 2D noise example easier
@@ -68,11 +70,6 @@ Priority
 
 
 
-
-
-
-
-Need to sync pixelSize, domainCenter, rangeCenter over the whole PlotLayout.
 
 
 
