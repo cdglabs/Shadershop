@@ -73,8 +73,9 @@ Actions.addChildFn = (fn) ->
   Actions.selectChildFn(childFn)
   return {childFn, parent, index}
 
-Actions.addCompoundFn = ->
+Actions.addCompoundFn = (combiner="sum") ->
   compoundFn = new C.CompoundFn()
+  compoundFn.combiner = combiner
   compoundFnContainer = new C.ChildFn(compoundFn)
 
   # Figure out where to add it

@@ -12,17 +12,32 @@ R.create "OutlineView",
 
       R.div {className: "Scroller"},
 
+        R.OutlineCombinerToolbar {}
+
         R.OutlineChildrenView {
           compoundFn: @definedFn
         }
 
-        R.div {className: "TextButton", onClick: @_onAddButtonClick}, "Add"
-
         if UI.selectedChildFns.length == 1
           R.OutlineControlsView {fn: UI.selectedChildFns[0]}
 
-  _onAddButtonClick: ->
-    Actions.addCompoundFn()
+
+# =============================================================================
+
+R.create "OutlineCombinerToolbar",
+  render: ->
+    R.div {className: "OutlineCombinerToolbar"},
+      R.span {className: "OutlineCombinerButton", onClick: @_compose}, "Compose"
+      R.span {className: "OutlineCombinerButton", onClick: @_add}, "Add"
+      R.span {className: "OutlineCombinerButton", onClick: @_multiply}, "Multiply"
+      R.span {className: "OutlineCombinerButton", onClick: @_define}, "Define"
+
+  shouldComponentUpdate: -> false
+
+  _compose: -> Actions.addCompoundFn("composition")
+  _add: -> Actions.addCompoundFn("sum")
+  _multiply: -> Actions.addCompoundFn("product")
+  _define: -> # TODO
 
 
 # =============================================================================

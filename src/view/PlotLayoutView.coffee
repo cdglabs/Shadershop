@@ -174,7 +174,12 @@ R.create "PlotView",
     Actions.zoomPlotLayout(plotLayout, zoomCenter, scaleFactor)
 
   _changeSelection: ->
-    Actions.selectChildFn(@_findHitTarget())
+    childFn = @_findHitTarget()
+    if key.command or key.shift
+      if childFn?
+        Actions.toggleSelectChildFn(childFn)
+    else
+      Actions.selectChildFn(childFn)
 
   _startPan: (e) ->
     from = @_getWorldMouseCoords()

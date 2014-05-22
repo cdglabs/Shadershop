@@ -201,24 +201,35 @@ class C.PlotLayout
     @plots = [new C.Plot(), new C.Plot()]
 
   getMainPlot: ->
-    return @plots[1]
+    return @plots[0]
 
   getPlotLocations: ->
     # returns [{plot, x, y, w, h}] dimensions as fractions
+
+    # return [
+    #   {
+    #     plot: @plots[0]
+    #     x: 0
+    #     y: 0.3
+    #     w: 1
+    #     h: 0.7
+    #   }
+    #   {
+    #     plot: @plots[1]
+    #     x: 0
+    #     y: 0
+    #     w: 1
+    #     h: 0.3
+    #   }
+    # ]
+
     return [
       {
         plot: @plots[0]
         x: 0
         y: 0
         w: 1
-        h: 0.3
-      }
-      {
-        plot: @plots[1]
-        x: 0
-        y: 0.3
-        w: 1
-        h: 0.7
+        h: 1
       }
     ]
 

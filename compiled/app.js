@@ -153,9 +153,13 @@
     };
   };
 
-  Actions.addCompoundFn = function() {
+  Actions.addCompoundFn = function(combiner) {
     var childFn, childFnInfo, childFnInfos, commonParent, compoundFn, compoundFnContainer, index, parent, _i, _j, _len, _len1, _ref, _ref1;
+    if (combiner == null) {
+      combiner = "sum";
+    }
     compoundFn = new C.CompoundFn();
+    compoundFn.combiner = combiner;
     compoundFnContainer = new C.ChildFn(compoundFn);
     childFnInfos = [];
     _ref = UI.selectedChildFns;
@@ -1010,7 +1014,7 @@
     }
 
     PlotLayout.prototype.getMainPlot = function() {
-      return this.plots[1];
+      return this.plots[0];
     };
 
     PlotLayout.prototype.getPlotLocations = function() {
@@ -1020,13 +1024,7 @@
           x: 0,
           y: 0,
           w: 1,
-          h: 0.3
-        }, {
-          plot: this.plots[1],
-          x: 0,
-          y: 0.3,
-          w: 1,
-          h: 0.7
+          h: 1
         }
       ];
     };
@@ -1991,18 +1989,45 @@
         className: "Header"
       }), R.div({
         className: "Scroller"
-      }, R.OutlineChildrenView({
+      }, R.OutlineCombinerToolbar({}), R.OutlineChildrenView({
         compoundFn: this.definedFn
-      }), R.div({
-        className: "TextButton",
-        onClick: this._onAddButtonClick
-      }, "Add"), UI.selectedChildFns.length === 1 ? R.OutlineControlsView({
+      }), UI.selectedChildFns.length === 1 ? R.OutlineControlsView({
         fn: UI.selectedChildFns[0]
       }) : void 0));
-    },
-    _onAddButtonClick: function() {
-      return Actions.addCompoundFn();
     }
+  });
+
+  R.create("OutlineCombinerToolbar", {
+    render: function() {
+      return R.div({
+        className: "OutlineCombinerToolbar"
+      }, R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._compose
+      }, "Compose"), R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._add
+      }, "Add"), R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._multiply
+      }, "Multiply"), R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._define
+      }, "Define"));
+    },
+    shouldComponentUpdate: function() {
+      return false;
+    },
+    _compose: function() {
+      return Actions.addCompoundFn("composition");
+    },
+    _add: function() {
+      return Actions.addCompoundFn("sum");
+    },
+    _multiply: function() {
+      return Actions.addCompoundFn("product");
+    },
+    _define: function() {}
   });
 
   R.create("OutlineChildrenView", {
@@ -2629,7 +2654,15 @@
       return Actions.zoomPlotLayout(plotLayout, zoomCenter, scaleFactor);
     },
     _changeSelection: function() {
-      return Actions.selectChildFn(this._findHitTarget());
+      var childFn;
+      childFn = this._findHitTarget();
+      if (key.command || key.shift) {
+        if (childFn != null) {
+          return Actions.toggleSelectChildFn(childFn);
+        }
+      } else {
+        return Actions.selectChildFn(childFn);
+      }
     },
     _startPan: function(e) {
       var from;

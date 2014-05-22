@@ -27,7 +27,6 @@ Plot
 Outline Stuff
   Break out "Inspector"
   Create definition button / right click item - create by abstracting
-  Thumbnails
   Show transform numbers when they're not identity?
 
 
@@ -42,7 +41,6 @@ Palette
   Anything can be dragged into the outline to put it in a specific place
   Maybe
     + insert buttons in outline like before
-    select multiple and then click "add", "multiply", etc. to group those
   Some way to delete definitions
 
 
@@ -65,7 +63,6 @@ The way the transform control points are selected for a plot is awkward (e.g. fo
 Priority
   projections, to make the 2D noise example easier
   something better than inspector
-  something better for making compound fn's
 
 
 

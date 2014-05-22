@@ -251,6 +251,19 @@ canvas, .Shader
 // Outline
 // ============================================================================
 
+.OutlineCombinerToolbar
+  padding SpacingSize 0 SpacingSize SpacingSize*2
+  background-color #f3f3f3
+  .OutlineCombinerButton
+    padding-right SpacingSize
+    border-right 1px solid #ccc
+    margin-right SpacingSize
+    cursor pointer
+    &:hover
+      color highlightColor
+    &:last-child
+      border-right 0
+
 .Outline .Scroller > .OutlineChildren
   margin-left 0px
 

@@ -181,6 +181,22 @@ canvas,
 .SettingsButton:hover {
   opacity: 1;
 }
+.OutlineCombinerToolbar {
+  padding: 6px 0 6px 12px;
+  background-color: #f3f3f3;
+}
+.OutlineCombinerToolbar .OutlineCombinerButton {
+  padding-right: 6px;
+  border-right: 1px solid #ccc;
+  margin-right: 6px;
+  cursor: pointer;
+}
+.OutlineCombinerToolbar .OutlineCombinerButton:hover {
+  color: #09c;
+}
+.OutlineCombinerToolbar .OutlineCombinerButton:last-child {
+  border-right: 0;
+}
 .Outline .Scroller > .OutlineChildren {
   margin-left: 0px;
 }
