@@ -137,11 +137,11 @@ R.create "PlotView",
         isThumbnail: false
       }
 
-      # if UI.selectedChildFns.length == 1
-      #   R.ChildFnControlsView {
-      #     childFn: UI.selectedChildFns[0]
-      #     plot: @plot
-      #   }
+      if UI.selectedChildFns.length == 1
+        R.ChildFnControlsView {
+          childFn: UI.selectedChildFns[0]
+          plot: @plot
+        }
 
       # Settings Button
       R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
@@ -233,12 +233,12 @@ R.create "ChildFnControlsView",
         position: @_getTranslatePosition()
         onMove: @_setTranslatePosition
       }
-      for dimension, index in @plot.getDimensions()
-        R.PointControlView {
-          position: @_getTransformPosition(dimension)
-          onMove: @_setTransformPosition(dimension)
-          key: index
-        }
+      # for dimension, index in @plot.getDimensions()
+      #   R.PointControlView {
+      #     position: @_getTransformPosition(dimension)
+      #     onMove: @_setTransformPosition(dimension)
+      #     key: index
+      #   }
 
   _snap: (value) ->
     pixelSize = @plot.getPixelSize()
@@ -261,23 +261,28 @@ R.create "ChildFnControlsView",
 
 
   _getTranslatePosition: ->
-    translate = {
-      domain: @childFn.domainTranslate.map (v) -> v.getValue()
-      range:  @childFn.rangeTranslate.map (v) -> v.getValue()
-    }
+    translate = [].concat(
+      @childFn.domainTranslate.map (v) -> v.getValue()
+      @childFn.rangeTranslate.map (v) -> v.getValue()
+    )
     return @plot.toPixel(translate)
 
   _setTranslatePosition: ({x, y}) ->
     translate = @plot.toWorld({x, y})
 
-    for value, coord in translate.domain
-      if value?
-        valueString = @_snap(value, .01)
-        Actions.setVariableValueString(@childFn.domainTranslate[coord], valueString)
-    for value, coord in translate.range
-      if value?
-        valueString = @_snap(value, .01)
-        Actions.setVariableValueString(@childFn.rangeTranslate[coord], valueString)
+    for isRepresented, coord in @plot.getMask()
+      if isRepresented
+        value = translate[coord]
+        valueString = @_snap(value)
+
+        # This is hacky because childFn's data is stored the "old" way
+        variable = if coord < translate.length/2
+          @childFn.domainTranslate[coord]
+        else
+          @childFn.rangeTranslate[coord - translate.length/2]
+
+        Actions.setVariableValueString(variable, valueString)
+
 
   _getTransformPosition: (dimension) ->
     translate = {

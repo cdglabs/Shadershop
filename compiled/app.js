@@ -1087,15 +1087,19 @@
       }
     };
 
-    Plot.prototype.getCombinedCenter = function() {
-      var combinedDimensions, dimension, dimensions, _i, _len;
+    Plot.prototype.getMask = function() {
+      var dimension, dimensions, mask, _i, _len;
       dimensions = this.getDimensions2();
-      combinedDimensions = util.constructVector(config.dimensions * 2, 0);
+      mask = util.constructVector(config.dimensions * 2, 0);
       for (_i = 0, _len = dimensions.length; _i < _len; _i++) {
         dimension = dimensions[_i];
-        combinedDimensions = numeric.add(dimension, combinedDimensions);
+        mask = numeric.add(dimension, mask);
       }
-      return util.vectorMask(this.center, this.focus, combinedDimensions);
+      return mask;
+    };
+
+    Plot.prototype.getCombinedCenter = function() {
+      return util.vectorMask(this.center, this.focus, this.getMask());
     };
 
     Plot.prototype.toWorld = function(_arg) {
@@ -2607,7 +2611,10 @@
         plot: this.plot,
         exprs: exprs,
         isThumbnail: false
-      }), R.div({
+      }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
+        childFn: UI.selectedChildFns[0],
+        plot: this.plot
+      }) : void 0, R.div({
         className: "SettingsButton Interactive",
         onClick: this._onSettingsButtonClick
       }, R.div({
@@ -2687,26 +2694,12 @@
       plot: C.Plot
     },
     render: function() {
-      var dimension, index;
       return R.div({
         className: "Interactive PointControlContainer"
       }, R.PointControlView({
         position: this._getTranslatePosition(),
         onMove: this._setTranslatePosition
-      }), (function() {
-        var _i, _len, _ref, _results;
-        _ref = this.plot.getDimensions();
-        _results = [];
-        for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
-          dimension = _ref[index];
-          _results.push(R.PointControlView({
-            position: this._getTransformPosition(dimension),
-            onMove: this._setTransformPosition(dimension),
-            key: index
-          }));
-        }
-        return _results;
-      }).call(this));
+      }));
     },
     _snap: function(value) {
       var digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, smallSpacing, snapTolerance, _ref;
@@ -2726,38 +2719,29 @@
     },
     _getTranslatePosition: function() {
       var translate;
-      translate = {
-        domain: this.childFn.domainTranslate.map(function(v) {
-          return v.getValue();
-        }),
-        range: this.childFn.rangeTranslate.map(function(v) {
-          return v.getValue();
-        })
-      };
+      translate = [].concat(this.childFn.domainTranslate.map(function(v) {
+        return v.getValue();
+      }), this.childFn.rangeTranslate.map(function(v) {
+        return v.getValue();
+      }));
       return this.plot.toPixel(translate);
     },
     _setTranslatePosition: function(_arg) {
-      var coord, translate, value, valueString, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var coord, isRepresented, translate, value, valueString, variable, x, y, _i, _len, _ref, _results;
       x = _arg.x, y = _arg.y;
       translate = this.plot.toWorld({
         x: x,
         y: y
       });
-      _ref = translate.domain;
-      for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
-        value = _ref[coord];
-        if (value != null) {
-          valueString = this._snap(value, .01);
-          Actions.setVariableValueString(this.childFn.domainTranslate[coord], valueString);
-        }
-      }
-      _ref1 = translate.range;
+      _ref = this.plot.getMask();
       _results = [];
-      for (coord = _j = 0, _len1 = _ref1.length; _j < _len1; coord = ++_j) {
-        value = _ref1[coord];
-        if (value != null) {
-          valueString = this._snap(value, .01);
-          _results.push(Actions.setVariableValueString(this.childFn.rangeTranslate[coord], valueString));
+      for (coord = _i = 0, _len = _ref.length; _i < _len; coord = ++_i) {
+        isRepresented = _ref[coord];
+        if (isRepresented) {
+          value = translate[coord];
+          valueString = this._snap(value);
+          variable = coord < translate.length / 2 ? this.childFn.domainTranslate[coord] : this.childFn.rangeTranslate[coord - translate.length / 2];
+          _results.push(Actions.setVariableValueString(variable, valueString));
         } else {
           _results.push(void 0);
         }

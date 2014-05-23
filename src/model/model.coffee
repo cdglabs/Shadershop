@@ -295,15 +295,19 @@ class C.Plot
         [0,1,0,0 , 0,0,0,0]
       ]
 
+  getMask: ->
+    # Returns a vector mask in world coordinates where very world coordinate
+    # that's represented in the plot is a 1 and 0 otherwise.
+    dimensions = @getDimensions2()
+    mask = util.constructVector(config.dimensions*2, 0)
+    for dimension in dimensions
+      mask = numeric.add(dimension, mask)
+    return mask
+
   getCombinedCenter: ->
     # This is the same as @center except any world coordinates which aren't
     # represented in the plot are replaced with @focus
-    dimensions = @getDimensions2()
-    combinedDimensions = util.constructVector(config.dimensions*2, 0)
-    for dimension in dimensions
-      combinedDimensions = numeric.add(dimension, combinedDimensions)
-
-    return util.vectorMask(@center, @focus, combinedDimensions)
+    return util.vectorMask(@center, @focus, @getMask())
 
   # The Pixel frame ({x, y}) has 0,0 at the center of the canvas and y
   # positive going up.
