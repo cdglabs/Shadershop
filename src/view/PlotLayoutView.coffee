@@ -284,6 +284,30 @@ R.create "ChildFnControlsView",
         Actions.setVariableValueString(variable, valueString)
 
 
+  _getVisibleTransforms: ->
+    mask = @plot.getMask()
+    visibleTransforms = []
+    for space in ["domain", "range"]
+      for basisVectorIndex in [0 ... config.dimensions]
+        basisVector = @childFn.getBasisVector(space, basisVectorIndex)
+        indexOffset = if space == "domain" then 0 else config.dimensions
+
+        isVisible = _.all [0 ... config.dimensions], (coord) =>
+          return true if mask[coord + indexOffset] == 1 # represented on the plot
+          return true if basisVector[coord] == @plot.focus[coord + indexOffset] # "in" the projection
+          return false
+
+        if isVisible
+          visibleTransforms.push {
+            space
+            basisVectorIndex
+            basisVector
+          }
+    return visibleTransforms
+
+
+
+
   _getTransformPosition: (dimension) ->
     translate = {
       domain: @childFn.domainTranslate.map (v) -> v.getValue()

@@ -2748,6 +2748,42 @@
       }
       return _results;
     },
+    _getVisibleTransforms: function() {
+      var basisVector, basisVectorIndex, indexOffset, isVisible, mask, space, visibleTransforms, _i, _j, _k, _len, _ref, _ref1, _ref2, _results;
+      mask = this.plot.getMask();
+      visibleTransforms = [];
+      _ref = ["domain", "range"];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        space = _ref[_i];
+        for (basisVectorIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; basisVectorIndex = 0 <= _ref1 ? ++_j : --_j) {
+          basisVector = this.childFn.getBasisVector(space, basisVectorIndex);
+          indexOffset = space === "domain" ? 0 : config.dimensions;
+          isVisible = _.all((function() {
+            _results = [];
+            for (var _k = 0, _ref2 = config.dimensions; 0 <= _ref2 ? _k < _ref2 : _k > _ref2; 0 <= _ref2 ? _k++ : _k--){ _results.push(_k); }
+            return _results;
+          }).apply(this), (function(_this) {
+            return function(coord) {
+              if (mask[coord + indexOffset] === 1) {
+                return true;
+              }
+              if (basisVector[coord] === _this.plot.focus[coord + indexOffset]) {
+                return true;
+              }
+              return false;
+            };
+          })(this));
+          if (isVisible) {
+            visibleTransforms.push({
+              space: space,
+              basisVectorIndex: basisVectorIndex,
+              basisVector: basisVector
+            });
+          }
+        }
+      }
+      return visibleTransforms;
+    },
     _getTransformPosition: function(dimension) {
       var basisVector, point, translate;
       translate = {
