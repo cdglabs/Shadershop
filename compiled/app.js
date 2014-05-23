@@ -2694,12 +2694,26 @@
       plot: C.Plot
     },
     render: function() {
+      var transformInfo;
       return R.div({
         className: "Interactive PointControlContainer"
       }, R.PointControlView({
         position: this._getTranslatePosition(),
         onMove: this._setTranslatePosition
-      }));
+      }), (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._getVisibleTransforms();
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          transformInfo = _ref[_i];
+          _results.push(R.PointControlView({
+            position: this._getTransformPosition(transformInfo),
+            onMove: this._setTransformPosition(transformInfo),
+            key: transformInfo.space + transformInfo.basisVectorIndex
+          }));
+        }
+        return _results;
+      }).call(this));
     },
     _snap: function(value) {
       var digitPrecision, largeSpacing, nearestSnap, pixelSize, precision, smallSpacing, snapTolerance, _ref;
@@ -2784,54 +2798,48 @@
       }
       return visibleTransforms;
     },
-    _getTransformPosition: function(dimension) {
-      var basisVector, point, translate;
-      translate = {
-        domain: this.childFn.domainTranslate.map(function(v) {
-          return v.getValue();
-        }),
-        range: this.childFn.rangeTranslate.map(function(v) {
-          return v.getValue();
-        })
-      };
-      basisVector = this.childFn.getBasisVector(dimension.space, dimension.coord);
-      if (dimension.space === "domain") {
-        point = {
-          domain: util.vector.add(translate.domain, basisVector),
-          range: translate.range
-        };
-      } else if (dimension.space === "range") {
-        point = {
-          domain: translate.domain,
-          range: util.vector.add(translate.range, basisVector)
-        };
+    _getTransformPosition: function(transformInfo) {
+      var transform, translate, worldPosition;
+      translate = [].concat(this.childFn.domainTranslate.map(function(v) {
+        return v.getValue();
+      }), this.childFn.rangeTranslate.map(function(v) {
+        return v.getValue();
+      }));
+      if (transformInfo.space === "domain") {
+        transform = [].concat(transformInfo.basisVector, util.constructVector(config.dimensions, 0));
+      } else {
+        transform = [].concat(util.constructVector(config.dimensions, 0), transformInfo.basisVector);
       }
-      return this.plot.toPixel(point);
+      worldPosition = numeric.add(translate, transform);
+      return this.plot.toPixel(worldPosition);
     },
-    _setTransformPosition: function(dimension) {
+    _setTransformPosition: function(transformInfo) {
       return (function(_this) {
         return function(_arg) {
-          var movedBasisVector, newBasisVector, oldBasisVector, point, translate, valueStrings, x, y;
+          var mask, newBasisVector, offset, point, translate, valueStrings, x, y;
           x = _arg.x, y = _arg.y;
-          translate = {
-            domain: _this.childFn.domainTranslate.map(function(v) {
-              return v.getValue();
-            }),
-            range: _this.childFn.rangeTranslate.map(function(v) {
-              return v.getValue();
-            })
-          };
+          translate = [].concat(_this.childFn.domainTranslate.map(function(v) {
+            return v.getValue();
+          }), _this.childFn.rangeTranslate.map(function(v) {
+            return v.getValue();
+          }));
           point = _this.plot.toWorld({
             x: x,
             y: y
           });
-          movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space]);
-          oldBasisVector = _this.childFn.getBasisVector(dimension.space, dimension.coord);
-          newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector);
+          offset = numeric.sub(point, translate);
+          if (transformInfo.space === "domain") {
+            newBasisVector = offset.slice(0, config.dimensions);
+            mask = _this.plot.getMask().slice(0, config.dimensions);
+          } else {
+            newBasisVector = offset.slice(config.dimensions);
+            mask = _this.plot.getMask().slice(config.dimensions);
+          }
+          newBasisVector = util.vectorMask(newBasisVector, transformInfo.basisVector, mask);
           valueStrings = newBasisVector.map(function(value) {
             return _this._snap(value);
           });
-          return Actions.setBasisVector(_this.childFn, dimension.space, dimension.coord, valueStrings);
+          return Actions.setBasisVector(_this.childFn, transformInfo.space, transformInfo.basisVectorIndex, valueStrings);
         };
       })(this);
     }

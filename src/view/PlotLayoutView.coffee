@@ -233,12 +233,12 @@ R.create "ChildFnControlsView",
         position: @_getTranslatePosition()
         onMove: @_setTranslatePosition
       }
-      # for dimension, index in @plot.getDimensions()
-      #   R.PointControlView {
-      #     position: @_getTransformPosition(dimension)
-      #     onMove: @_setTransformPosition(dimension)
-      #     key: index
-      #   }
+      for transformInfo in @_getVisibleTransforms()
+        R.PointControlView {
+          position: @_getTransformPosition(transformInfo)
+          onMove: @_setTransformPosition(transformInfo)
+          key: transformInfo.space + transformInfo.basisVectorIndex
+        }
 
   _snap: (value) ->
     pixelSize = @plot.getPixelSize()
@@ -306,45 +306,49 @@ R.create "ChildFnControlsView",
     return visibleTransforms
 
 
+  _getTransformPosition: (transformInfo) ->
+    translate = [].concat(
+      @childFn.domainTranslate.map (v) -> v.getValue()
+      @childFn.rangeTranslate.map (v) -> v.getValue()
+    )
+    if transformInfo.space == "domain"
+      transform = [].concat(
+        transformInfo.basisVector
+        util.constructVector(config.dimensions, 0)
+      )
+    else
+      transform = [].concat(
+        util.constructVector(config.dimensions, 0)
+        transformInfo.basisVector
+      )
+
+    worldPosition = numeric.add(translate, transform)
+    return @plot.toPixel(worldPosition)
 
 
-  _getTransformPosition: (dimension) ->
-    translate = {
-      domain: @childFn.domainTranslate.map (v) -> v.getValue()
-      range:  @childFn.rangeTranslate.map (v) -> v.getValue()
-    }
-
-    basisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
-
-    if dimension.space == "domain"
-      point = {
-        domain: util.vector.add(translate.domain, basisVector)
-        range: translate.range
-      }
-    else if dimension.space == "range"
-      point = {
-        domain: translate.domain
-        range: util.vector.add(translate.range, basisVector)
-      }
-    return @plot.toPixel(point)
-
-  _setTransformPosition: (dimension) ->
+  _setTransformPosition: (transformInfo) ->
     ({x, y}) =>
-      translate = {
-        domain: @childFn.domainTranslate.map (v) -> v.getValue()
-        range:  @childFn.rangeTranslate.map (v) -> v.getValue()
-      }
+      translate = [].concat(
+        @childFn.domainTranslate.map (v) -> v.getValue()
+        @childFn.rangeTranslate.map (v) -> v.getValue()
+      )
+
       point = @plot.toWorld({x, y})
 
-      movedBasisVector = util.vector.sub(point[dimension.space], translate[dimension.space])
+      offset = numeric.sub(point, translate)
 
-      oldBasisVector = @childFn.getBasisVector(dimension.space, dimension.coord)
-      newBasisVector = util.vector.merge(oldBasisVector, movedBasisVector)
+      if transformInfo.space == "domain"
+        newBasisVector = offset[ ... config.dimensions]
+        mask = @plot.getMask()[ ... config.dimensions]
+      else
+        newBasisVector = offset[config.dimensions ... ]
+        mask = @plot.getMask()[config.dimensions ... ]
+
+      newBasisVector = util.vectorMask(newBasisVector, transformInfo.basisVector, mask)
 
       valueStrings = newBasisVector.map (value) => @_snap(value)
 
-      Actions.setBasisVector(@childFn, dimension.space, dimension.coord, valueStrings)
-
+      Actions.setBasisVector(@childFn, transformInfo.space, transformInfo.basisVectorIndex, valueStrings)
 
 
 
