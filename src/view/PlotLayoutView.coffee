@@ -54,8 +54,11 @@ R.create "PlotView",
 
     point = @_getWorldMouseCoords()
 
-    inputVal  = point[ ... point.length/2]
-    outputVal = point[point.length/2 ... ]
+    mask = @plot.getMask()
+    outputMask = mask[config.dimensions ... ]
+
+    inputVal  = point[ ... config.dimensions]
+    outputVal = point[config.dimensions ... ]
 
     found = null
     foundError = maxQuadrance
@@ -64,6 +67,7 @@ R.create "PlotView",
       evaluated = childFn.evaluate(inputVal)
 
       offset = numeric.sub(outputVal, evaluated)
+      offset = numeric.mul(offset, outputMask) # We only care about the projected output.
       error = numeric.norm2Squared(offset)
 
       if error < foundError

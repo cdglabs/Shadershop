@@ -2532,13 +2532,15 @@
       });
     },
     _findHitTarget: function() {
-      var childFn, error, evaluated, found, foundError, inputVal, maxDistance, maxQuadrance, offset, outputVal, pixelSize, point, _i, _len, _ref;
+      var childFn, error, evaluated, found, foundError, inputVal, mask, maxDistance, maxQuadrance, offset, outputMask, outputVal, pixelSize, point, _i, _len, _ref;
       pixelSize = this.plot.getPixelSize();
       maxDistance = config.hitTolerance * pixelSize;
       maxQuadrance = maxDistance * maxDistance;
       point = this._getWorldMouseCoords();
-      inputVal = point.slice(0, point.length / 2);
-      outputVal = point.slice(point.length / 2);
+      mask = this.plot.getMask();
+      outputMask = mask.slice(config.dimensions);
+      inputVal = point.slice(0, config.dimensions);
+      outputVal = point.slice(config.dimensions);
       found = null;
       foundError = maxQuadrance;
       _ref = this._getExpandedChildFns();
@@ -2546,6 +2548,7 @@
         childFn = _ref[_i];
         evaluated = childFn.evaluate(inputVal);
         offset = numeric.sub(outputVal, evaluated);
+        offset = numeric.mul(offset, outputMask);
         error = numeric.norm2Squared(offset);
         if (error < foundError) {
           found = childFn;
