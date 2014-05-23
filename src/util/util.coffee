@@ -179,6 +179,14 @@ util.safeInv = (m) ->
   catch
     return numeric.identity(m.length)
 
+util.vectorMask = (a, b, mask) ->
+  # Takes components from a when mask is 1, b when mask is 0
+  return numeric.add(
+    numeric.mul(a, mask)
+    numeric.mul(b, numeric.sub(1, mask))
+  )
+
+
 
 
 util.onceDragConsummated = (downEvent, callback, notConsummatedCallback=null) ->

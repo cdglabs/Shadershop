@@ -239,8 +239,12 @@ class C.PlotLayout
 
 class C.Plot
   constructor: ->
-    @domainCenter = util.constructVector(config.dimensions, 0)
-    @rangeCenter = util.constructVector(config.dimensions, 0)
+    # The center, in world coordinates, of the plot
+    @center = util.constructVector(config.dimensions*2, 0)
+
+    # This is the projection that's used for any coordinates not defined on
+    # the plot.
+    @focus = util.constructVector(config.dimensions*2, 0)
 
     @pixelSize = .01
 
@@ -249,8 +253,8 @@ class C.Plot
   getScaledBounds: (width, height, scaleFactor) ->
     pixelSize = @pixelSize
     center = {
-      domain: @domainCenter
-      range:  @rangeCenter
+      domain: @center[ ... @center.length/2]
+      range:  @center[@center.length/2 ... ]
     }
     dimensions = @getDimensions()
 
@@ -279,43 +283,68 @@ class C.Plot
         {space: "domain", coord: 1}
       ]
 
+  getDimensions2: ->
+    if @type == "cartesian"
+      return [
+        [1,0,0,0 , 0,0,0,0]
+        [0,0,0,0 , 1,0,0,0]
+      ]
+    else if @type == "colorMap"
+      return [
+        [1,0,0,0 , 0,0,0,0]
+        [0,1,0,0 , 0,0,0,0]
+      ]
+
+  getCombinedCenter: ->
+    # This is the same as @center except any world coordinates which aren't
+    # represented in the plot are replaced with @focus
+    dimensions = @getDimensions2()
+    combinedDimensions = util.constructVector(config.dimensions*2, 0)
+    for dimension in dimensions
+      combinedDimensions = numeric.add(dimension, combinedDimensions)
+
+    return util.vectorMask(@center, @focus, combinedDimensions)
+
   # The Pixel frame ({x, y}) has 0,0 at the center of the canvas and y
   # positive going up.
 
   toWorld: ({x, y}) ->
     pixelSize = @getPixelSize()
-    center = {
-      domain: @domainCenter
-      range:  @rangeCenter
-    }
-    dimensions = @getDimensions()
 
-    result = {
-      domain: util.constructVector(config.dimensions, null)
-      range:  util.constructVector(config.dimensions, null)
-    }
-    result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + x * pixelSize
-    result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + y * pixelSize
+    offset = numeric.dot(
+      numeric.mul([x, y], pixelSize)
+      @getDimensions2()
+    )
 
-    return result
+    return numeric.add(
+      offset,
+      @getCombinedCenter()
+    )
 
-  toPixel: ({domain, range}) ->
+  toPixel: (worldPoint) ->
     pixelSize = @getPixelSize()
-    center = {
-      domain: @domainCenter
-      range:  @rangeCenter
-    }
-    dimensions = @getDimensions()
 
-    offset = {
-      domain: util.vector.sub(domain, center.domain)
-      range:  util.vector.sub(range,  center.range)
-    }
+    offset = numeric.sub(worldPoint, @getCombinedCenter())
+    xyPoint = numeric.div(
+      numeric.dot(
+        @getDimensions2()
+        offset
+      )
+      pixelSize
+    )
 
-    x = offset[dimensions[0].space][dimensions[0].coord] / pixelSize
-    y = offset[dimensions[1].space][dimensions[1].coord] / pixelSize
+    return {x: xyPoint[0], y: xyPoint[1]}
 
-    return {x, y}
+
+
+
+
+
+
+
+
+
+
 
 
 

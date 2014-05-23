@@ -53,23 +53,32 @@ Get Grid using better Plot API
 Get ShaderOverlayView using better Plot API
   Be able to use any coordinates (right now d0, r0 is hardcoded for cartesian, and d0, d1, r0 is hardcoded for colorMap)
 
-Try out better color scale for colorMap
 
-Send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
 
-The way the transform control points are selected for a plot is awkward (e.g. for a domain-rotated 2D function on a cartesian slice.)
+
+
+
+
+
+
+
+
+
+
 
 
 Priority
   projections, to make the 2D noise example easier
+    need y-x cartesian
+    need to be able to see/move the projection
   something better than inspector
-
-
-
-
-
-
-
+    text fields on control points would work
+    should fix how control points show up on graph if they're not "in" the projection (e.g. for a domain-rotated 2D function on a cartesian slice.)
+  need duplicate
+    would be nice to have drag multiple, but not needed
+  flexible color scale for colorMap
+  performance
+    send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
 
 
 

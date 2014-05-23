@@ -241,23 +241,15 @@
   };
 
   Actions.panPlot = function(plot, from, to) {
-    var domainOffset, newDomainCenter, newRangeCenter, rangeOffset;
-    domainOffset = util.vector.sub(from.domain, to.domain);
-    rangeOffset = util.vector.sub(from.range, to.range);
-    newDomainCenter = util.vector.add(plot.domainCenter, domainOffset);
-    newRangeCenter = util.vector.add(plot.rangeCenter, rangeOffset);
-    plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter);
-    return plot.rangeCenter = util.vector.merge(plot.rangeCenter, newRangeCenter);
+    var offset;
+    offset = numeric.sub(from, to);
+    return plot.center = numeric.add(plot.center, offset);
   };
 
   Actions.zoomPlot = function(plot, zoomCenter, scaleFactor) {
-    var domainOffset, newDomainCenter, newRangeCenter, rangeOffset;
-    domainOffset = util.vector.sub(plot.domainCenter, zoomCenter.domain);
-    rangeOffset = util.vector.sub(plot.rangeCenter, zoomCenter.range);
-    newDomainCenter = util.vector.add(zoomCenter.domain, util.vector.mul(scaleFactor, domainOffset));
-    newRangeCenter = util.vector.add(zoomCenter.range, util.vector.mul(scaleFactor, rangeOffset));
-    plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter);
-    plot.rangeCenter = util.vector.merge(plot.rangeCenter, newRangeCenter);
+    var offset;
+    offset = numeric.sub(plot.center, zoomCenter);
+    plot.center = numeric.add(zoomCenter, numeric.mul(offset, scaleFactor));
     return plot.pixelSize *= scaleFactor;
   };
 
@@ -1035,8 +1027,8 @@
 
   C.Plot = (function() {
     function Plot() {
-      this.domainCenter = util.constructVector(config.dimensions, 0);
-      this.rangeCenter = util.constructVector(config.dimensions, 0);
+      this.center = util.constructVector(config.dimensions * 2, 0);
+      this.focus = util.constructVector(config.dimensions * 2, 0);
       this.pixelSize = .01;
       this.type = "cartesian";
     }
@@ -1045,8 +1037,8 @@
       var center, dimensions, pixelSize, xPixelCenter, yPixelCenter;
       pixelSize = this.pixelSize;
       center = {
-        domain: this.domainCenter,
-        range: this.rangeCenter
+        domain: this.center.slice(0, this.center.length / 2),
+        range: this.center.slice(this.center.length / 2)
       };
       dimensions = this.getDimensions();
       xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
@@ -1087,42 +1079,41 @@
       }
     };
 
-    Plot.prototype.toWorld = function(_arg) {
-      var center, dimensions, pixelSize, result, x, y;
-      x = _arg.x, y = _arg.y;
-      pixelSize = this.getPixelSize();
-      center = {
-        domain: this.domainCenter,
-        range: this.rangeCenter
-      };
-      dimensions = this.getDimensions();
-      result = {
-        domain: util.constructVector(config.dimensions, null),
-        range: util.constructVector(config.dimensions, null)
-      };
-      result[dimensions[0].space][dimensions[0].coord] = center[dimensions[0].space][dimensions[0].coord] + x * pixelSize;
-      result[dimensions[1].space][dimensions[1].coord] = center[dimensions[1].space][dimensions[1].coord] + y * pixelSize;
-      return result;
+    Plot.prototype.getDimensions2 = function() {
+      if (this.type === "cartesian") {
+        return [[1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0]];
+      } else if (this.type === "colorMap") {
+        return [[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]];
+      }
     };
 
-    Plot.prototype.toPixel = function(_arg) {
-      var center, dimensions, domain, offset, pixelSize, range, x, y;
-      domain = _arg.domain, range = _arg.range;
+    Plot.prototype.getCombinedCenter = function() {
+      var combinedDimensions, dimension, dimensions, _i, _len;
+      dimensions = this.getDimensions2();
+      combinedDimensions = util.constructVector(config.dimensions * 2, 0);
+      for (_i = 0, _len = dimensions.length; _i < _len; _i++) {
+        dimension = dimensions[_i];
+        combinedDimensions = numeric.add(dimension, combinedDimensions);
+      }
+      return util.vectorMask(this.center, this.focus, combinedDimensions);
+    };
+
+    Plot.prototype.toWorld = function(_arg) {
+      var offset, pixelSize, x, y;
+      x = _arg.x, y = _arg.y;
       pixelSize = this.getPixelSize();
-      center = {
-        domain: this.domainCenter,
-        range: this.rangeCenter
-      };
-      dimensions = this.getDimensions();
-      offset = {
-        domain: util.vector.sub(domain, center.domain),
-        range: util.vector.sub(range, center.range)
-      };
-      x = offset[dimensions[0].space][dimensions[0].coord] / pixelSize;
-      y = offset[dimensions[1].space][dimensions[1].coord] / pixelSize;
+      offset = numeric.dot(numeric.mul([x, y], pixelSize), this.getDimensions2());
+      return numeric.add(offset, this.getCombinedCenter());
+    };
+
+    Plot.prototype.toPixel = function(worldPoint) {
+      var offset, pixelSize, xyPoint;
+      pixelSize = this.getPixelSize();
+      offset = numeric.sub(worldPoint, this.getCombinedCenter());
+      xyPoint = numeric.div(numeric.dot(this.getDimensions2(), offset), pixelSize);
       return {
-        x: x,
-        y: y
+        x: xyPoint[0],
+        y: xyPoint[1]
       };
     };
 
@@ -1792,6 +1783,10 @@
     } catch (_error) {
       return numeric.identity(m.length);
     }
+  };
+
+  util.vectorMask = function(a, b, mask) {
+    return numeric.add(numeric.mul(a, mask), numeric.mul(b, numeric.sub(1, mask)));
   };
 
   util.onceDragConsummated = function(downEvent, callback, notConsummatedCallback) {
@@ -2533,23 +2528,24 @@
       });
     },
     _findHitTarget: function() {
-      var childFn, domain, evaluated, found, foundDistance, foundQuadrance, offset, pixelSize, quadrance, range, testPoint, _i, _len, _ref, _ref1;
-      _ref = this._getWorldMouseCoords(), domain = _ref.domain, range = _ref.range;
+      var childFn, error, evaluated, found, foundError, inputVal, maxDistance, maxQuadrance, offset, outputVal, pixelSize, point, _i, _len, _ref;
       pixelSize = this.plot.getPixelSize();
-      testPoint = util.constructVector(config.dimensions, 0);
-      testPoint = util.vector.merge(testPoint, domain);
+      maxDistance = config.hitTolerance * pixelSize;
+      maxQuadrance = maxDistance * maxDistance;
+      point = this._getWorldMouseCoords();
+      inputVal = point.slice(0, point.length / 2);
+      outputVal = point.slice(point.length / 2);
       found = null;
-      foundDistance = config.hitTolerance * pixelSize;
-      foundQuadrance = foundDistance * foundDistance;
-      _ref1 = this._getExpandedChildFns();
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        childFn = _ref1[_i];
-        evaluated = childFn.evaluate(testPoint);
-        offset = util.vector.sub(range, evaluated);
-        quadrance = util.vector.quadrance(offset);
-        if (quadrance < foundQuadrance) {
+      foundError = maxQuadrance;
+      _ref = this._getExpandedChildFns();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        childFn = _ref[_i];
+        evaluated = childFn.evaluate(inputVal);
+        offset = numeric.sub(outputVal, evaluated);
+        error = numeric.norm2Squared(offset);
+        if (error < foundError) {
           found = childFn;
-          foundQuadrance = quadrance;
+          foundError = error;
         }
       }
       return found;
@@ -2611,10 +2607,7 @@
         plot: this.plot,
         exprs: exprs,
         isThumbnail: false
-      }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
-        childFn: UI.selectedChildFns[0],
-        plot: this.plot
-      }) : void 0, R.div({
+      }), R.div({
         className: "SettingsButton Interactive",
         onClick: this._onSettingsButtonClick
       }, R.div({

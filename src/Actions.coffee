@@ -155,27 +155,17 @@ Actions.setBasisVector = (childFn, space, coord, valueStrings) ->
 # =============================================================================
 
 Actions.panPlot = (plot, from, to) ->
-  domainOffset = util.vector.sub(from.domain, to.domain)
-  rangeOffset  = util.vector.sub(from.range,  to.range)
-
-  newDomainCenter = util.vector.add(plot.domainCenter, domainOffset)
-  newRangeCenter  = util.vector.add(plot.rangeCenter,  rangeOffset)
-
-  plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter)
-  plot.rangeCenter  = util.vector.merge(plot.rangeCenter,  newRangeCenter)
+  offset = numeric.sub(from, to)
+  plot.center = numeric.add(plot.center, offset)
 
 Actions.zoomPlot = (plot, zoomCenter, scaleFactor) ->
   # scaleFactor > 1 is zoom "out"
 
-  domainOffset = util.vector.sub(plot.domainCenter, zoomCenter.domain)
-  rangeOffset  = util.vector.sub(plot.rangeCenter,  zoomCenter.range)
-
-  newDomainCenter = util.vector.add(zoomCenter.domain, util.vector.mul(scaleFactor, domainOffset))
-  newRangeCenter  = util.vector.add(zoomCenter.range,  util.vector.mul(scaleFactor, rangeOffset))
-
-  plot.domainCenter = util.vector.merge(plot.domainCenter, newDomainCenter)
-  plot.rangeCenter  = util.vector.merge(plot.rangeCenter,  newRangeCenter)
-
+  offset = numeric.sub(plot.center, zoomCenter)
+  plot.center = numeric.add(
+    zoomCenter
+    numeric.mul(offset, scaleFactor)
+  )
   plot.pixelSize *= scaleFactor
 
 

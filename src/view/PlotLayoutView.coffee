@@ -48,29 +48,30 @@ R.create "PlotView",
     return @plot.toWorld({x, y})
 
   _findHitTarget: ->
-    {domain, range} = @_getWorldMouseCoords()
-
     pixelSize = @plot.getPixelSize()
+    maxDistance = config.hitTolerance * pixelSize
+    maxQuadrance = maxDistance * maxDistance
 
-    # TODO 0 here should be replaced based on where the projection is.
-    testPoint = util.constructVector(config.dimensions, 0)
-    testPoint = util.vector.merge(testPoint, domain)
+    point = @_getWorldMouseCoords()
+
+    inputVal  = point[ ... point.length/2]
+    outputVal = point[point.length/2 ... ]
 
     found = null
-    foundDistance = config.hitTolerance * pixelSize
-    foundQuadrance = foundDistance * foundDistance
+    foundError = maxQuadrance
 
     for childFn in @_getExpandedChildFns()
-      evaluated = childFn.evaluate(testPoint)
+      evaluated = childFn.evaluate(inputVal)
 
-      offset = util.vector.sub(range, evaluated)
-      quadrance = util.vector.quadrance(offset)
+      offset = numeric.sub(outputVal, evaluated)
+      error = numeric.norm2Squared(offset)
 
-      if quadrance < foundQuadrance
+      if error < foundError
         found = childFn
-        foundQuadrance = quadrance
+        foundError = error
 
     return found
+
 
   render: ->
     exprs = []
@@ -136,11 +137,11 @@ R.create "PlotView",
         isThumbnail: false
       }
 
-      if UI.selectedChildFns.length == 1
-        R.ChildFnControlsView {
-          childFn: UI.selectedChildFns[0]
-          plot: @plot
-        }
+      # if UI.selectedChildFns.length == 1
+      #   R.ChildFnControlsView {
+      #     childFn: UI.selectedChildFns[0]
+      #     plot: @plot
+      #   }
 
       # Settings Button
       R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
