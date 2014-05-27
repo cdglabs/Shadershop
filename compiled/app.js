@@ -1046,7 +1046,7 @@
         domain: this.center.slice(0, this.center.length / 2),
         range: this.center.slice(this.center.length / 2)
       };
-      dimensions = this.getDimensions();
+      dimensions = this.getDimensionsOld();
       xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
       yPixelCenter = center[dimensions[1].space][dimensions[1].coord];
       return {
@@ -1061,7 +1061,7 @@
       return this.pixelSize;
     };
 
-    Plot.prototype.getDimensions = function() {
+    Plot.prototype.getDimensionsOld = function() {
       if (this.type === "cartesian") {
         return [
           {
@@ -1085,9 +1085,11 @@
       }
     };
 
-    Plot.prototype.getDimensions2 = function() {
+    Plot.prototype.getDimensions = function() {
       if (this.type === "cartesian") {
         return [[1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0]];
+      } else if (this.type === "cartesian2") {
+        return [[0, 0, 0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]];
       } else if (this.type === "colorMap") {
         return [[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]];
       }
@@ -1095,7 +1097,7 @@
 
     Plot.prototype.getMask = function() {
       var dimension, dimensions, mask, _i, _len;
-      dimensions = this.getDimensions2();
+      dimensions = this.getDimensions();
       mask = util.constructVector(config.dimensions * 2, 0);
       for (_i = 0, _len = dimensions.length; _i < _len; _i++) {
         dimension = dimensions[_i];
@@ -1112,7 +1114,7 @@
       var offset, pixelSize, x, y;
       x = _arg.x, y = _arg.y;
       pixelSize = this.getPixelSize();
-      offset = numeric.dot(numeric.mul([x, y], pixelSize), this.getDimensions2());
+      offset = numeric.dot(numeric.mul([x, y], pixelSize), this.getDimensions());
       return numeric.add(offset, this.getCombinedCenter());
     };
 
@@ -1120,7 +1122,7 @@
       var offset, pixelSize, xyPoint;
       pixelSize = this.getPixelSize();
       offset = numeric.sub(worldPoint, this.getCombinedCenter());
-      xyPoint = numeric.div(numeric.dot(this.getDimensions2(), offset), pixelSize);
+      xyPoint = numeric.div(numeric.dot(this.getDimensions(), offset), pixelSize);
       return {
         x: xyPoint[0],
         y: xyPoint[1]
@@ -1743,6 +1745,18 @@
       string = util.glslMatrixType(length) + "(" + string + ")";
       return string;
     }
+  };
+
+  util.glslMatrixArray = function(matrix) {
+    var col, length, result, row, _i, _j;
+    result = [];
+    length = matrix.length;
+    for (col = _i = 0; 0 <= length ? _i < length : _i > length; col = 0 <= length ? ++_i : --_i) {
+      for (row = _j = 0; 0 <= length ? _j < length : _j > length; row = 0 <= length ? ++_j : --_j) {
+        result.push(matrix[row][col]);
+      }
+    }
+    return result;
   };
 
   util.glslVectorType = function(dimensions) {
@@ -3111,7 +3125,7 @@
           }
           usedPrograms[name] = true;
           if (plot.type === "cartesian") {
-            drawCartesianProgram(this.glod, name, numSamples, expr.color, bounds);
+            drawCartesianProgram(this.glod, name, expr.color, plot, rect.width, rect.height, scaleFactor);
           } else if (plot.type === "colorMap") {
             drawColorMapProgram(this.glod, name, bounds);
           }
@@ -3199,21 +3213,62 @@
   };
 
   createCartesianProgram = function(glod, name, expr) {
-    var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\nuniform float numSamples;\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  float s = sample / numSamples;\n\n  " + (util.glslVectorType(config.dimensions)) + " x, y;\n  x = " + (util.glslString(util.constructVector(config.dimensions, 0))) + ";\n\n  " + (util.glslSetComponent("x", config.dimensions, 0, "lerp(s, 0., 1., xMin, xMax)")) + ";\n  y = " + expr + ";\n\n  float px, py;\n  px = " + (util.glslGetComponent("x", config.dimensions, 0)) + ";\n  py = " + (util.glslGetComponent("y", config.dimensions, 0)) + ";\n\n  px = lerp(px, xMin, xMax, -1., 1.);\n  py = lerp(py, yMin, yMax, -1., 1.);\n\n  gl_Position = vec4(px, py, 0., 1.);\n}";
+    var fragment, matType, vecType, vertex;
+    vecType = util.glslVectorType(config.dimensions);
+    matType = util.glslMatrixType(config.dimensions);
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  " + vecType + " x = inputVal; // TODO: make inputVal the new x\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
-  drawCartesianProgram = function(glod, name, numSamples, color, bounds) {
+  drawCartesianProgram = function(glod, name, color, plot, width, height, scaleFactor) {
+    var dimensions, domainCenter, domainEnd, domainStart, domainStep, domainTransform, domainTransformSmall, isHorizontal, numSamples, pixelScale, pixelSize, rangeCenter, rangeTransform, rangeTransformSmall;
+    dimensions = plot.getDimensions();
+    pixelSize = plot.getPixelSize();
+    width *= scaleFactor;
+    height *= scaleFactor;
+    isHorizontal = dimensions[0][0] === 1 || dimensions[1][0] === 1;
+    if (isHorizontal) {
+      domainStart = plot.toWorld({
+        x: -width / 2,
+        y: 0
+      }).slice(0, config.dimensions);
+      domainEnd = plot.toWorld({
+        x: width / 2,
+        y: 0
+      }).slice(0, config.dimensions);
+      numSamples = width / config.resolution;
+    } else {
+      domainStart = plot.toWorld({
+        x: 0,
+        y: -height / 2
+      }).slice(0, config.dimensions);
+      domainEnd = plot.toWorld({
+        x: 0,
+        y: height / 2
+      }).slice(0, config.dimensions);
+      numSamples = height / config.resolution;
+    }
+    domainStep = numeric.div(numeric.sub(domainEnd, domainStart), numSamples);
+    domainCenter = plot.center.slice(0, config.dimensions);
+    rangeCenter = plot.center.slice(config.dimensions);
+    domainTransformSmall = numeric.getBlock(dimensions, [0, 0], [1, config.dimensions - 1]);
+    rangeTransformSmall = numeric.getBlock(dimensions, [0, config.dimensions], [1, config.dimensions * 2 - 1]);
+    domainTransform = numeric.identity(config.dimensions);
+    rangeTransform = numeric.identity(config.dimensions);
+    numeric.setBlock(domainTransform, [0, 0], [1, config.dimensions - 1], domainTransformSmall);
+    numeric.setBlock(rangeTransform, [0, 0], [1, config.dimensions - 1], rangeTransformSmall);
+    pixelScale = [(1 / pixelSize) * (1 / (width / 2)), (1 / pixelSize) * (1 / (height / 2))];
     glod.begin(name);
     glod.pack("samples", "sample");
     glod.valuev("color", color);
-    glod.value("xMin", bounds.xMin);
-    glod.value("xMax", bounds.xMax);
-    glod.value("yMin", bounds.yMin);
-    glod.value("yMax", bounds.yMax);
-    glod.value("numSamples", numSamples);
+    glod.valuev("domainStart", domainStart);
+    glod.valuev("domainStep", domainStep);
+    glod.valuev("domainCenter", domainCenter);
+    glod.valuev("rangeCenter", rangeCenter);
+    glod.valuev("domainTransform", util.glslMatrixArray(domainTransform));
+    glod.valuev("rangeTransform", util.glslMatrixArray(rangeTransform));
+    glod.valuev("pixelScale", pixelScale);
     glod.ready().lineStrip().drawArrays(0, numSamples);
     return glod.end();
   };

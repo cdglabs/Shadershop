@@ -67,7 +67,7 @@ R.create "ShaderOverlayView",
         usedPrograms[name] = true
 
         if plot.type == "cartesian"
-          drawCartesianProgram(@glod, name, numSamples, expr.color, bounds)
+          drawCartesianProgram(@glod, name, expr.color, plot, rect.width, rect.height, scaleFactor)
         else if plot.type == "colorMap"
           drawColorMapProgram(@glod, name, bounds)
 
@@ -169,39 +169,32 @@ bufferCartesianSamples = (glod, numSamples) ->
 
 createCartesianProgram = (glod, name, expr) ->
 
+  vecType = util.glslVectorType(config.dimensions)
+  matType = util.glslMatrixType(config.dimensions)
+
   vertex = """
   precision highp float;
   precision highp int;
 
   attribute float sample;
-  uniform float numSamples;
-  uniform float xMin;
-  uniform float xMax;
-  uniform float yMin;
-  uniform float yMax;
 
-  float lerp(float x, float dMin, float dMax, float rMin, float rMax) {
-    float ratio = (x - dMin) / (dMax - dMin);
-    return ratio * (rMax - rMin) + rMin;
-  }
+  uniform #{vecType} domainStart, domainStep;
+
+  uniform #{vecType} domainCenter, rangeCenter;
+  uniform #{matType} domainTransform, rangeTransform;
+
+  uniform vec2 pixelScale;
 
   void main() {
-    float s = sample / numSamples;
+    #{vecType} inputVal, outputVal;
+    inputVal = domainStart + domainStep * sample;
+    #{vecType} x = inputVal; // TODO: make inputVal the new x
+    outputVal = #{expr};
 
-    #{util.glslVectorType(config.dimensions)} x, y;
-    x = #{util.glslString(util.constructVector(config.dimensions, 0))};
+    #{vecType} position = domainTransform * (inputVal - domainCenter) +
+                          rangeTransform * (outputVal - rangeCenter);
 
-    #{util.glslSetComponent("x", config.dimensions, 0, "lerp(s, 0., 1., xMin, xMax)")};
-    y = #{expr};
-
-    float px, py;
-    px = #{util.glslGetComponent("x", config.dimensions, 0)};
-    py = #{util.glslGetComponent("y", config.dimensions, 0)};
-
-    px = lerp(px, xMin, xMax, -1., 1.);
-    py = lerp(py, yMin, yMax, -1., 1.);
-
-    gl_Position = vec4(px, py, 0., 1.);
+    gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);
   }
   """
 
@@ -218,18 +211,63 @@ createCartesianProgram = (glod, name, expr) ->
 
   createProgramFromSrc(glod, name, vertex, fragment)
 
-drawCartesianProgram = (glod, name, numSamples, color, bounds) ->
+drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
+  dimensions = plot.getDimensions()
+  pixelSize  = plot.getPixelSize()
+
+  width *= scaleFactor
+  height *= scaleFactor
+
+  # Determine domainStart, domainStep, numSamples. Note: this probably needs
+  # to be generalized with more information in plot, e.g. for parametric
+  # cartesian plot.
+  isHorizontal = (dimensions[0][0] == 1 or dimensions[1][0] == 1)
+  if isHorizontal
+    domainStart = plot.toWorld({x: -width/2, y: 0})[ ... config.dimensions]
+    domainEnd   = plot.toWorld({x:  width/2, y: 0})[ ... config.dimensions]
+    numSamples  = width / config.resolution
+  else
+    domainStart = plot.toWorld({x: 0, y: -height/2})[ ... config.dimensions]
+    domainEnd   = plot.toWorld({x: 0, y:  height/2})[ ... config.dimensions]
+    numSamples  = height / config.resolution
+
+  domainStep = numeric.div(
+    numeric.sub(domainEnd, domainStart)
+    numSamples
+  )
+
+  # Determine domainCenter, rangeCenter
+  domainCenter = plot.center[ ... config.dimensions]
+  rangeCenter  = plot.center[config.dimensions ... ]
+
+  # Determine domainTransform, rangeTransform
+  domainTransformSmall = numeric.getBlock(dimensions, [0,0], [1,config.dimensions - 1])
+  rangeTransformSmall  = numeric.getBlock(dimensions, [0,config.dimensions], [1,config.dimensions*2 - 1])
+
+  domainTransform = numeric.identity(config.dimensions)
+  rangeTransform  = numeric.identity(config.dimensions)
+  numeric.setBlock(domainTransform, [0,0], [1,config.dimensions - 1], domainTransformSmall)
+  numeric.setBlock(rangeTransform,  [0,0], [1,config.dimensions - 1], rangeTransformSmall)
+
+  # Determine pixelScale
+  pixelScale = [
+    (1 / pixelSize) * (1 / (width / 2))
+    (1 / pixelSize) * (1 / (height / 2))
+  ]
+
   glod.begin(name)
 
   glod.pack("samples", "sample")
 
   glod.valuev("color", color)
-  glod.value("xMin", bounds.xMin)
-  glod.value("xMax", bounds.xMax)
-  glod.value("yMin", bounds.yMin)
-  glod.value("yMax", bounds.yMax)
 
-  glod.value("numSamples", numSamples)
+  glod.valuev("domainStart", domainStart)
+  glod.valuev("domainStep", domainStep)
+  glod.valuev("domainCenter", domainCenter)
+  glod.valuev("rangeCenter", rangeCenter)
+  glod.valuev("domainTransform", util.glslMatrixArray(domainTransform))
+  glod.valuev("rangeTransform", util.glslMatrixArray(rangeTransform))
+  glod.valuev("pixelScale", pixelScale)
 
   glod.ready().lineStrip().drawArrays(0, numSamples)
 

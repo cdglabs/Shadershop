@@ -256,7 +256,7 @@ class C.Plot
       domain: @center[ ... @center.length/2]
       range:  @center[@center.length/2 ... ]
     }
-    dimensions = @getDimensions()
+    dimensions = @getDimensionsOld()
 
     xPixelCenter = center[dimensions[0].space][dimensions[0].coord]
     yPixelCenter = center[dimensions[1].space][dimensions[1].coord]
@@ -271,7 +271,7 @@ class C.Plot
   getPixelSize: ->
     return @pixelSize
 
-  getDimensions: ->
+  getDimensionsOld: ->
     if @type == "cartesian"
       return [
         {space: "domain", coord: 0}
@@ -283,11 +283,16 @@ class C.Plot
         {space: "domain", coord: 1}
       ]
 
-  getDimensions2: ->
+  getDimensions: ->
     if @type == "cartesian"
       return [
         [1,0,0,0 , 0,0,0,0]
         [0,0,0,0 , 1,0,0,0]
+      ]
+    else if @type == "cartesian2"
+      return [
+        [0,0,0,0 , 1,0,0,0]
+        [0,1,0,0 , 0,0,0,0]
       ]
     else if @type == "colorMap"
       return [
@@ -298,7 +303,7 @@ class C.Plot
   getMask: ->
     # Returns a vector mask in world coordinates where very world coordinate
     # that's represented in the plot is a 1 and 0 otherwise.
-    dimensions = @getDimensions2()
+    dimensions = @getDimensions()
     mask = util.constructVector(config.dimensions*2, 0)
     for dimension in dimensions
       mask = numeric.add(dimension, mask)
@@ -317,7 +322,7 @@ class C.Plot
 
     offset = numeric.dot(
       numeric.mul([x, y], pixelSize)
-      @getDimensions2()
+      @getDimensions()
     )
 
     return numeric.add(
@@ -331,7 +336,7 @@ class C.Plot
     offset = numeric.sub(worldPoint, @getCombinedCenter())
     xyPoint = numeric.div(
       numeric.dot(
-        @getDimensions2()
+        @getDimensions()
         offset
       )
       pixelSize

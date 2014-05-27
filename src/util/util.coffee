@@ -146,6 +146,17 @@ util.glslString = (value) ->
     return string
 
 
+util.glslMatrixArray = (matrix) ->
+  # Note: Numeric stores matrices as array of arrays in row major order, but
+  # glsl array needs to be in column major order.
+  result = []
+  length = matrix.length
+  for col in [0...length]
+    for row in [0...length]
+      result.push matrix[row][col]
+  return result
+
+
 util.glslVectorType = (dimensions) ->
   return "float" if dimensions == 1
   return "vec"+dimensions
