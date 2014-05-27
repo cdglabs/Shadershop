@@ -280,9 +280,9 @@ createColorMapProgram = (glod, name, expr) ->
     float normvalue = abs(value);
     vec3 color;
     if (value > 0.) {
-      color = mix(vec3(1., 1., 1.), vec3(#{config.colorMapPositive}), normvalue);
+      color = mix(vec3(.5, .5, .5), vec3(#{config.colorMapPositive}), normvalue);
     } else {
-      color = mix(vec3(1., 1., 1.), vec3(#{config.colorMapNegative}), normvalue);
+      color = mix(vec3(.5, .5, .5), vec3(#{config.colorMapNegative}), normvalue);
     }
 
     gl_FragColor = vec4(color, 1.);
