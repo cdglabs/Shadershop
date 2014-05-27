@@ -460,8 +460,8 @@
     snapTolerance: 7,
     outlineIndent: 16,
     gridColor: "204,194,163",
-    colorMapPositive: ".84, .75, .47",
-    colorMapNegative: ".47, .56, .84",
+    colorMapPositive: util.hslToRgb(46, 1, 0.85).map(util.glslString).join(","),
+    colorMapNegative: util.hslToRgb(226, 1, 0.15).map(util.glslString).join(","),
     style: {
       main: {
         strokeStyle: "#333",
@@ -495,9 +495,9 @@
 }, "main": function(exports, require, module) {(function() {
   var debouncedSaveState, eventName, json, refresh, refreshEventNames, refreshView, saveState, storageName, willRefreshNextFrame, _i, _len;
 
-  require("./config");
-
   require("./util/util");
+
+  require("./config");
 
   require("./model/C");
 
@@ -1847,6 +1847,52 @@
     window.addEventListener("mousemove", handleMove);
     return window.addEventListener("mouseup", handleUp);
   };
+
+  
+function RGBToHSL(r, g, b) {
+  var
+  min = Math.min(r, g, b),
+  max = Math.max(r, g, b),
+  diff = max - min,
+  h = 0, s = 0, l = (min + max) / 2;
+
+  if (diff != 0) {
+    s = l < 0.5 ? diff / (max + min) : diff / (2 - max - min);
+
+    h = (r == max ? (g - b) / diff : g == max ? 2 + (b - r) / diff : 4 + (r - g) / diff) * 60;
+  }
+
+  return [h, s, l];
+}
+
+function HSLToRGB(h, s, l) {
+  if (s == 0) {
+    return [l, l, l];
+  }
+
+  var temp2 = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  var temp1 = 2 * l - temp2;
+
+  h /= 360;
+
+  var
+  rtemp = (h + 1 / 3) % 1,
+  gtemp = h,
+  btemp = (h + 2 / 3) % 1,
+  rgb = [rtemp, gtemp, btemp],
+  i = 0;
+
+  for (; i < 3; ++i) {
+    rgb[i] = rgb[i] < 1 / 6 ? temp1 + (temp2 - temp1) * 6 * rgb[i] : rgb[i] < 1 / 2 ? temp2 : rgb[i] < 2 / 3 ? temp1 + (temp2 - temp1) * 6 * (2 / 3 - rgb[i]) : temp1;
+  }
+
+  return rgb;
+}
+;
+
+  util.rgbToHsl = RGBToHSL;
+
+  util.hslToRgb = HSLToRGB;
 
   require("./selection");
 

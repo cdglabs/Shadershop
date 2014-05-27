@@ -1,9 +1,8 @@
 
 
 
-
-require("./config")
 require("./util/util")
+require("./config")
 require("./model/C")
 require("./Actions")
 require("./Compiler")

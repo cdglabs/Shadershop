@@ -32,8 +32,10 @@ window.config = config = {
 
   # colorMapPositive: ".80, .69, .36"
   # colorMapNegative: ".36, .47, .80"
-  colorMapPositive: ".84, .75, .47"
-  colorMapNegative: ".47, .56, .84"
+  # colorMapPositive: ".84, .75, .47"
+  # colorMapNegative: ".47, .56, .84"
+  colorMapPositive: util.hslToRgb(46, 1, 0.85).map(util.glslString).join(",")
+  colorMapNegative: util.hslToRgb(226, 1, 0.15).map(util.glslString).join(",")
 
 
   style: {
