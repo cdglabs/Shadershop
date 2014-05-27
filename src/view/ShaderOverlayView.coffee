@@ -313,13 +313,18 @@ createColorMapProgram = (glod, name, expr) ->
     vec4 y = #{expr};
 
     float value = y.x;
-    float normvalue = clamp(0., 1., abs(value));
     vec3 color;
+
+    /*
+    float normvalue = clamp(0., 1., abs(value));
     if (value > 0.) {
       color = mix(vec3(.5, .5, .5), vec3(#{config.colorMapPositive}), normvalue);
     } else {
       color = mix(vec3(.5, .5, .5), vec3(#{config.colorMapNegative}), normvalue);
     }
+    */
+
+    color = vec3(value, value, value);
 
     gl_FragColor = vec4(color, 1.);
   }

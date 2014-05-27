@@ -69,7 +69,6 @@ Get ShaderOverlayView using better Plot API
 
 Priority
   projections, to make the 2D noise example easier
-    need y-x cartesian
     need to be able to see/move the projection
       OK, everything's in place. Need to fix up ShaderOverlay to do the right thing. Then just put in controls to move the Plot.focus (projection).
 
