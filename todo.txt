@@ -71,16 +71,23 @@ Priority
   projections, to make the 2D noise example easier
     need y-x cartesian
     need to be able to see/move the projection
+      OK, everything's in place. Need to fix up ShaderOverlay to do the right thing. Then just put in controls to move the Plot.focus (projection).
+
   something better than inspector
     text fields on control points would work
     should fix how control points show up on graph if they're not "in" the projection (e.g. for a domain-rotated 2D function on a cartesian slice.)
+
   need duplicate
     would be nice to have drag multiple, but not needed
+
   flexible color scale for colorMap
+
   performance
     send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
 
+  maybe a hover in "window" view for colorMap
 
+  look into changing data model / API for childFn to make control point code less ugly
 
 
 
