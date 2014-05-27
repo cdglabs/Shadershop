@@ -1002,7 +1002,7 @@
 
   C.PlotLayout = (function() {
     function PlotLayout() {
-      this.plots = [new C.Plot(), new C.Plot()];
+      this.plots = [new C.Plot(), new C.Plot(), new C.Plot()];
     }
 
     PlotLayout.prototype.getMainPlot = function() {
@@ -1015,14 +1015,20 @@
           plot: this.plots[0],
           x: 0,
           y: 0.3,
-          w: 1,
+          w: 0.7,
           h: 0.7
         }, {
           plot: this.plots[1],
           x: 0,
           y: 0,
-          w: 1,
+          w: 0.7,
           h: 0.3
+        }, {
+          plot: this.plots[2],
+          x: 0.7,
+          y: 0.3,
+          w: 0.3,
+          h: 0.7
         }
       ];
     };
@@ -1048,6 +1054,16 @@
           }, {
             space: "range",
             coord: 0
+          }
+        ];
+      } else if (this.type === "cartesian2") {
+        return [
+          {
+            space: "range",
+            coord: 0
+          }, {
+            space: "domain",
+            coord: 1
           }
         ];
       } else if (this.type === "colorMap") {
@@ -3160,7 +3176,7 @@ function HSLToRGB(h, s, l) {
           expr = exprs[_j];
           name = plot.type + "," + expr.exprString;
           if (!this.programs[name]) {
-            if (plot.type === "cartesian") {
+            if (plot.type === "cartesian" || plot.type === "cartesian2") {
               createCartesianProgram(this.glod, name, expr.exprString);
             } else if (plot.type === "colorMap") {
               createColorMapProgram(this.glod, name, expr.exprString);
@@ -3168,7 +3184,7 @@ function HSLToRGB(h, s, l) {
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
-          if (plot.type === "cartesian") {
+          if (plot.type === "cartesian" || plot.type === "cartesian2") {
             drawCartesianProgram(this.glod, name, expr.color, plot, rect.width, rect.height, scaleFactor);
           } else if (plot.type === "colorMap") {
             bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor);

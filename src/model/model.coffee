@@ -198,7 +198,7 @@ class C.ChildFn extends C.Fn
 class C.PlotLayout
   constructor: ->
     # TODO: Hardcoded two plots on top of each other
-    @plots = [new C.Plot(), new C.Plot()]
+    @plots = [new C.Plot(), new C.Plot(), new C.Plot()]
 
   getMainPlot: ->
     return @plots[0]
@@ -211,15 +211,22 @@ class C.PlotLayout
         plot: @plots[0]
         x: 0
         y: 0.3
-        w: 1
+        w: 0.7
         h: 0.7
       }
       {
         plot: @plots[1]
         x: 0
         y: 0
-        w: 1
+        w: 0.7
         h: 0.3
+      }
+      {
+        plot: @plots[2]
+        x: 0.7
+        y: 0.3
+        w: 0.3
+        h: 0.7
       }
     ]
 
@@ -257,6 +264,11 @@ class C.Plot
       return [
         {space: "domain", coord: 0}
         {space: "range",  coord: 0}
+      ]
+    else if @type == "cartesian2"
+      return [
+        {space: "range",  coord: 0}
+        {space: "domain", coord: 1}
       ]
     else if @type == "colorMap"
       return [

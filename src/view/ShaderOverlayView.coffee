@@ -53,7 +53,7 @@ R.create "ShaderOverlayView",
         name = plot.type + "," + expr.exprString
         unless @programs[name]
 
-          if plot.type == "cartesian"
+          if plot.type == "cartesian" or plot.type == "cartesian2"
             createCartesianProgram(@glod, name, expr.exprString)
           else if plot.type == "colorMap"
             createColorMapProgram(@glod, name, expr.exprString)
@@ -61,7 +61,7 @@ R.create "ShaderOverlayView",
           @programs[name] = true
         usedPrograms[name] = true
 
-        if plot.type == "cartesian"
+        if plot.type == "cartesian" or plot.type == "cartesian2"
           drawCartesianProgram(@glod, name, expr.color, plot, rect.width, rect.height, scaleFactor)
         else if plot.type == "colorMap"
           bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor)
