@@ -75,7 +75,6 @@ Priority
 
   something better than inspector
     text fields on control points would work
-    should fix how control points show up on graph if they're not "in" the projection (e.g. for a domain-rotated 2D function on a cartesian slice.)
 
   need duplicate
     would be nice to have drag multiple, but not needed

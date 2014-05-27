@@ -197,48 +197,49 @@ class C.ChildFn extends C.Fn
 
 class C.PlotLayout
   constructor: ->
-    # TODO: Hardcoded two plots on top of each other
+    # TODO: All this hardcoded stuff needs to change...
     @plots = [new C.Plot(), new C.Plot(), new C.Plot()]
+    @display2d = false
 
   getMainPlot: ->
     return @plots[0]
 
   getPlotLocations: ->
     # returns [{plot, x, y, w, h}] dimensions as fractions
-
-    return [
-      {
-        plot: @plots[0]
-        x: 0
-        y: 0.3
-        w: 0.7
-        h: 0.7
-      }
-      {
-        plot: @plots[1]
-        x: 0
-        y: 0
-        w: 0.7
-        h: 0.3
-      }
-      {
-        plot: @plots[2]
-        x: 0.7
-        y: 0.3
-        w: 0.3
-        h: 0.7
-      }
-    ]
-
-    # return [
-    #   {
-    #     plot: @plots[0]
-    #     x: 0
-    #     y: 0
-    #     w: 1
-    #     h: 1
-    #   }
-    # ]
+    if @display2d
+      return [
+        {
+          plot: @plots[0]
+          x: 0
+          y: 0.3
+          w: 0.7
+          h: 0.7
+        }
+        {
+          plot: @plots[1]
+          x: 0
+          y: 0
+          w: 0.7
+          h: 0.3
+        }
+        {
+          plot: @plots[2]
+          x: 0.7
+          y: 0.3
+          w: 0.3
+          h: 0.7
+        }
+      ]
+    else
+      return [
+        {
+          plot: @plots[0]
+          x: 0
+          y: 0
+          w: 1
+          h: 1
+        }
+      ]
 
 
 

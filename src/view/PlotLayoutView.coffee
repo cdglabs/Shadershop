@@ -6,6 +6,7 @@ R.create "PlotLayoutView",
     plotLocations = @fn.plotLayout.getPlotLocations()
 
     R.div {className: "PlotLayout"},
+
       for {plot, x, y, w, h}, index in plotLocations
         R.div {
           className: "PlotLocation"
@@ -21,6 +22,22 @@ R.create "PlotLayoutView",
             fn: @fn
             plot: plot
           }
+
+      # Settings Button
+      R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
+        R.div {className: "icon-cog"}
+
+  _onSettingsButtonClick: ->
+    # TODO This method of controlling plot layouts is getting even more hardcoded...
+    plotLayout = @fn.plotLayout
+    if plotLayout.display2d
+      plotLayout.display2d = false
+      plotLayout.plots[0].type = "cartesian"
+    else
+      plotLayout.display2d = true
+      plotLayout.plots[0].type = "colorMap"
+      plotLayout.plots[1].type = "cartesian"
+      plotLayout.plots[2].type = "cartesian2"
 
 
 
@@ -147,9 +164,9 @@ R.create "PlotView",
           plot: @plot
         }
 
-      # Settings Button
-      R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
-        R.div {className: "icon-cog"}
+      # # Settings Button
+      # R.div {className: "SettingsButton Interactive", onClick: @_onSettingsButtonClick},
+      #   R.div {className: "icon-cog"}
 
   _onMouseMove: ->
     Actions.hoverChildFn(@_findHitTarget())

@@ -1003,6 +1003,7 @@
   C.PlotLayout = (function() {
     function PlotLayout() {
       this.plots = [new C.Plot(), new C.Plot(), new C.Plot()];
+      this.display2d = false;
     }
 
     PlotLayout.prototype.getMainPlot = function() {
@@ -1010,27 +1011,39 @@
     };
 
     PlotLayout.prototype.getPlotLocations = function() {
-      return [
-        {
-          plot: this.plots[0],
-          x: 0,
-          y: 0.3,
-          w: 0.7,
-          h: 0.7
-        }, {
-          plot: this.plots[1],
-          x: 0,
-          y: 0,
-          w: 0.7,
-          h: 0.3
-        }, {
-          plot: this.plots[2],
-          x: 0.7,
-          y: 0.3,
-          w: 0.3,
-          h: 0.7
-        }
-      ];
+      if (this.display2d) {
+        return [
+          {
+            plot: this.plots[0],
+            x: 0,
+            y: 0.3,
+            w: 0.7,
+            h: 0.7
+          }, {
+            plot: this.plots[1],
+            x: 0,
+            y: 0,
+            w: 0.7,
+            h: 0.3
+          }, {
+            plot: this.plots[2],
+            x: 0.7,
+            y: 0.3,
+            w: 0.3,
+            h: 0.7
+          }
+        ];
+      } else {
+        return [
+          {
+            plot: this.plots[0],
+            x: 0,
+            y: 0,
+            w: 1,
+            h: 1
+          }
+        ];
+      }
     };
 
     return PlotLayout;
@@ -2570,7 +2583,25 @@ function HSLToRGB(h, s, l) {
           })));
         }
         return _results;
-      }).call(this));
+      }).call(this), R.div({
+        className: "SettingsButton Interactive",
+        onClick: this._onSettingsButtonClick
+      }, R.div({
+        className: "icon-cog"
+      })));
+    },
+    _onSettingsButtonClick: function() {
+      var plotLayout;
+      plotLayout = this.fn.plotLayout;
+      if (plotLayout.display2d) {
+        plotLayout.display2d = false;
+        return plotLayout.plots[0].type = "cartesian";
+      } else {
+        plotLayout.display2d = true;
+        plotLayout.plots[0].type = "colorMap";
+        plotLayout.plots[1].type = "cartesian";
+        return plotLayout.plots[2].type = "cartesian2";
+      }
     }
   });
 
@@ -2699,12 +2730,7 @@ function HSLToRGB(h, s, l) {
       }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
         childFn: UI.selectedChildFns[0],
         plot: this.plot
-      }) : void 0, R.div({
-        className: "SettingsButton Interactive",
-        onClick: this._onSettingsButtonClick
-      }, R.div({
-        className: "icon-cog"
-      })));
+      }) : void 0);
     },
     _onMouseMove: function() {
       return Actions.hoverChildFn(this._findHitTarget());
