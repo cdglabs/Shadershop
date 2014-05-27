@@ -49,11 +49,6 @@ R.create "ShaderOverlayView",
       else
         scaleFactor = 1
 
-      bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor)
-
-
-      numSamples = rect.width / config.resolution
-
       for expr in exprs
         name = plot.type + "," + expr.exprString
         unless @programs[name]
@@ -69,6 +64,7 @@ R.create "ShaderOverlayView",
         if plot.type == "cartesian"
           drawCartesianProgram(@glod, name, expr.color, plot, rect.width, rect.height, scaleFactor)
         else if plot.type == "colorMap"
+          bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor)
           drawColorMapProgram(@glod, name, bounds)
 
     # Delete unused programs
@@ -282,8 +278,10 @@ createColorMapProgram = (glod, name, expr) ->
   precision highp int;
 
   attribute vec4 position;
+  varying vec2 vPosition;
 
   void main() {
+    vPosition = position.xy;
     gl_Position = position;
   }
   """
@@ -293,12 +291,12 @@ createColorMapProgram = (glod, name, expr) ->
   precision highp float;
   precision highp int;
 
-  uniform float screenXMin, screenXMax, screenYMin, screenYMax;
-
   uniform float xMin;
   uniform float xMax;
   uniform float yMin;
   uniform float yMax;
+
+  varying vec2 vPosition;
 
   float lerp(float x, float dMin, float dMax, float rMin, float rMax) {
     float ratio = (x - dMin) / (dMax - dMin);
@@ -307,8 +305,8 @@ createColorMapProgram = (glod, name, expr) ->
 
   void main() {
     vec4 x = vec4(
-      lerp(gl_FragCoord.x, screenXMin, screenXMax, xMin, xMax),
-      lerp(gl_FragCoord.y, screenYMin, screenYMax, yMin, yMax),
+      lerp(vPosition.x, -1., 1., xMin, xMax),
+      lerp(vPosition.y, -1., 1., yMin, yMax),
       0.,
       0.
     );
@@ -335,11 +333,6 @@ drawColorMapProgram = (glod, name, bounds) ->
   glod.begin(name)
 
   glod.pack("quad", "position")
-
-  glod.value("screenXMin", glod.viewport_.x)
-  glod.value("screenXMax", glod.viewport_.x + glod.viewport_.w)
-  glod.value("screenYMin", glod.viewport_.y)
-  glod.value("screenYMax", glod.viewport_.y + glod.viewport_.h)
 
   glod.value("xMin", bounds.xMin)
   glod.value("xMax", bounds.xMax)

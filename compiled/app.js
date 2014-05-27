@@ -1039,28 +1039,6 @@
       this.type = "cartesian";
     }
 
-    Plot.prototype.getScaledBounds = function(width, height, scaleFactor) {
-      var center, dimensions, pixelSize, xPixelCenter, yPixelCenter;
-      pixelSize = this.pixelSize;
-      center = {
-        domain: this.center.slice(0, this.center.length / 2),
-        range: this.center.slice(this.center.length / 2)
-      };
-      dimensions = this.getDimensionsOld();
-      xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
-      yPixelCenter = center[dimensions[1].space][dimensions[1].coord];
-      return {
-        xMin: xPixelCenter - pixelSize * (width / 2) * scaleFactor,
-        xMax: xPixelCenter + pixelSize * (width / 2) * scaleFactor,
-        yMin: yPixelCenter - pixelSize * (height / 2) * scaleFactor,
-        yMax: yPixelCenter + pixelSize * (height / 2) * scaleFactor
-      };
-    };
-
-    Plot.prototype.getPixelSize = function() {
-      return this.pixelSize;
-    };
-
     Plot.prototype.getDimensionsOld = function() {
       if (this.type === "cartesian") {
         return [
@@ -1083,6 +1061,28 @@
           }
         ];
       }
+    };
+
+    Plot.prototype.getScaledBounds = function(width, height, scaleFactor) {
+      var center, dimensions, pixelSize, xPixelCenter, yPixelCenter;
+      pixelSize = this.pixelSize;
+      center = {
+        domain: this.center.slice(0, this.center.length / 2),
+        range: this.center.slice(this.center.length / 2)
+      };
+      dimensions = this.getDimensionsOld();
+      xPixelCenter = center[dimensions[0].space][dimensions[0].coord];
+      yPixelCenter = center[dimensions[1].space][dimensions[1].coord];
+      return {
+        xMin: xPixelCenter - pixelSize * (width / 2) * scaleFactor,
+        xMax: xPixelCenter + pixelSize * (width / 2) * scaleFactor,
+        yMin: yPixelCenter - pixelSize * (height / 2) * scaleFactor,
+        yMax: yPixelCenter + pixelSize * (height / 2) * scaleFactor
+      };
+    };
+
+    Plot.prototype.getPixelSize = function() {
+      return this.pixelSize;
     };
 
     Plot.prototype.getDimensions = function() {
@@ -3087,7 +3087,7 @@
       }
     },
     draw: function() {
-      var bounds, canvas, clippingRect, expr, exprs, junk, name, numSamples, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, expr, exprs, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -3110,8 +3110,6 @@
         } else {
           scaleFactor = 1;
         }
-        bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor);
-        numSamples = rect.width / config.resolution;
         for (_j = 0, _len1 = exprs.length; _j < _len1; _j++) {
           expr = exprs[_j];
           name = plot.type + "," + expr.exprString;
@@ -3127,6 +3125,7 @@
           if (plot.type === "cartesian") {
             drawCartesianProgram(this.glod, name, expr.color, plot, rect.width, rect.height, scaleFactor);
           } else if (plot.type === "colorMap") {
+            bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor);
             drawColorMapProgram(this.glod, name, bounds);
           }
         }
@@ -3275,8 +3274,8 @@
 
   createColorMapProgram = function(glod, name, expr) {
     var fragment, vertex;
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\n\nvoid main() {\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float screenXMin, screenXMax, screenYMin, screenYMax;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(gl_FragCoord.x, screenXMin, screenXMax, xMin, xMax),\n    lerp(gl_FragCoord.y, screenYMin, screenYMax, yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  float value = y.x;\n  float normvalue = abs(value);\n  vec3 color;\n  if (value > 0.) {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  float value = y.x;\n  float normvalue = abs(value);\n  vec3 color;\n  if (value > 0.) {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
@@ -3285,10 +3284,6 @@
     canvas = glod.canvas();
     glod.begin(name);
     glod.pack("quad", "position");
-    glod.value("screenXMin", glod.viewport_.x);
-    glod.value("screenXMax", glod.viewport_.x + glod.viewport_.w);
-    glod.value("screenYMin", glod.viewport_.y);
-    glod.value("screenYMax", glod.viewport_.y + glod.viewport_.h);
     glod.value("xMin", bounds.xMin);
     glod.value("xMax", bounds.xMax);
     glod.value("yMin", bounds.yMin);

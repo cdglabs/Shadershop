@@ -250,6 +250,20 @@ class C.Plot
 
     @type = "cartesian"
 
+
+  # TODO: These are both old, should be removed.
+  getDimensionsOld: ->
+    if @type == "cartesian"
+      return [
+        {space: "domain", coord: 0}
+        {space: "range",  coord: 0}
+      ]
+    else if @type == "colorMap"
+      return [
+        {space: "domain", coord: 0}
+        {space: "domain", coord: 1}
+      ]
+
   getScaledBounds: (width, height, scaleFactor) ->
     pixelSize = @pixelSize
     center = {
@@ -268,20 +282,10 @@ class C.Plot
       yMax: yPixelCenter + pixelSize * (height/2) * scaleFactor
     }
 
+
+
   getPixelSize: ->
     return @pixelSize
-
-  getDimensionsOld: ->
-    if @type == "cartesian"
-      return [
-        {space: "domain", coord: 0}
-        {space: "range",  coord: 0}
-      ]
-    else if @type == "colorMap"
-      return [
-        {space: "domain", coord: 0}
-        {space: "domain", coord: 1}
-      ]
 
   getDimensions: ->
     if @type == "cartesian"
