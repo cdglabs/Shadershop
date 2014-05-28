@@ -3,7 +3,9 @@ R.create "GridView",
     plot: C.Plot
     isThumbnail: Boolean
 
-  _getParams: (canvas) ->
+  _getParams: ->
+    canvas = @getDOMNode()
+
     if @isThumbnail
       scaleFactor = window.innerHeight / canvas.height
     else
@@ -26,8 +28,10 @@ R.create "GridView",
       pixelSize: @plot.getPixelSize() * scaleFactor
     }
 
-  drawFn: (canvas) ->
-    @_lastParams = params = @_getParams(canvas)
+  draw: ->
+    canvas = @getDOMNode()
+
+    @_lastParams = params = @_getParams()
 
     ctx = canvas.getContext("2d")
 
@@ -35,8 +39,26 @@ R.create "GridView",
 
     util.canvas.drawGrid ctx, params
 
+  ensureProperSize: ->
+    # Returns true if we had to resize the canvas.
+    canvas = @getDOMNode()
+    rect = canvas.getBoundingClientRect()
+    if canvas.width != rect.width or canvas.height != rect.height
+      canvas.width = rect.width
+      canvas.height = rect.height
+      return true
+    return false
+
   shouldComponentUpdate: (nextProps) ->
+    return true if @ensureProperSize()
     return !_.isEqual(@_lastParams, @_getParams(@getDOMNode()))
 
+  componentDidMount: ->
+    @ensureProperSize()
+    @draw()
+
+  componentDidUpdate: ->
+    @draw()
+
   render: ->
-    R.CanvasView {drawFn: @drawFn}
+    R.canvas {}

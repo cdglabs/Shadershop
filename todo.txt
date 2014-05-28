@@ -15,7 +15,6 @@ Misc
 
 Dirty system
   Should have a thing for keeping track of whether certain things might be dirty, ala the Compiler.
-  E.g. canvas resize when PlotLayout changes
 
 
 
@@ -26,7 +25,6 @@ Plot
   Better "settings" controls
   Clean up hard coded stuff in plot layout
   ColorMap needs to be dimensionally generic
-  Get rid of bounds calls in grid
 
 
 
@@ -60,8 +58,6 @@ Palette
 
 
 Priority
-  fix grid/canvas resize
-
   something better than inspector
     text fields on control points would work
 

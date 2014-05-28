@@ -3301,8 +3301,6 @@ function HSLToRGB(h, s, l) {
 
   require("./VariableView");
 
-  require("./plot/CanvasView");
-
   require("./plot/GridView");
 
   require("./plot/ShaderCartesianView");
@@ -3488,7 +3486,7 @@ function HSLToRGB(h, s, l) {
         x: width / 2,
         y: 0
       }).slice(0, config.dimensions);
-      numSamples = width / config.resolution;
+      numSamples = (width / scaleFactor) / config.resolution;
     } else {
       domainStart = plot.toWorld({
         x: 0,
@@ -3498,7 +3496,7 @@ function HSLToRGB(h, s, l) {
         x: 0,
         y: height / 2
       }).slice(0, config.dimensions);
-      numSamples = height / config.resolution;
+      numSamples = (height / scaleFactor) / config.resolution;
     }
     domainStep = numeric.div(numeric.sub(domainEnd, domainStart), numSamples);
     domainCenter = plot.center.slice(0, config.dimensions);
@@ -3591,57 +3589,15 @@ function HSLToRGB(h, s, l) {
   });
 
 }).call(this);
-}, "view/plot/CanvasView": function(exports, require, module) {(function() {
-  R.create("CanvasView", {
-    propTypes: {
-      drawFn: Function
-    },
-    draw: function() {
-      var canvas;
-      canvas = this.getDOMNode();
-      return this.drawFn(canvas);
-    },
-    sizeCanvas: function() {
-      var canvas, rect;
-      canvas = this.getDOMNode();
-      rect = canvas.getBoundingClientRect();
-      if (canvas.width !== rect.width || canvas.height !== rect.height) {
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        return true;
-      }
-      return false;
-    },
-    handleResize: function() {
-      if (this.sizeCanvas()) {
-        return this.draw();
-      }
-    },
-    componentDidUpdate: function() {
-      return this.draw();
-    },
-    componentDidMount: function() {
-      this.sizeCanvas();
-      this.draw();
-      return window.addEventListener("resize", this.handleResize);
-    },
-    componentWillUnmount: function() {
-      return window.removeEventListener("resize", this.handleResize);
-    },
-    render: function() {
-      return R.canvas({});
-    }
-  });
-
-}).call(this);
 }, "view/plot/GridView": function(exports, require, module) {(function() {
   R.create("GridView", {
     propTypes: {
       plot: C.Plot,
       isThumbnail: Boolean
     },
-    _getParams: function(canvas) {
-      var dimensions, maxWorld, minWorld, scaleFactor, xMax, xMin, yMax, yMin;
+    _getParams: function() {
+      var canvas, dimensions, maxWorld, minWorld, scaleFactor, xMax, xMin, yMax, yMin;
+      canvas = this.getDOMNode();
       if (this.isThumbnail) {
         scaleFactor = window.innerHeight / canvas.height;
       } else {
@@ -3668,20 +3624,40 @@ function HSLToRGB(h, s, l) {
         pixelSize: this.plot.getPixelSize() * scaleFactor
       };
     },
-    drawFn: function(canvas) {
-      var ctx, params;
-      this._lastParams = params = this._getParams(canvas);
+    draw: function() {
+      var canvas, ctx, params;
+      canvas = this.getDOMNode();
+      this._lastParams = params = this._getParams();
       ctx = canvas.getContext("2d");
       util.canvas.clear(ctx);
       return util.canvas.drawGrid(ctx, params);
     },
+    ensureProperSize: function() {
+      var canvas, rect;
+      canvas = this.getDOMNode();
+      rect = canvas.getBoundingClientRect();
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        return true;
+      }
+      return false;
+    },
     shouldComponentUpdate: function(nextProps) {
+      if (this.ensureProperSize()) {
+        return true;
+      }
       return !_.isEqual(this._lastParams, this._getParams(this.getDOMNode()));
     },
+    componentDidMount: function() {
+      this.ensureProperSize();
+      return this.draw();
+    },
+    componentDidUpdate: function() {
+      return this.draw();
+    },
     render: function() {
-      return R.CanvasView({
-        drawFn: this.drawFn
-      });
+      return R.canvas({});
     }
   });
 

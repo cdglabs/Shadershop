@@ -128,7 +128,6 @@ require("./OutlineView")
 require("./InspectorView")
 require("./VariableView")
 
-require("./plot/CanvasView")
 require("./plot/GridView")
 require("./plot/ShaderCartesianView")
 

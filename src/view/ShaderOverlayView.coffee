@@ -220,11 +220,11 @@ drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
   if isHorizontal
     domainStart = plot.toWorld({x: -width/2, y: 0})[ ... config.dimensions]
     domainEnd   = plot.toWorld({x:  width/2, y: 0})[ ... config.dimensions]
-    numSamples  = width / config.resolution
+    numSamples  = (width / scaleFactor) / config.resolution
   else
     domainStart = plot.toWorld({x: 0, y: -height/2})[ ... config.dimensions]
     domainEnd   = plot.toWorld({x: 0, y:  height/2})[ ... config.dimensions]
-    numSamples  = height / config.resolution
+    numSamples  = (height / scaleFactor) / config.resolution
 
   domainStep = numeric.div(
     numeric.sub(domainEnd, domainStart)
