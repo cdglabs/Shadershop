@@ -2490,7 +2490,13 @@ function HSLToRGB(h, s, l) {
     },
     render: function() {
       var className;
-      className = "Label " + this.className;
+      className = R.cx({
+        Label: true,
+        Interactive: !(this.fn instanceof C.BuiltInFn)
+      });
+      if (this.className) {
+        className += " " + this.className;
+      }
       if (this.fn instanceof C.BuiltInFn) {
         return R.div({
           className: className
@@ -2601,7 +2607,7 @@ function HSLToRGB(h, s, l) {
     },
     _onMouseDown: function(e) {
       var addChildFn, selectFn;
-      if (e.target.matches(".Label")) {
+      if (e.target.matches(".Interactive")) {
         return;
       }
       util.preventDefault(e);

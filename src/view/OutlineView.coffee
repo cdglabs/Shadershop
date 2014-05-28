@@ -241,7 +241,11 @@ R.create "LabelView",
     fn: C.Fn
 
   render: ->
-    className = "Label " + @className
+    className = R.cx {
+      Label: true
+      Interactive: !(@fn instanceof C.BuiltInFn)
+    }
+    className += " " + @className if @className
     if @fn instanceof C.BuiltInFn
       R.div {className: className}, @fn.label
     else

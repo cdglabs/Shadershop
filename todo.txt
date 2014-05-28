@@ -31,7 +31,6 @@ Plot
 
 
 Outline Stuff
-  Break out "Inspector"
   Create definition button / right click item - create by abstracting
   Show transform numbers when they're not identity?
 

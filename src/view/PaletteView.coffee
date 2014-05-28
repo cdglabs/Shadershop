@@ -52,7 +52,7 @@ R.create "DefinitionView",
       }
 
   _onMouseDown: (e) ->
-    return if e.target.matches(".Label")
+    return if e.target.matches(".Interactive")
     util.preventDefault(e)
 
     addChildFn = =>
