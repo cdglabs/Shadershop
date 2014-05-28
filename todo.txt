@@ -18,7 +18,10 @@ Misc
 
 
 Plot
-  Plot wants to be configurable: at least which axes correspond to which coordinates in domain/range
+  Better "settings" controls
+  Clean up hard coded stuff in plot layout
+  ColorMap needs to be dimensionally generic
+  Get rid of bounds calls in grid
 
 
 
@@ -48,22 +51,6 @@ Palette
 
 
 
-Get Grid using better Plot API
-
-Get ShaderOverlayView using better Plot API
-  Be able to use any coordinates (right now d0, r0 is hardcoded for cartesian, and d0, d1, r0 is hardcoded for colorMap)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -75,6 +62,8 @@ Priority
     would be nice to have drag multiple, but not needed
 
   flexible color scale for colorMap
+
+  rotate/scale modifier when dragging transform points
 
   performance
     send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster

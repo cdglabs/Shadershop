@@ -3053,10 +3053,22 @@ function HSLToRGB(h, s, l) {
       return slices;
     },
     _onMove: function(position) {
-      var focus, pixelFocus, plotLayout;
+      var focus, largeSpacing, pixelFocus, pixelSize, plotLayout, smallSpacing, snapTolerance, _ref;
       pixelFocus = this.plot.toPixel(this.plot.focus);
       pixelFocus = _.extend(pixelFocus, position);
       focus = this.plot.toWorld(pixelFocus);
+      pixelSize = this.plot.getPixelSize();
+      _ref = util.canvas.getSpacing(pixelSize), largeSpacing = _ref.largeSpacing, smallSpacing = _ref.smallSpacing;
+      snapTolerance = pixelSize * config.snapTolerance;
+      focus = focus.map(function(value) {
+        var nearestSnap;
+        nearestSnap = Math.round(value / largeSpacing) * largeSpacing;
+        if (Math.abs(value - nearestSnap) < snapTolerance) {
+          return nearestSnap;
+        } else {
+          return value;
+        }
+      });
       plotLayout = this.lookup("fn").plotLayout;
       return Actions.setPlotLayoutFocus(plotLayout, focus);
     }

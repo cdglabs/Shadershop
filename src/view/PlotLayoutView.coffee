@@ -438,6 +438,17 @@ R.create "SliceControlsView",
     pixelFocus = _.extend(pixelFocus, position)
     focus = @plot.toWorld(pixelFocus)
 
+    pixelSize = @plot.getPixelSize()
+    {largeSpacing, smallSpacing} = util.canvas.getSpacing(pixelSize)
+    snapTolerance = pixelSize * config.snapTolerance
+
+    focus = focus.map (value) ->
+      nearestSnap = Math.round(value / largeSpacing) * largeSpacing
+      if Math.abs(value - nearestSnap) < snapTolerance
+        return nearestSnap
+      else
+        return value
+
     plotLayout = @lookup("fn").plotLayout
     Actions.setPlotLayoutFocus(plotLayout, focus)
 
@@ -477,8 +488,6 @@ R.create "LineControlView",
         else
           @onMove({y})
     }
-
-
 
 
 

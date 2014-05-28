@@ -38,6 +38,7 @@ canvas,
   right: 270px;
   border-left: 1px solid #e6e6e6;
   border-right: 1px solid #e6e6e6;
+  background-color: #eee;
   box-sizing: border-box;
 }
 .Palette {
