@@ -51,6 +51,7 @@ body
   font-size 12px
   cursor default
   overflow hidden
+  color #333
 
 canvas, .Shader
   position absolute
@@ -370,13 +371,24 @@ canvas, .Shader
 
 table
   border-collapse collapse
+  width 100%
 
 td, th
   text-align center
   min-width 54px
 
+tr
+  td:first-child, th:first-child
+    min-width 24px
+    color #333
+
 th
-  background-color #eee
+  background-color #f3f3f3
+
+.Translate
+  td
+    // background-color #f3f3f3
+    border-bottom 1px solid #eee
 
 .Variable
   padding 2px 6px

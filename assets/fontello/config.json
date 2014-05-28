@@ -27,6 +27,18 @@
       "src": "fontawesome"
     },
     {
+      "uid": "b013f6403e5ab0326614e68d1850fd6b",
+      "css": "resize-full-alt",
+      "code": 59396,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "6605ee6441bf499ffa3c63d3c7409471",
+      "css": "move",
+      "code": 59397,
+      "src": "fontawesome"
+    },
+    {
       "uid": "97bd5542ed3e143d2ee9b60e14487615",
       "css": "list-add",
       "code": 59394,
