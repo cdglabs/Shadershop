@@ -13,6 +13,11 @@ Misc
   Check that you don't create dependency loops
   Need to listen for scroll events on Scrollers and refresh
 
+Dirty system
+  Should have a thing for keeping track of whether certain things might be dirty, ala the Compiler.
+  E.g. canvas resize when PlotLayout changes
+
+
 
 
 

@@ -3601,27 +3601,43 @@ function HSLToRGB(h, s, l) {
       plot: C.Plot,
       isThumbnail: Boolean
     },
-    drawFn: function(canvas) {
-      var bounds, ctx, scaleFactor, xMax, xMin, yMax, yMin;
-      ctx = canvas.getContext("2d");
+    _getParams: function(canvas) {
+      var dimensions, maxWorld, minWorld, scaleFactor, xMax, xMin, yMax, yMin;
       if (this.isThumbnail) {
         scaleFactor = window.innerHeight / canvas.height;
       } else {
         scaleFactor = 1;
       }
-      bounds = this.plot.getScaledBounds(canvas.width, canvas.height, scaleFactor);
-      xMin = bounds.xMin, xMax = bounds.xMax, yMin = bounds.yMin, yMax = bounds.yMax;
-      util.canvas.clear(ctx);
-      return util.canvas.drawGrid(ctx, {
+      minWorld = this.plot.toWorld({
+        x: -canvas.width * scaleFactor / 2,
+        y: -canvas.height * scaleFactor / 2
+      });
+      maxWorld = this.plot.toWorld({
+        x: canvas.width * scaleFactor / 2,
+        y: canvas.height * scaleFactor / 2
+      });
+      dimensions = this.plot.getDimensions();
+      xMin = numeric.dot(minWorld, dimensions[0]);
+      yMin = numeric.dot(minWorld, dimensions[1]);
+      xMax = numeric.dot(maxWorld, dimensions[0]);
+      yMax = numeric.dot(maxWorld, dimensions[1]);
+      return {
         xMin: xMin,
         xMax: xMax,
         yMin: yMin,
         yMax: yMax,
         pixelSize: this.plot.getPixelSize() * scaleFactor
-      });
+      };
+    },
+    drawFn: function(canvas) {
+      var ctx, params;
+      this._lastParams = params = this._getParams(canvas);
+      ctx = canvas.getContext("2d");
+      util.canvas.clear(ctx);
+      return util.canvas.drawGrid(ctx, params);
     },
     shouldComponentUpdate: function(nextProps) {
-      return true;
+      return !_.isEqual(this._lastParams, this._getParams(this.getDOMNode()));
     },
     render: function() {
       return R.CanvasView({

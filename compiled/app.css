@@ -172,7 +172,7 @@ canvas,
 }
 .LineControl {
   position: absolute;
-  background-color: #09c;
+  background-color: #0c9;
   z-index: 20;
   opacity: 0.5;
   width: 2px;
