@@ -275,6 +275,17 @@
     return _results;
   };
 
+  Actions.setPlotLayoutFocus = function(plotLayout, focus) {
+    var plot, _i, _len, _ref, _results;
+    _ref = plotLayout.plots;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      plot = _ref[_i];
+      _results.push(plot.focus = focus);
+    }
+    return _results;
+  };
+
   Actions.selectFn = function(fn) {
     if (!(fn instanceof C.DefinedFn)) {
       return;
@@ -3011,6 +3022,7 @@ function HSLToRGB(h, s, l) {
           slice = _ref[index];
           _results.push(R.LineControlView({
             position: slice,
+            onMove: this._onMove,
             key: index
           }));
         }
@@ -3039,23 +3051,58 @@ function HSLToRGB(h, s, l) {
         }
       }
       return slices;
+    },
+    _onMove: function(position) {
+      var focus, pixelFocus, plotLayout;
+      pixelFocus = this.plot.toPixel(this.plot.focus);
+      pixelFocus = _.extend(pixelFocus, position);
+      focus = this.plot.toWorld(pixelFocus);
+      plotLayout = this.lookup("fn").plotLayout;
+      return Actions.setPlotLayoutFocus(plotLayout, focus);
     }
   });
 
   R.create("LineControlView", {
     propTypes: {
-      position: Object
+      position: Object,
+      onMove: Function
     },
     render: function() {
       return R.div({
         className: "LineControl",
+        onMouseDown: this._onMouseDown,
         style: {
           left: this.position.x != null ? this.position.x : "-50%",
           top: this.position.y != null ? -this.position.y : "-50%",
-          width: this.position.x != null ? 1 : "100%",
-          height: this.position.y != null ? 1 : "100%"
+          width: this.position.x != null ? "" : "100%",
+          height: this.position.y != null ? "" : "100%"
         }
       });
+    },
+    _onMouseDown: function(e) {
+      var container, rect;
+      util.preventDefault(e);
+      container = this.getDOMNode().closest(".PointControlContainer");
+      rect = container.getBoundingClientRect();
+      return UI.dragging = {
+        onMove: (function(_this) {
+          return function(e) {
+            var x, y;
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+            y *= -1;
+            if (_this.position.x != null) {
+              return _this.onMove({
+                x: x
+              });
+            } else {
+              return _this.onMove({
+                y: y
+              });
+            }
+          };
+        })(this)
+      };
     }
   });
 

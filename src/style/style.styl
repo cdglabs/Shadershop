@@ -14,6 +14,7 @@ OutlineThumbnailSize = 36px
 PaletteThumbnailSize = 48px
 
 pointControlSize = 12px
+LineControlSize = 2px
 
 ShaderOverlayZIndex = 10
 PlotControlZIndex = 20
@@ -241,6 +242,9 @@ canvas, .Shader
   background-color highlightColor
   z-index PlotControlZIndex
   opacity 0.5
+  width LineControlSize
+  height LineControlSize
+  margin LineControlSize * -0.5
   &:hover
     opacity 1
   &:before

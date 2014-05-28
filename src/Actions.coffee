@@ -180,6 +180,10 @@ Actions.zoomPlotLayout = (plotLayout, zoomCenter, scaleFactor) ->
   for plot in plotLayout.plots
     Actions.zoomPlot(plot, zoomCenter, scaleFactor)
 
+Actions.setPlotLayoutFocus = (plotLayout, focus) ->
+  for plot in plotLayout.plots
+    plot.focus = focus
+
 # =============================================================================
 # Changing UI state (selection, hover, expanded)
 # =============================================================================

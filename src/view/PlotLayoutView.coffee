@@ -417,7 +417,7 @@ R.create "SliceControlsView",
   render: ->
     R.div {className: "Interactive PointControlContainer"},
       for slice, index in @_getSlices()
-        R.LineControlView {position: slice, key: index}
+        R.LineControlView {position: slice, onMove: @_onMove, key: index}
 
   _getSlices: ->
     slices = []
@@ -433,25 +433,50 @@ R.create "SliceControlsView",
             slices.push({y: pixelFocus.y})
     return slices
 
+  _onMove: (position) ->
+    pixelFocus = @plot.toPixel(@plot.focus)
+    pixelFocus = _.extend(pixelFocus, position)
+    focus = @plot.toWorld(pixelFocus)
+
+    plotLayout = @lookup("fn").plotLayout
+    Actions.setPlotLayoutFocus(plotLayout, focus)
+
 
 
 
 R.create "LineControlView",
   propTypes:
     position: Object # {x, y} in the Pixel frame
+    onMove: Function
 
   render: ->
     R.div {
       className: "LineControl"
+      onMouseDown: @_onMouseDown
       style: {
         left:   if @position.x? then  @position.x else "-50%"
         top:    if @position.y? then -@position.y else "-50%"
-        width:  if @position.x? then 1 else "100%"
-        height: if @position.y? then 1 else "100%"
+        width:  if @position.x? then "" else "100%"
+        height: if @position.y? then "" else "100%"
       }
     }
 
+  _onMouseDown: (e) ->
+    util.preventDefault(e)
 
+    container = @getDOMNode().closest(".PointControlContainer")
+    rect = container.getBoundingClientRect()
+
+    UI.dragging = {
+      onMove: (e) =>
+        x = e.clientX - rect.left
+        y = e.clientY - rect.top
+        y *= -1
+        if @position.x?
+          @onMove({x})
+        else
+          @onMove({y})
+    }
 
 
 
