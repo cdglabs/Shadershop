@@ -184,7 +184,6 @@ createCartesianProgram = (glod, name, expr) ->
   void main() {
     #{vecType} inputVal, outputVal;
     inputVal = domainStart + domainStep * sample;
-    #{vecType} x = inputVal; // TODO: make inputVal the new x
     outputVal = #{expr};
 
     #{vecType} position = domainTransform * (inputVal - domainCenter) +
@@ -304,15 +303,15 @@ createColorMapProgram = (glod, name, expr) ->
   }
 
   void main() {
-    vec4 x = vec4(
+    vec4 inputVal = vec4(
       lerp(vPosition.x, -1., 1., xMin, xMax),
       lerp(vPosition.y, -1., 1., yMin, yMax),
       0.,
       0.
     );
-    vec4 y = #{expr};
+    vec4 outputVal = #{expr};
 
-    float value = y.x;
+    float value = outputVal.x;
     vec3 color;
 
     /*

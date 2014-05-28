@@ -2686,32 +2686,32 @@ function HSLToRGB(h, s, l) {
       exprs = [];
       if (this.plot.type === "colorMap") {
         exprs.push({
-          exprString: Compiler.getExprString(this.fn, "x")
+          exprString: Compiler.getExprString(this.fn, "inputVal")
         });
       } else {
         expandedChildFns = this._getExpandedChildFns();
         for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
           childFn = expandedChildFns[_i];
           exprs.push({
-            exprString: Compiler.getExprString(childFn, "x"),
+            exprString: Compiler.getExprString(childFn, "inputVal"),
             color: config.color.child
           });
         }
         if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
           exprs.push({
-            exprString: Compiler.getExprString(UI.hoveredChildFn, "x"),
+            exprString: Compiler.getExprString(UI.hoveredChildFn, "inputVal"),
             color: config.color.hovered
           });
         }
         exprs.push({
-          exprString: Compiler.getExprString(this.fn, "x"),
+          exprString: Compiler.getExprString(this.fn, "inputVal"),
           color: config.color.main
         });
         _ref = UI.selectedChildFns;
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           childFn = _ref[_j];
           exprs.push({
-            exprString: Compiler.getExprString(childFn, "x"),
+            exprString: Compiler.getExprString(childFn, "inputVal"),
             color: config.color.selected
           });
         }
@@ -3428,7 +3428,7 @@ function HSLToRGB(h, s, l) {
     var fragment, matType, vecType, vertex;
     vecType = util.glslVectorType(config.dimensions);
     matType = util.glslMatrixType(config.dimensions);
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  " + vecType + " x = inputVal; // TODO: make inputVal the new x\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
@@ -3488,7 +3488,7 @@ function HSLToRGB(h, s, l) {
   createColorMapProgram = function(glod, name, expr) {
     var fragment, vertex;
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 x = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 y = " + expr + ";\n\n  float value = y.x;\n  vec3 color;\n\n  /*\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n  */\n\n  color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  /*\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n  */\n\n  color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
@@ -3525,7 +3525,7 @@ function HSLToRGB(h, s, l) {
         isThumbnail: true,
         exprs: [
           {
-            exprString: Compiler.getExprString(this.fn, "x"),
+            exprString: Compiler.getExprString(this.fn, "inputVal"),
             color: config.color.main
           }
         ]

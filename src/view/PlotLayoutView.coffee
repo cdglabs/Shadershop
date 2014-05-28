@@ -101,7 +101,7 @@ R.create "PlotView",
 
       # Main
       exprs.push {
-        exprString: Compiler.getExprString(@fn, "x")
+        exprString: Compiler.getExprString(@fn, "inputVal")
       }
 
     else
@@ -111,27 +111,27 @@ R.create "PlotView",
       # Child Fns
       for childFn in expandedChildFns
         exprs.push {
-          exprString: Compiler.getExprString(childFn, "x")
+          exprString: Compiler.getExprString(childFn, "inputVal")
           color: config.color.child
         }
 
       # Hovered
       if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
         exprs.push {
-          exprString: Compiler.getExprString(UI.hoveredChildFn, "x")
+          exprString: Compiler.getExprString(UI.hoveredChildFn, "inputVal")
           color: config.color.hovered
         }
 
       # Main
       exprs.push {
-        exprString: Compiler.getExprString(@fn, "x")
+        exprString: Compiler.getExprString(@fn, "inputVal")
         color: config.color.main
       }
 
       # Selected
       for childFn in UI.selectedChildFns
         exprs.push {
-          exprString: Compiler.getExprString(childFn, "x")
+          exprString: Compiler.getExprString(childFn, "inputVal")
           color: config.color.selected
         }
 

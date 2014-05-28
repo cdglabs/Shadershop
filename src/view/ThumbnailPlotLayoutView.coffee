@@ -14,7 +14,7 @@ R.create "ThumbnailPlotLayoutView",
         isThumbnail: true
         exprs: [
           {
-            exprString: Compiler.getExprString(@fn, "x")
+            exprString: Compiler.getExprString(@fn, "inputVal")
             color: config.color.main
           }
         ]
