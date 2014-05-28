@@ -471,8 +471,9 @@
     snapTolerance: 7,
     outlineIndent: 16,
     gridColor: "204,194,163",
-    colorMapPositive: util.hslToRgb(46, 1, 0.85).map(util.glslString).join(","),
-    colorMapNegative: util.hslToRgb(226, 1, 0.15).map(util.glslString).join(","),
+    colorMapZero: util.hslToRgb(0, 0, 0).map(util.glslString).join(","),
+    colorMapPositive: util.hslToRgb(0, 0, 1).map(util.glslString).join(","),
+    colorMapNegative: util.hslToRgb(226, 1, 0.4).map(util.glslString).join(","),
     style: {
       main: {
         strokeStyle: "#333",
@@ -3525,7 +3526,7 @@ function HSLToRGB(h, s, l) {
   createColorMapProgram = function(glod, name, expr) {
     var fragment, vertex;
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  /*\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(.5, .5, .5), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n  */\n\n  color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
@@ -3624,15 +3625,20 @@ function HSLToRGB(h, s, l) {
         pixelSize: this.plot.getPixelSize() * scaleFactor
       };
     },
-    draw: function() {
-      var canvas, ctx, params;
+    _draw: function() {
+      var canvas, ctx, didResize, params;
+      didResize = this._ensureProperSize();
+      params = this._getParams();
+      if (!didResize && _.isEqual(params, this._lastParams)) {
+        return;
+      }
+      this._lastParams = params;
       canvas = this.getDOMNode();
-      this._lastParams = params = this._getParams();
       ctx = canvas.getContext("2d");
       util.canvas.clear(ctx);
       return util.canvas.drawGrid(ctx, params);
     },
-    ensureProperSize: function() {
+    _ensureProperSize: function() {
       var canvas, rect;
       canvas = this.getDOMNode();
       rect = canvas.getBoundingClientRect();
@@ -3643,18 +3649,11 @@ function HSLToRGB(h, s, l) {
       }
       return false;
     },
-    shouldComponentUpdate: function(nextProps) {
-      if (this.ensureProperSize()) {
-        return true;
-      }
-      return !_.isEqual(this._lastParams, this._getParams(this.getDOMNode()));
-    },
     componentDidMount: function() {
-      this.ensureProperSize();
-      return this.draw();
+      return this._draw();
     },
     componentDidUpdate: function() {
-      return this.draw();
+      return this._draw();
     },
     render: function() {
       return R.canvas({});

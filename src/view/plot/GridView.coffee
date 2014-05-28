@@ -28,10 +28,16 @@ R.create "GridView",
       pixelSize: @plot.getPixelSize() * scaleFactor
     }
 
-  draw: ->
-    canvas = @getDOMNode()
+  _draw: ->
+    didResize = @_ensureProperSize()
+    params = @_getParams()
 
-    @_lastParams = params = @_getParams()
+    if !didResize and _.isEqual(params, @_lastParams)
+      return
+
+    @_lastParams = params
+
+    canvas = @getDOMNode()
 
     ctx = canvas.getContext("2d")
 
@@ -39,7 +45,7 @@ R.create "GridView",
 
     util.canvas.drawGrid ctx, params
 
-  ensureProperSize: ->
+  _ensureProperSize: ->
     # Returns true if we had to resize the canvas.
     canvas = @getDOMNode()
     rect = canvas.getBoundingClientRect()
@@ -49,16 +55,11 @@ R.create "GridView",
       return true
     return false
 
-  shouldComponentUpdate: (nextProps) ->
-    return true if @ensureProperSize()
-    return !_.isEqual(@_lastParams, @_getParams(@getDOMNode()))
-
   componentDidMount: ->
-    @ensureProperSize()
-    @draw()
+    @_draw()
 
   componentDidUpdate: ->
-    @draw()
+    @_draw()
 
   render: ->
     R.canvas {}
