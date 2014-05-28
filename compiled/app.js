@@ -2044,7 +2044,7 @@ function HSLToRGB(h, s, l) {
         appRoot: this.appRoot
       }), R.OutlineView({
         definedFn: UI.selectedFn
-      }), R.DebugView({}), R.DraggingView({}), R.ShaderOverlayView({
+      }), R.InspectorView({}), R.DebugView({}), R.DraggingView({}), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
     }
@@ -2081,6 +2081,104 @@ function HSLToRGB(h, s, l) {
   });
 
 }).call(this);
+}, "view/InspectorView": function(exports, require, module) {(function() {
+  R.create("InspectorView", {
+    render: function() {
+      return R.div({
+        className: "Inspector"
+      }, R.div({
+        className: "Header"
+      }, "Inspector"), R.div({
+        className: "Scroller"
+      }, UI.selectedChildFns.length === 1 ? R.InspectorTableView({
+        fn: UI.selectedChildFns[0]
+      }) : void 0));
+    }
+  });
+
+  R.create("InspectorTableView", {
+    propTypes: {
+      fn: C.ChildFn
+    },
+    render: function() {
+      var coordIndex, rowIndex, variable;
+      return R.table({}, R.tr({}, (function() {
+        var _i, _ref, _results;
+        _results = [];
+        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+          _results.push(R.th({}, "d" + (coordIndex + 1)));
+        }
+        return _results;
+      })()), R.tr({}, this.fn.domainTranslate.map((function(_this) {
+        return function(variable) {
+          return R.td({
+            key: C.id(variable)
+          }, R.VariableView({
+            variable: variable
+          }));
+        };
+      })(this))), (function() {
+        var _i, _ref, _results;
+        _results = [];
+        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+          _results.push(R.tr({
+            key: coordIndex
+          }, (function() {
+            var _j, _ref1, _results1;
+            _results1 = [];
+            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
+              variable = this.fn.domainTransform[rowIndex][coordIndex];
+              _results1.push(R.td({
+                key: C.id(variable)
+              }, R.VariableView({
+                variable: variable
+              })));
+            }
+            return _results1;
+          }).call(this)));
+        }
+        return _results;
+      }).call(this), R.tr({}, (function() {
+        var _i, _ref, _results;
+        _results = [];
+        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+          _results.push(R.th({}, "r" + (coordIndex + 1)));
+        }
+        return _results;
+      })()), R.tr({}, this.fn.rangeTranslate.map((function(_this) {
+        return function(variable) {
+          return R.td({
+            key: C.id(variable)
+          }, R.VariableView({
+            variable: variable
+          }));
+        };
+      })(this))), (function() {
+        var _i, _ref, _results;
+        _results = [];
+        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+          _results.push(R.tr({
+            key: coordIndex
+          }, (function() {
+            var _j, _ref1, _results1;
+            _results1 = [];
+            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
+              variable = this.fn.rangeTransform[rowIndex][coordIndex];
+              _results1.push(R.td({
+                key: C.id(variable)
+              }, R.VariableView({
+                variable: variable
+              })));
+            }
+            return _results1;
+          }).call(this)));
+        }
+        return _results;
+      }).call(this));
+    }
+  });
+
+}).call(this);
 }, "view/OutlineView": function(exports, require, module) {(function() {
   R.create("OutlineView", {
     propTypes: {
@@ -2096,9 +2194,7 @@ function HSLToRGB(h, s, l) {
         className: "Scroller"
       }, R.OutlineCombinerToolbar({}), R.OutlineChildrenView({
         compoundFn: this.definedFn
-      }), UI.selectedChildFns.length === 1 ? R.OutlineControlsView({
-        fn: UI.selectedChildFns[0]
-      }) : void 0));
+      })));
     }
   });
 
@@ -2413,65 +2509,6 @@ function HSLToRGB(h, s, l) {
       var value;
       value = e.target.selectedOptions[0].value;
       return Actions.setCompoundFnCombiner(this.compoundFn, value);
-    }
-  });
-
-  R.create("OutlineControlsView", {
-    propTypes: {
-      fn: C.ChildFn
-    },
-    render: function() {
-      var coordIndex, rowIndex, variable;
-      return R.table({}, R.tr({}, this.fn.domainTranslate.map((function(_this) {
-        return function(variable) {
-          return R.td({
-            key: C.id(variable)
-          }, R.VariableView({
-            variable: variable
-          }));
-        };
-      })(this)), this.fn.rangeTranslate.map((function(_this) {
-        return function(variable) {
-          return R.td({
-            key: C.id(variable)
-          }, R.VariableView({
-            variable: variable
-          }));
-        };
-      })(this))), (function() {
-        var _i, _ref, _results;
-        _results = [];
-        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
-          _results.push(R.tr({
-            key: coordIndex
-          }, (function() {
-            var _j, _ref1, _results1;
-            _results1 = [];
-            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
-              variable = this.fn.domainTransform[rowIndex][coordIndex];
-              _results1.push(R.td({
-                key: C.id(variable)
-              }, R.VariableView({
-                variable: variable
-              })));
-            }
-            return _results1;
-          }).call(this), (function() {
-            var _j, _ref1, _results1;
-            _results1 = [];
-            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
-              variable = this.fn.rangeTransform[rowIndex][coordIndex];
-              _results1.push(R.td({
-                key: C.id(variable)
-              }, R.VariableView({
-                variable: variable
-              })));
-            }
-            return _results1;
-          }).call(this)));
-        }
-        return _results;
-      }).call(this));
     }
   });
 
@@ -3259,6 +3296,8 @@ function HSLToRGB(h, s, l) {
   require("./ThumbnailPlotLayoutView");
 
   require("./OutlineView");
+
+  require("./InspectorView");
 
   require("./VariableView");
 

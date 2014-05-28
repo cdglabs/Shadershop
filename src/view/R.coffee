@@ -125,6 +125,7 @@ require("./PaletteView")
 require("./PlotLayoutView")
 require("./ThumbnailPlotLayoutView")
 require("./OutlineView")
+require("./InspectorView")
 require("./VariableView")
 
 require("./plot/CanvasView")

@@ -16,6 +16,7 @@ R.create "AppRootView",
       R.PlotLayoutView {fn: UI.selectedFn}
       R.PaletteView {appRoot: @appRoot}
       R.OutlineView {definedFn: UI.selectedFn}
+      R.InspectorView {}
       R.DebugView {}
       R.DraggingView {}
       R.ShaderOverlayView {ref: "shaderOverlay"}

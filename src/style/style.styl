@@ -4,6 +4,7 @@ PlotBackgroundColor = #FAF8F2
 
 LeftSidebarWidth = 180px
 RightSidebarWidth = 270px
+InspectorHeight = 300px
 
 HeaderSize = 18px
 
@@ -102,6 +103,13 @@ canvas, .Shader
   right 0px
   width RightSidebarWidth
   top 0px
+  bottom InspectorHeight
+
+.Inspector
+  position absolute
+  right 0px
+  width RightSidebarWidth
+  height InspectorHeight
   bottom 0px
 
 
@@ -270,6 +278,7 @@ canvas, .Shader
   &:hover
     opacity 1
 
+
 // ============================================================================
 // Outline
 // ============================================================================
@@ -336,14 +345,9 @@ canvas, .Shader
   margin 2px
   border 1px solid #eee
 
-
 .Placeholder
   background-color #bbb
   box-shadow inset 0px 1px 3px rgba(0,0,0,0.5)
-
-.Variable
-  padding 2px 6px
-  text-align center
 
 .DisclosureTriangle
   width 0
@@ -358,6 +362,26 @@ canvas, .Shader
   &.Hidden
     // visibility hidden
     display none
+
+
+// ============================================================================
+// Inspector
+// ============================================================================
+
+table
+  border-collapse collapse
+
+td, th
+  text-align center
+  min-width 54px
+
+th
+  background-color #eee
+
+.Variable
+  padding 2px 6px
+  text-align center
+
 
 // ============================================================================
 // Buttons

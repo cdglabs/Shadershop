@@ -18,9 +18,6 @@ R.create "OutlineView",
           compoundFn: @definedFn
         }
 
-        if UI.selectedChildFns.length == 1
-          R.OutlineControlsView {fn: UI.selectedChildFns[0]}
-
 
 # =============================================================================
 
@@ -278,36 +275,3 @@ R.create "CombinerView",
 
 
 
-
-
-
-
-
-# =============================================================================
-
-# TODO: Move this into Inspector
-
-R.create "OutlineControlsView",
-  propTypes:
-    fn: C.ChildFn
-
-  render: ->
-    R.table {},
-      R.tr {},
-        @fn.domainTranslate.map (variable) =>
-          R.td {key: C.id(variable)},
-            R.VariableView {variable}
-        @fn.rangeTranslate.map (variable) =>
-          R.td {key: C.id(variable)},
-            R.VariableView {variable}
-
-      for coordIndex in [0...config.dimensions]
-        R.tr {key: coordIndex},
-          for rowIndex in [0...config.dimensions]
-            variable = @fn.domainTransform[rowIndex][coordIndex]
-            R.td {key: C.id(variable)},
-              R.VariableView {variable}
-          for rowIndex in [0...config.dimensions]
-            variable = @fn.rangeTransform[rowIndex][coordIndex]
-            R.td {key: C.id(variable)},
-              R.VariableView {variable}

@@ -60,6 +60,8 @@ Palette
 
 
 Priority
+  fix grid/canvas resize
+
   something better than inspector
     text fields on control points would work
 

@@ -53,6 +53,13 @@ canvas,
   right: 0px;
   width: 270px;
   top: 0px;
+  bottom: 300px;
+}
+.Inspector {
+  position: absolute;
+  right: 0px;
+  width: 270px;
+  height: 300px;
   bottom: 0px;
 }
 .DraggingObject {
@@ -280,10 +287,6 @@ canvas,
   background-color: #bbb;
   box-shadow: inset 0px 1px 3px rgba(0,0,0,0.5);
 }
-.Variable {
-  padding: 2px 6px;
-  text-align: center;
-}
 .DisclosureTriangle {
   width: 0;
   height: 0;
@@ -298,6 +301,21 @@ canvas,
 }
 .DisclosureTriangle.Hidden {
   display: none;
+}
+table {
+  border-collapse: collapse;
+}
+td,
+th {
+  text-align: center;
+  min-width: 54px;
+}
+th {
+  background-color: #eee;
+}
+.Variable {
+  padding: 2px 6px;
+  text-align: center;
 }
 .TextButton {
   cursor: pointer;
