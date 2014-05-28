@@ -152,6 +152,8 @@ canvas,
   position: absolute;
   top: 50%;
   left: 50%;
+  width: 100%;
+  height: 100%;
 }
 .PointControl {
   position: absolute;
@@ -166,6 +168,23 @@ canvas,
 }
 .PointControl:hover {
   opacity: 1;
+}
+.LineControl {
+  position: absolute;
+  background-color: #09c;
+  z-index: 20;
+  opacity: 0.5;
+}
+.LineControl:hover {
+  opacity: 1;
+}
+.LineControl:before {
+  content: " ";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  margin: -10px;
 }
 .SettingsButton {
   position: absolute;

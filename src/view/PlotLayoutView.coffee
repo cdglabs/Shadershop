@@ -158,6 +158,10 @@ R.create "PlotView",
         isThumbnail: false
       }
 
+      R.SliceControlsView {
+        plot: @plot
+      }
+
       if UI.selectedChildFns.length == 1
         R.ChildFnControlsView {
           childFn: UI.selectedChildFns[0]
@@ -403,6 +407,52 @@ R.create "PointControlView",
         y *= -1
         @onMove({x, y})
     }
+
+
+
+R.create "SliceControlsView",
+  propTypes:
+    plot: C.Plot
+
+  render: ->
+    R.div {className: "Interactive PointControlContainer"},
+      for slice, index in @_getSlices()
+        R.LineControlView {position: slice, key: index}
+
+  _getSlices: ->
+    slices = []
+
+    pixelFocus = @plot.toPixel(@plot.focus)
+
+    for dimension, dimensionIndex in @plot.getDimensions()
+      for coord in [0 ... config.dimensions]
+        if dimension[coord] == 1
+          if dimensionIndex == 0 # x
+            slices.push({x: pixelFocus.x})
+          else if dimensionIndex == 1 # y
+            slices.push({y: pixelFocus.y})
+    return slices
+
+
+
+
+R.create "LineControlView",
+  propTypes:
+    position: Object # {x, y} in the Pixel frame
+
+  render: ->
+    R.div {
+      className: "LineControl"
+      style: {
+        left:   if @position.x? then  @position.x else "-50%"
+        top:    if @position.y? then -@position.y else "-50%"
+        width:  if @position.x? then 1 else "100%"
+        height: if @position.y? then 1 else "100%"
+      }
+    }
+
+
+
 
 
 

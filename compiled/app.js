@@ -2727,6 +2727,8 @@ function HSLToRGB(h, s, l) {
         plot: this.plot,
         exprs: exprs,
         isThumbnail: false
+      }), R.SliceControlsView({
+        plot: this.plot
       }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
         childFn: UI.selectedChildFns[0],
         plot: this.plot
@@ -2990,6 +2992,70 @@ function HSLToRGB(h, s, l) {
           };
         })(this)
       };
+    }
+  });
+
+  R.create("SliceControlsView", {
+    propTypes: {
+      plot: C.Plot
+    },
+    render: function() {
+      var index, slice;
+      return R.div({
+        className: "Interactive PointControlContainer"
+      }, (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._getSlices();
+        _results = [];
+        for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
+          slice = _ref[index];
+          _results.push(R.LineControlView({
+            position: slice,
+            key: index
+          }));
+        }
+        return _results;
+      }).call(this));
+    },
+    _getSlices: function() {
+      var coord, dimension, dimensionIndex, pixelFocus, slices, _i, _j, _len, _ref, _ref1;
+      slices = [];
+      pixelFocus = this.plot.toPixel(this.plot.focus);
+      _ref = this.plot.getDimensions();
+      for (dimensionIndex = _i = 0, _len = _ref.length; _i < _len; dimensionIndex = ++_i) {
+        dimension = _ref[dimensionIndex];
+        for (coord = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; coord = 0 <= _ref1 ? ++_j : --_j) {
+          if (dimension[coord] === 1) {
+            if (dimensionIndex === 0) {
+              slices.push({
+                x: pixelFocus.x
+              });
+            } else if (dimensionIndex === 1) {
+              slices.push({
+                y: pixelFocus.y
+              });
+            }
+          }
+        }
+      }
+      return slices;
+    }
+  });
+
+  R.create("LineControlView", {
+    propTypes: {
+      position: Object
+    },
+    render: function() {
+      return R.div({
+        className: "LineControl",
+        style: {
+          left: this.position.x != null ? this.position.x : "-50%",
+          top: this.position.y != null ? -this.position.y : "-50%",
+          width: this.position.x != null ? 1 : "100%",
+          height: this.position.y != null ? 1 : "100%"
+        }
+      });
     }
   });
 
