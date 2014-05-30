@@ -111,7 +111,11 @@ R.create "OutlineItemView",
     return if e.target.closest(".Interactive, select, [contenteditable]")
 
     if key.command or key.shift
-      Actions.toggleSelectChildFn(@childFn)
+      if _.contains(UI.selectedChildFns, @childFn)
+        util.onceDragConsummated e, null, =>
+          Actions.toggleSelectChildFn(@childFn)
+      else
+        Actions.toggleSelectChildFn(@childFn)
     else
       Actions.selectChildFn(@childFn)
 

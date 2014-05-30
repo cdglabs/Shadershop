@@ -22,6 +22,9 @@ class C.Variable
     @_lastValueString = @valueString
     return value
 
+  duplicate: ->
+    return new C.Variable(@valueString)
+
 
 
 class C.Fn
@@ -41,6 +44,9 @@ class C.BuiltInFn extends C.Fn
 
   evaluate: (x) ->
     return builtIn.fnEvaluators[@fnName](x)
+
+  duplicate: ->
+    return this
 
 
 class C.CompoundFn extends C.Fn
@@ -100,6 +106,12 @@ class C.CompoundFn extends C.Fn
       else
         return "(" + childExprStrings.join(" * ") + ")"
 
+    duplicate: ->
+      compoundFn = new C.CompoundFn()
+      compoundFn.combiner = @combiner
+      compoundFn.childFns = @childFns.map (childFn) -> childFn.duplicate()
+      return compoundFn
+
 
 class C.DefinedFn extends C.CompoundFn
   constructor: ->
@@ -107,6 +119,8 @@ class C.DefinedFn extends C.CompoundFn
     @combiner = "last"
     @plotLayout = new C.PlotLayout()
 
+  duplicate: ->
+    return this
 
 
 class C.ChildFn extends C.Fn
@@ -189,6 +203,20 @@ class C.ChildFn extends C.Fn
 
   _zeroVectorString: util.glslString(util.constructVector(config.dimensions, 0))
   _identityMatrixString: util.glslString(numeric.identity(config.dimensions))
+
+  duplicate: ->
+    childFn = new C.ChildFn(@fn)
+    childFn.visible = @visible
+    childFn.domainTranslate = @domainTranslate.map (variable) -> variable.duplicate()
+    childFn.domainTransform = @domainTransform.map (row) ->
+      row.map (variable) ->
+        variable.duplicate()
+    childFn.rangeTranslate = @rangeTranslate.map (variable) -> variable.duplicate()
+    childFn.rangeTransform = @rangeTransform.map (row) ->
+      row.map (variable) ->
+        variable.duplicate()
+    return childFn
+
 
 
 

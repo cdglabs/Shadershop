@@ -758,6 +758,10 @@
       return value;
     };
 
+    Variable.prototype.duplicate = function() {
+      return new C.Variable(this.valueString);
+    };
+
     return Variable;
 
   })();
@@ -794,6 +798,10 @@
 
     BuiltInFn.prototype.evaluate = function(x) {
       return builtIn.fnEvaluators[this.fnName](x);
+    };
+
+    BuiltInFn.prototype.duplicate = function() {
+      return this;
     };
 
     return BuiltInFn;
@@ -878,6 +886,17 @@
           return "(" + childExprStrings.join(" * ") + ")";
         }
       }
+      return {
+        duplicate: function() {
+          var compoundFn;
+          compoundFn = new C.CompoundFn();
+          compoundFn.combiner = this.combiner;
+          compoundFn.childFns = this.childFns.map(function(childFn) {
+            return childFn.duplicate();
+          });
+          return compoundFn;
+        }
+      };
     };
 
     return CompoundFn;
@@ -892,6 +911,10 @@
       this.combiner = "last";
       this.plotLayout = new C.PlotLayout();
     }
+
+    DefinedFn.prototype.duplicate = function() {
+      return this;
+    };
 
     return DefinedFn;
 
@@ -1007,6 +1030,29 @@
     ChildFn.prototype._zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
 
     ChildFn.prototype._identityMatrixString = util.glslString(numeric.identity(config.dimensions));
+
+    ChildFn.prototype.duplicate = function() {
+      var childFn;
+      childFn = new C.ChildFn(this.fn);
+      childFn.visible = this.visible;
+      childFn.domainTranslate = this.domainTranslate.map(function(variable) {
+        return variable.duplicate();
+      });
+      childFn.domainTransform = this.domainTransform.map(function(row) {
+        return row.map(function(variable) {
+          return variable.duplicate();
+        });
+      });
+      childFn.rangeTranslate = this.rangeTranslate.map(function(variable) {
+        return variable.duplicate();
+      });
+      childFn.rangeTransform = this.rangeTransform.map(function(row) {
+        return row.map(function(variable) {
+          return variable.duplicate();
+        });
+      });
+      return childFn;
+    };
 
     return ChildFn;
 
@@ -2342,7 +2388,15 @@ function HSLToRGB(h, s, l) {
         return;
       }
       if (key.command || key.shift) {
-        Actions.toggleSelectChildFn(this.childFn);
+        if (_.contains(UI.selectedChildFns, this.childFn)) {
+          util.onceDragConsummated(e, null, (function(_this) {
+            return function() {
+              return Actions.toggleSelectChildFn(_this.childFn);
+            };
+          })(this));
+        } else {
+          Actions.toggleSelectChildFn(this.childFn);
+        }
       } else {
         Actions.selectChildFn(this.childFn);
       }
