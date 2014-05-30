@@ -4,6 +4,8 @@ R.create "GridView",
     isThumbnail: Boolean
 
   _getParams: ->
+    params = {}
+
     canvas = @getDOMNode()
 
     if @isThumbnail
@@ -15,18 +17,32 @@ R.create "GridView",
     maxWorld = @plot.toWorld({x:  canvas.width * scaleFactor / 2, y:  canvas.height * scaleFactor / 2})
 
     dimensions = @plot.getDimensions()
-    xMin = numeric.dot(minWorld, dimensions[0])
-    yMin = numeric.dot(minWorld, dimensions[1])
-    xMax = numeric.dot(maxWorld, dimensions[0])
-    yMax = numeric.dot(maxWorld, dimensions[1])
+    params.xMin = numeric.dot(minWorld, dimensions[0])
+    params.yMin = numeric.dot(minWorld, dimensions[1])
+    params.xMax = numeric.dot(maxWorld, dimensions[0])
+    params.yMax = numeric.dot(maxWorld, dimensions[1])
 
-    return {
-      xMin: xMin
-      xMax: xMax
-      yMin: yMin
-      yMax: yMax
-      pixelSize: @plot.getPixelSize() * scaleFactor
-    }
+    params.pixelSize = @plot.getPixelSize() * scaleFactor
+
+    # Hacky way to see if we should draw axis labels
+    if scaleFactor == 1
+      xCoord = dimensions[0].indexOf(1)
+      if xCoord < config.dimensions
+        params.xLabelColor = config.domainLabelColor
+        params.xLabel = "d" + (xCoord+1)
+      else
+        params.xLabelColor = config.rangeLabelColor
+        params.xLabel = "r" + (xCoord+1 - config.dimensions)
+
+      yCoord = dimensions[1].indexOf(1)
+      if yCoord < config.dimensions
+        params.yLabelColor = config.domainLabelColor
+        params.yLabel = "d" + (yCoord+1)
+      else
+        params.yLabelColor = config.rangeLabelColor
+        params.yLabel = "r" + (yCoord+1 - config.dimensions)
+
+    return params
 
   _draw: ->
     didResize = @_ensureProperSize()

@@ -471,6 +471,8 @@
     snapTolerance: 7,
     outlineIndent: 16,
     gridColor: "204,194,163",
+    domainLabelColor: "#900",
+    rangeLabelColor: "#090",
     colorMapZero: util.hslToRgb(0, 0, 0).map(util.glslString).join(","),
     colorMapPositive: util.hslToRgb(0, 0, 1).map(util.glslString).join(","),
     colorMapNegative: util.hslToRgb(226, 1, 0.4).map(util.glslString).join(","),
@@ -1318,12 +1320,16 @@
   };
 
   drawGrid = function(ctx, opts) {
-    var axesColor, axesOpacity, color, cx, cxMax, cxMin, cy, cyMax, cyMin, fromLocal, height, labelColor, labelDistance, labelOpacity, largeSpacing, majorColor, majorOpacity, minorColor, minorOpacity, pixelSize, smallSpacing, text, textHeight, toLocal, width, x, xMax, xMin, y, yMax, yMin, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var axesColor, axesOpacity, color, cx, cxMax, cxMin, cy, cyMax, cyMin, fromLocal, height, labelColor, labelDistance, labelEdgeDistance, labelOpacity, largeSpacing, majorColor, majorOpacity, minorColor, minorOpacity, originX, originY, pixelSize, smallSpacing, text, textHeight, toLocal, width, x, xLabel, xLabelColor, xMax, xMin, y, yLabel, yLabelColor, yMax, yMin, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     xMin = opts.xMin;
     xMax = opts.xMax;
     yMin = opts.yMin;
     yMax = opts.yMax;
     pixelSize = opts.pixelSize;
+    xLabel = opts.xLabel;
+    yLabel = opts.yLabel;
+    xLabelColor = opts.xLabelColor;
+    yLabelColor = opts.yLabelColor;
     _ref = canvasBounds(ctx), cxMin = _ref.cxMin, cxMax = _ref.cxMax, cyMin = _ref.cyMin, cyMax = _ref.cyMax, width = _ref.width, height = _ref.height;
     _ref1 = getSpacing(pixelSize), largeSpacing = _ref1.largeSpacing, smallSpacing = _ref1.smallSpacing;
     toLocal = function(_arg) {
@@ -1374,6 +1380,7 @@
     ctx.strokeStyle = axesColor;
     drawLine(ctx, fromLocal([0, yMin]), fromLocal([0, yMax]));
     drawLine(ctx, fromLocal([xMin, 0]), fromLocal([xMax, 0]));
+    labelEdgeDistance = labelDistance * 6;
     ctx.font = "" + textHeight + "px verdana";
     ctx.fillStyle = labelColor;
     ctx.textAlign = "center";
@@ -1384,14 +1391,16 @@
       if (x !== 0) {
         text = parseFloat(x.toPrecision(12)).toString();
         _ref7 = fromLocal([x, 0]), cx = _ref7[0], cy = _ref7[1];
-        cy += labelDistance;
-        if (cy < labelDistance) {
-          cy = labelDistance;
+        if (cx < cxMax - labelEdgeDistance) {
+          cy += labelDistance;
+          if (cy < labelDistance) {
+            cy = labelDistance;
+          }
+          if (cy + textHeight + labelDistance > height) {
+            cy = height - labelDistance - textHeight;
+          }
+          ctx.fillText(text, cx, cy);
         }
-        if (cy + textHeight + labelDistance > height) {
-          cy = height - labelDistance - textHeight;
-        }
-        ctx.fillText(text, cx, cy);
       }
     }
     ctx.textAlign = "left";
@@ -1402,15 +1411,46 @@
       if (y !== 0) {
         text = parseFloat(y.toPrecision(12)).toString();
         _ref9 = fromLocal([0, y]), cx = _ref9[0], cy = _ref9[1];
-        cx += labelDistance;
-        if (cx < labelDistance) {
-          cx = labelDistance;
+        if (cy > labelEdgeDistance) {
+          cx += labelDistance;
+          if (cx < labelDistance) {
+            cx = labelDistance;
+          }
+          if (cx + ctx.measureText(text).width + labelDistance > width) {
+            cx = width - labelDistance - ctx.measureText(text).width;
+          }
+          ctx.fillText(text, cx, cy);
         }
-        if (cx + ctx.measureText(text).width + labelDistance > width) {
-          cx = width - labelDistance - ctx.measureText(text).width;
-        }
-        ctx.fillText(text, cx, cy);
       }
+    }
+    if (xLabel) {
+      _ref10 = fromLocal([0, 0]), originX = _ref10[0], originY = _ref10[1];
+      text = xLabel;
+      ctx.fillStyle = xLabelColor;
+      cx = cxMax - labelDistance;
+      cy = originY + labelDistance;
+      if (cy < labelDistance) {
+        cy = labelDistance;
+      }
+      if (cy + textHeight + labelDistance > height) {
+        cy = height - labelDistance - textHeight;
+      }
+      ctx.textAlign = "right";
+      ctx.textBaseline = "top";
+      ctx.fillText(text, cx, cy);
+      text = yLabel;
+      ctx.fillStyle = yLabelColor;
+      cx = originX + labelDistance;
+      cy = labelDistance;
+      if (cx < labelDistance) {
+        cx = labelDistance;
+      }
+      if (cx + ctx.measureText(text).width + labelDistance > width) {
+        cx = width - labelDistance - ctx.measureText(text).width;
+      }
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(text, cx, cy);
     }
     return ctx.restore();
   };
@@ -3680,7 +3720,8 @@ function HSLToRGB(h, s, l) {
       isThumbnail: Boolean
     },
     _getParams: function() {
-      var canvas, dimensions, maxWorld, minWorld, scaleFactor, xMax, xMin, yMax, yMin;
+      var canvas, dimensions, maxWorld, minWorld, params, scaleFactor, xCoord, yCoord;
+      params = {};
       canvas = this.getDOMNode();
       if (this.isThumbnail) {
         scaleFactor = window.innerHeight / canvas.height;
@@ -3696,17 +3737,30 @@ function HSLToRGB(h, s, l) {
         y: canvas.height * scaleFactor / 2
       });
       dimensions = this.plot.getDimensions();
-      xMin = numeric.dot(minWorld, dimensions[0]);
-      yMin = numeric.dot(minWorld, dimensions[1]);
-      xMax = numeric.dot(maxWorld, dimensions[0]);
-      yMax = numeric.dot(maxWorld, dimensions[1]);
-      return {
-        xMin: xMin,
-        xMax: xMax,
-        yMin: yMin,
-        yMax: yMax,
-        pixelSize: this.plot.getPixelSize() * scaleFactor
-      };
+      params.xMin = numeric.dot(minWorld, dimensions[0]);
+      params.yMin = numeric.dot(minWorld, dimensions[1]);
+      params.xMax = numeric.dot(maxWorld, dimensions[0]);
+      params.yMax = numeric.dot(maxWorld, dimensions[1]);
+      params.pixelSize = this.plot.getPixelSize() * scaleFactor;
+      if (scaleFactor === 1) {
+        xCoord = dimensions[0].indexOf(1);
+        if (xCoord < config.dimensions) {
+          params.xLabelColor = config.domainLabelColor;
+          params.xLabel = "d" + (xCoord + 1);
+        } else {
+          params.xLabelColor = config.rangeLabelColor;
+          params.xLabel = "r" + (xCoord + 1 - config.dimensions);
+        }
+        yCoord = dimensions[1].indexOf(1);
+        if (yCoord < config.dimensions) {
+          params.yLabelColor = config.domainLabelColor;
+          params.yLabel = "d" + (yCoord + 1);
+        } else {
+          params.yLabelColor = config.rangeLabelColor;
+          params.yLabel = "r" + (yCoord + 1 - config.dimensions);
+        }
+      }
+      return params;
     },
     _draw: function() {
       var canvas, ctx, didResize, params;

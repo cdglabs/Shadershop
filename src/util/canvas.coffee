@@ -63,6 +63,10 @@ drawGrid = (ctx, opts) ->
   yMin = opts.yMin
   yMax = opts.yMax
   pixelSize = opts.pixelSize
+  xLabel = opts.xLabel
+  yLabel = opts.yLabel
+  xLabelColor = opts.xLabelColor
+  yLabelColor = opts.yLabelColor
 
   {cxMin, cxMax, cyMin, cyMax, width, height} = canvasBounds(ctx)
 
@@ -116,6 +120,7 @@ drawGrid = (ctx, opts) ->
   drawLine(ctx, fromLocal([xMin, 0]), fromLocal([xMax, 0]))
 
   # draw labels
+  labelEdgeDistance = labelDistance * 6 # To keep it from overlapping the axis labels
   ctx.font = "#{textHeight}px verdana"
   ctx.fillStyle = labelColor
   ctx.textAlign = "center"
@@ -124,24 +129,55 @@ drawGrid = (ctx, opts) ->
     if x != 0
       text = parseFloat(x.toPrecision(12)).toString()
       [cx, cy] = fromLocal([x, 0])
-      cy += labelDistance
-      if cy < labelDistance
-        cy = labelDistance
-      if cy + textHeight + labelDistance > height
-        cy = height - labelDistance - textHeight
-      ctx.fillText(text, cx, cy)
+      if cx < cxMax - labelEdgeDistance
+        cy += labelDistance
+        if cy < labelDistance
+          cy = labelDistance
+        if cy + textHeight + labelDistance > height
+          cy = height - labelDistance - textHeight
+        ctx.fillText(text, cx, cy)
   ctx.textAlign = "left"
   ctx.textBaseline = "middle"
   for y in ticks(largeSpacing, yMin, yMax)
     if y != 0
       text = parseFloat(y.toPrecision(12)).toString()
       [cx, cy] = fromLocal([0, y])
-      cx += labelDistance
-      if cx < labelDistance
-        cx = labelDistance
-      if cx + ctx.measureText(text).width + labelDistance > width
-        cx = width - labelDistance - ctx.measureText(text).width
-      ctx.fillText(text, cx, cy)
+      if cy > labelEdgeDistance
+        cx += labelDistance
+        if cx < labelDistance
+          cx = labelDistance
+        if cx + ctx.measureText(text).width + labelDistance > width
+          cx = width - labelDistance - ctx.measureText(text).width
+        ctx.fillText(text, cx, cy)
+
+  # draw axis labels
+  # TODO: The axis labels overlap if you're in the lower left quadrant.
+  if xLabel
+    [originX, originY] = fromLocal([0, 0])
+
+    text = xLabel
+    ctx.fillStyle = xLabelColor
+    cx = cxMax - labelDistance
+    cy = originY + labelDistance
+    if cy < labelDistance
+      cy = labelDistance
+    if cy + textHeight + labelDistance > height
+      cy = height - labelDistance - textHeight
+    ctx.textAlign = "right"
+    ctx.textBaseline = "top"
+    ctx.fillText(text, cx, cy)
+
+    text = yLabel
+    ctx.fillStyle = yLabelColor
+    cx = originX + labelDistance
+    cy = labelDistance
+    if cx < labelDistance
+      cx = labelDistance
+    if cx + ctx.measureText(text).width + labelDistance > width
+      cx = width - labelDistance - ctx.measureText(text).width
+    ctx.textAlign = "left"
+    ctx.textBaseline = "top"
+    ctx.fillText(text, cx, cy)
 
   ctx.restore()
 

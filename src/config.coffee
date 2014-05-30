@@ -29,6 +29,8 @@ window.config = config = {
   outlineIndent: 16
 
   gridColor: "204,194,163"
+  domainLabelColor: "#900"
+  rangeLabelColor: "#090"
 
   # colorMapPositive: ".80, .69, .36"
   # colorMapNegative: ".36, .47, .80"
