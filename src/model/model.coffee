@@ -106,11 +106,11 @@ class C.CompoundFn extends C.Fn
       else
         return "(" + childExprStrings.join(" * ") + ")"
 
-    duplicate: ->
-      compoundFn = new C.CompoundFn()
-      compoundFn.combiner = @combiner
-      compoundFn.childFns = @childFns.map (childFn) -> childFn.duplicate()
-      return compoundFn
+  duplicate: ->
+    compoundFn = new C.CompoundFn()
+    compoundFn.combiner = @combiner
+    compoundFn.childFns = @childFns.map (childFn) -> childFn.duplicate()
+    return compoundFn
 
 
 class C.DefinedFn extends C.CompoundFn
@@ -205,7 +205,7 @@ class C.ChildFn extends C.Fn
   _identityMatrixString: util.glslString(numeric.identity(config.dimensions))
 
   duplicate: ->
-    childFn = new C.ChildFn(@fn)
+    childFn = new C.ChildFn(@fn.duplicate())
     childFn.visible = @visible
     childFn.domainTranslate = @domainTranslate.map (variable) -> variable.duplicate()
     childFn.domainTransform = @domainTransform.map (row) ->

@@ -134,8 +134,18 @@ R.create "OutlineItemView",
       cursor: "-webkit-grabbing"
     }
 
-    childFn = @childFn
-    parentCompoundFn = @lookup("compoundFn")
+    # TODO: This only handles what you started dragging. Instead it should
+    # move the selection. Could use code cleanup too. childFn is the childFn
+    # that's being moved.
+    if key.command
+      # Duplicate
+      childFn = @childFn.duplicate()
+      # HACK: Should maybe copy the expanded state of the original
+      Actions.setChildFnExpanded(childFn, false)
+      parentCompoundFn = null
+    else
+      childFn = @childFn
+      parentCompoundFn = @lookup("compoundFn")
 
     util.onceDragConsummated e, =>
       UI.dragging = {

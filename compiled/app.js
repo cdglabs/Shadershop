@@ -886,17 +886,16 @@
           return "(" + childExprStrings.join(" * ") + ")";
         }
       }
-      return {
-        duplicate: function() {
-          var compoundFn;
-          compoundFn = new C.CompoundFn();
-          compoundFn.combiner = this.combiner;
-          compoundFn.childFns = this.childFns.map(function(childFn) {
-            return childFn.duplicate();
-          });
-          return compoundFn;
-        }
-      };
+    };
+
+    CompoundFn.prototype.duplicate = function() {
+      var compoundFn;
+      compoundFn = new C.CompoundFn();
+      compoundFn.combiner = this.combiner;
+      compoundFn.childFns = this.childFns.map(function(childFn) {
+        return childFn.duplicate();
+      });
+      return compoundFn;
     };
 
     return CompoundFn;
@@ -1033,7 +1032,7 @@
 
     ChildFn.prototype.duplicate = function() {
       var childFn;
-      childFn = new C.ChildFn(this.fn);
+      childFn = new C.ChildFn(this.fn.duplicate());
       childFn.visible = this.visible;
       childFn.domainTranslate = this.domainTranslate.map(function(variable) {
         return variable.duplicate();
@@ -2412,8 +2411,14 @@ function HSLToRGB(h, s, l) {
       UI.dragging = {
         cursor: "-webkit-grabbing"
       };
-      childFn = this.childFn;
-      parentCompoundFn = this.lookup("compoundFn");
+      if (key.command) {
+        childFn = this.childFn.duplicate();
+        Actions.setChildFnExpanded(childFn, false);
+        parentCompoundFn = null;
+      } else {
+        childFn = this.childFn;
+        parentCompoundFn = this.lookup("compoundFn");
+      }
       return util.onceDragConsummated(e, (function(_this) {
         return function() {
           return UI.dragging = {
