@@ -2130,7 +2130,7 @@ function HSLToRGB(h, s, l) {
         appRoot: this.appRoot
       }), R.OutlineView({
         definedFn: UI.selectedFn
-      }), R.InspectorView({}), R.DebugView({}), R.DraggingView({}), R.ShaderOverlayView({
+      }), R.InspectorView({}), R.DraggingView({}), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
     }
@@ -2164,6 +2164,10 @@ function HSLToRGB(h, s, l) {
         onClick: reset
       }, "Reset"));
     }
+  });
+
+  key("ctrl+R", function() {
+    return reset();
   });
 
 }).call(this);

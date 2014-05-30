@@ -17,7 +17,7 @@ R.create "AppRootView",
       R.PaletteView {appRoot: @appRoot}
       R.OutlineView {definedFn: UI.selectedFn}
       R.InspectorView {}
-      R.DebugView {}
+      # R.DebugView {}
       R.DraggingView {}
       R.ShaderOverlayView {ref: "shaderOverlay"}
 
@@ -49,3 +49,7 @@ R.create "DebugView",
       }
     },
       R.button {onClick: reset}, "Reset"
+
+
+key "ctrl+R", ->
+  reset()
