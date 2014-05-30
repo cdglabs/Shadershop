@@ -57,11 +57,11 @@ Palette
 
 
 Priority
-  something better than inspector
-    text fields on control points would work
-
   need duplicate
     would be nice to have drag multiple, but not needed
+
+Nice to have
+  labels on axes
 
   flexible color scale for colorMap
 
@@ -69,6 +69,10 @@ Priority
 
   performance
     send in selectedChildFn transforms as uniforms into shaders to make dragging control points faster
+
+  highlight hovered/active transform variables
+
+  spread based on the hovered transform point/variable(s)
 
   maybe a hover in "window" view for colorMap
 
