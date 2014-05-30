@@ -2188,7 +2188,11 @@ function HSLToRGB(h, s, l) {
     },
     render: function() {
       var className, coordIndex, rowIndex, variable;
-      return R.table({}, R.tr({}, R.th({}), (function() {
+      return R.table({}, R.tr({
+        style: {
+          color: config.domainLabelColor
+        }
+      }, R.th({}), (function() {
         var _i, _ref, _results;
         _results = [];
         for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
@@ -2233,7 +2237,11 @@ function HSLToRGB(h, s, l) {
           }).call(this)));
         }
         return _results;
-      }).call(this), R.tr({}, R.th({}), (function() {
+      }).call(this), R.tr({
+        style: {
+          color: config.rangeLabelColor
+        }
+      }, R.th({}), (function() {
         var _i, _ref, _results;
         _results = [];
         for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {

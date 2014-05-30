@@ -14,7 +14,7 @@ R.create "InspectorTableView",
   render: ->
     R.table {},
 
-      R.tr {},
+      R.tr {style: {color: config.domainLabelColor}},
         R.th {}
         for coordIndex in [0...config.dimensions]
           R.th {}, "d"+(coordIndex+1)
@@ -36,7 +36,7 @@ R.create "InspectorTableView",
             R.td {key: C.id(variable)},
               R.VariableView {variable}
 
-      R.tr {},
+      R.tr {style: {color: config.rangeLabelColor}},
         R.th {}
         for coordIndex in [0...config.dimensions]
           R.th {}, "r"+(coordIndex+1)
