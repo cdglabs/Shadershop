@@ -352,6 +352,23 @@
     return cache = {};
   };
 
+  Compiler.getAllDefinedFnExprStrings = function() {
+    var definedFn, exprString, lastChildFn, result, _i, _len, _ref;
+    result = {};
+    _ref = appRoot.fns;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      definedFn = _ref[_i];
+      if (definedFn.childFns.length > 0) {
+        lastChildFn = _.last(definedFn.childFns);
+        exprString = Compiler.getExprString(lastChildFn, "inputVal");
+      } else {
+        exprString = util.glslString(util.constructVector(config.dimensions, 0));
+      }
+      result[C.id(definedFn)] = exprString;
+    }
+    return result;
+  };
+
 }).call(this);
 }, "UI": function(exports, require, module) {(function() {
   var UI,
@@ -912,6 +929,10 @@
       this.combiner = "last";
       this.plotLayout = new C.PlotLayout();
     }
+
+    DefinedFn.prototype.getExprString = function(parameter) {
+      return C.id(this) + "(" + parameter + ")";
+    };
 
     DefinedFn.prototype.duplicate = function() {
       return this;
@@ -3473,9 +3494,10 @@ function HSLToRGB(h, s, l) {
       }
     },
     draw: function() {
-      var bounds, canvas, clippingRect, exprString, fnHolder, fns, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var additionalCode, bounds, canvas, clippingRect, exprString, fnHolder, fns, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
+      additionalCode = this.getAdditionalCode();
       shaderEls = document.querySelectorAll(".Shader");
       for (_i = 0, _len = shaderEls.length; _i < _len; _i++) {
         shaderEl = shaderEls[_i];
@@ -3499,12 +3521,12 @@ function HSLToRGB(h, s, l) {
         for (_j = 0, _len1 = fns.length; _j < _len1; _j++) {
           fnHolder = fns[_j];
           exprString = Compiler.getExprString(fnHolder.fn, "inputVal");
-          name = plot.type + "," + exprString;
+          name = plot.type + "," + exprString + "," + additionalCode;
           if (!this.programs[name]) {
             if (plot.type === "cartesian" || plot.type === "cartesian2") {
-              createCartesianProgram(this.glod, name, exprString);
+              createCartesianProgram(this.glod, name, exprString, additionalCode);
             } else if (plot.type === "colorMap") {
-              createColorMapProgram(this.glod, name, exprString);
+              createColorMapProgram(this.glod, name, exprString, additionalCode);
             }
             this.programs[name] = true;
           }
@@ -3530,6 +3552,18 @@ function HSLToRGB(h, s, l) {
         }
       }
       return _results;
+    },
+    getAdditionalCode: function() {
+      var additionalCode, exprString, id, vecType, _ref;
+      additionalCode = "";
+      vecType = util.glslVectorType(config.dimensions);
+      _ref = Compiler.getAllDefinedFnExprStrings();
+      for (id in _ref) {
+        if (!__hasProp.call(_ref, id)) continue;
+        exprString = _ref[id];
+        additionalCode += "" + vecType + " " + id + "(" + vecType + " inputVal) {return " + exprString + ";}\n";
+      }
+      return additionalCode;
     },
     handleResize: function() {
       this.sizeCanvas();
@@ -3598,11 +3632,11 @@ function HSLToRGB(h, s, l) {
     return glod.createVBO("samples").bufferDataStatic("samples", new Float32Array(samplesArray));
   };
 
-  createCartesianProgram = function(glod, name, expr) {
+  createCartesianProgram = function(glod, name, expr, additionalCode) {
     var fragment, matType, vecType, vertex;
     vecType = util.glslVectorType(config.dimensions);
     matType = util.glslMatrixType(config.dimensions);
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\n" + additionalCode + "\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
@@ -3659,10 +3693,10 @@ function HSLToRGB(h, s, l) {
     return glod.end();
   };
 
-  createColorMapProgram = function(glod, name, expr) {
+  createColorMapProgram = function(glod, name, expr, additionalCode) {
     var fragment, vertex;
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\n" + additionalCode + "\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 

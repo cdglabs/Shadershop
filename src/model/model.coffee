@@ -119,6 +119,10 @@ class C.DefinedFn extends C.CompoundFn
     @combiner = "last"
     @plotLayout = new C.PlotLayout()
 
+  getExprString: (parameter) ->
+    # Optimization
+    return C.id(this) + "(" + parameter + ")"
+
   duplicate: ->
     return this
 

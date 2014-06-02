@@ -29,6 +29,8 @@ R.create "ShaderOverlayView",
 
     usedPrograms = {}
 
+    additionalCode = @getAdditionalCode()
+
     shaderEls = document.querySelectorAll(".Shader")
     for shaderEl in shaderEls
       continue unless shaderEl.isOnScreen()
@@ -51,13 +53,13 @@ R.create "ShaderOverlayView",
 
       for fnHolder in fns
         exprString = Compiler.getExprString(fnHolder.fn, "inputVal")
-        name = plot.type + "," + exprString
+        name = plot.type + "," + exprString + "," + additionalCode
         unless @programs[name]
 
           if plot.type == "cartesian" or plot.type == "cartesian2"
-            createCartesianProgram(@glod, name, exprString)
+            createCartesianProgram(@glod, name, exprString, additionalCode)
           else if plot.type == "colorMap"
-            createColorMapProgram(@glod, name, exprString)
+            createColorMapProgram(@glod, name, exprString, additionalCode)
 
           @programs[name] = true
         usedPrograms[name] = true
@@ -73,6 +75,14 @@ R.create "ShaderOverlayView",
       unless usedPrograms[name]
         delete @glod._programs[name]
         delete @programs[name]
+
+  getAdditionalCode: ->
+    additionalCode = ""
+    vecType = util.glslVectorType(config.dimensions)
+    for own id, exprString of Compiler.getAllDefinedFnExprStrings()
+      additionalCode += "#{vecType} #{id}(#{vecType} inputVal) {return #{exprString};}\n"
+    return additionalCode
+
 
 
   # ===========================================================================
@@ -164,7 +174,7 @@ bufferCartesianSamples = (glod, numSamples) ->
 # Shader Programs
 # =============================================================================
 
-createCartesianProgram = (glod, name, expr) ->
+createCartesianProgram = (glod, name, expr, additionalCode) ->
 
   vecType = util.glslVectorType(config.dimensions)
   matType = util.glslMatrixType(config.dimensions)
@@ -181,6 +191,8 @@ createCartesianProgram = (glod, name, expr) ->
   uniform #{matType} domainTransform, rangeTransform;
 
   uniform vec2 pixelScale;
+
+  #{additionalCode}
 
   void main() {
     #{vecType} inputVal, outputVal;
@@ -271,7 +283,7 @@ drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
 
 
 
-createColorMapProgram = (glod, name, expr) ->
+createColorMapProgram = (glod, name, expr, additionalCode) ->
 
   vertex = """
   precision highp float;
@@ -297,6 +309,8 @@ createColorMapProgram = (glod, name, expr) ->
   uniform float yMax;
 
   varying vec2 vPosition;
+
+  #{additionalCode}
 
   float lerp(float x, float dMin, float dMax, float rMin, float rMax) {
     float ratio = (x - dMin) / (dMax - dMin);
