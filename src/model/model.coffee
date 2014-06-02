@@ -29,18 +29,11 @@ class C.Variable
 
 class C.Fn
   constructor: ->
-  getExprString: (parameter) -> throw "Not implemented"
   evaluate: (x) -> throw "Not implemented"
 
 
 class C.BuiltInFn extends C.Fn
   constructor: (@fnName, @label) ->
-
-  getExprString: (parameter) ->
-    if @fnName == "identity"
-      return parameter
-
-    return "#{@fnName}(#{parameter})"
 
   evaluate: (x) ->
     return builtIn.fnEvaluators[@fnName](x)
@@ -76,36 +69,6 @@ class C.CompoundFn extends C.Fn
         numeric.mul(result, childFn.evaluate(x))
       return _.reduce(@childFns, reducer, util.constructVector(config.dimensions, 1))
 
-  getExprString: (parameter) ->
-    visibleChildFns = _.filter @childFns, (childFn) -> childFn.visible
-
-    if @combiner == "last"
-      if visibleChildFns.length > 0
-        return _.last(visibleChildFns).getExprString(parameter)
-      else
-        return util.glslString(util.constructVector(config.dimensions, 0))
-
-    if @combiner == "composition"
-      exprString = parameter
-      for childFn in visibleChildFns
-        exprString = childFn.getExprString(exprString)
-      return exprString
-
-    childExprStrings = visibleChildFns.map (childFn) =>
-      childFn.getExprString(parameter)
-
-    if @combiner == "sum"
-      if childExprStrings.length == 0
-        return util.glslString(util.constructVector(config.dimensions, 0))
-      else
-        return "(" + childExprStrings.join(" + ") + ")"
-
-    if @combiner == "product"
-      if childExprStrings.length == 0
-        return util.glslString(util.constructVector(config.dimensions, 1))
-      else
-        return "(" + childExprStrings.join(" * ") + ")"
-
   duplicate: ->
     compoundFn = new C.CompoundFn()
     compoundFn.combiner = @combiner
@@ -118,10 +81,6 @@ class C.DefinedFn extends C.CompoundFn
     super()
     @combiner = "last"
     @plotLayout = new C.PlotLayout()
-
-  getExprString: (parameter) ->
-    # Optimization
-    return C.id(this) + "(" + parameter + ")"
 
   duplicate: ->
     return this
@@ -180,33 +139,6 @@ class C.ChildFn extends C.Fn
     x = @fn.evaluate(x)
     x = numeric.add(numeric.dot(rangeTransform, x), rangeTranslate)
     return x
-
-  getExprString: (parameter) ->
-    domainTranslate    = util.glslString(@getDomainTranslate())
-    domainTransformInv = util.glslString(util.safeInv(@getDomainTransform()))
-    rangeTranslate     = util.glslString(@getRangeTranslate())
-    rangeTransform     = util.glslString(@getRangeTransform())
-
-    exprString = parameter
-
-    if domainTranslate != @_zeroVectorString
-      exprString = "(#{exprString} - #{domainTranslate})"
-
-    if domainTransformInv != @_identityMatrixString
-      exprString = "(#{domainTransformInv} * #{exprString})"
-
-    exprString = @fn.getExprString(exprString)
-
-    if rangeTransform != @_identityMatrixString
-      exprString = "(#{rangeTransform} * #{exprString})"
-
-    if rangeTranslate != @_zeroVectorString
-      exprString = "(#{exprString} + #{rangeTranslate})"
-
-    return exprString
-
-  _zeroVectorString: util.glslString(util.constructVector(config.dimensions, 0))
-  _identityMatrixString: util.glslString(numeric.identity(config.dimensions))
 
   duplicate: ->
     childFn = new C.ChildFn(@fn.duplicate())

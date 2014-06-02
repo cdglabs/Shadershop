@@ -331,42 +331,161 @@
 
 }).call(this);
 }, "Compiler": function(exports, require, module) {(function() {
-  var Compiler, cache;
+  var Compiler, cache, getAllDependencies, getDependencies, getExprStringAndDependencies, getGlslFnString, identityMatrixString, vecType, zeroVectorString;
 
   window.Compiler = Compiler = {};
 
-  cache = {};
+  vecType = util.glslVectorType(config.dimensions);
 
-  Compiler.getExprString = function(fn, parameter) {
-    var key, result;
-    key = C.id(fn) + "," + parameter;
-    if (cache[key] != null) {
-      return cache[key];
-    }
-    result = fn.getExprString(parameter);
-    cache[key] = result;
-    return result;
-  };
+  zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
+
+  identityMatrixString = util.glslString(numeric.identity(config.dimensions));
+
+  cache = {};
 
   Compiler.setDirty = function() {
     return cache = {};
   };
 
-  Compiler.getAllDefinedFnExprStrings = function() {
-    var definedFn, exprString, lastChildFn, result, _i, _len, _ref;
-    result = {};
-    _ref = appRoot.fns;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      definedFn = _ref[_i];
-      if (definedFn.childFns.length > 0) {
-        lastChildFn = _.last(definedFn.childFns);
-        exprString = Compiler.getExprString(lastChildFn, "inputVal");
-      } else {
-        exprString = util.glslString(util.constructVector(config.dimensions, 0));
-      }
-      result[C.id(definedFn)] = exprString;
+  getExprStringAndDependencies = function(fn) {
+    var dependencies, exprString, id, recurse, result;
+    id = C.id(fn);
+    if (cache[id] != null) {
+      return cache[id];
     }
+    dependencies = [];
+    recurse = function(fn, parameter, firstCall) {
+      var childExprStrings, childFn, domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate, visibleChildFns, _i, _len;
+      if (firstCall == null) {
+        firstCall = false;
+      }
+      if (fn instanceof C.BuiltInFn) {
+        if (fn.fnName === "identity") {
+          return parameter;
+        }
+        return "" + fn.fnName + "(" + parameter + ")";
+      }
+      if (fn instanceof C.DefinedFn && !firstCall) {
+        dependencies.push(fn);
+        return "" + (C.id(fn)) + "(" + parameter + ")";
+      }
+      if (fn instanceof C.CompoundFn) {
+        visibleChildFns = _.filter(fn.childFns, function(childFn) {
+          return childFn.visible;
+        });
+        if (fn.combiner === "last") {
+          if (visibleChildFns.length > 0) {
+            return recurse(_.last(visibleChildFns), parameter);
+          } else {
+            return util.glslString(util.constructVector(config.dimensions, 0));
+          }
+        }
+        if (fn.combiner === "composition") {
+          exprString = parameter;
+          for (_i = 0, _len = visibleChildFns.length; _i < _len; _i++) {
+            childFn = visibleChildFns[_i];
+            exprString = recurse(childFn, exprString);
+          }
+          return exprString;
+        }
+        childExprStrings = visibleChildFns.map((function(_this) {
+          return function(childFn) {
+            return recurse(childFn, parameter);
+          };
+        })(this));
+        if (fn.combiner === "sum") {
+          if (childExprStrings.length === 0) {
+            return util.glslString(util.constructVector(config.dimensions, 0));
+          } else {
+            return "(" + childExprStrings.join(" + ") + ")";
+          }
+        }
+        if (fn.combiner === "product") {
+          if (childExprStrings.length === 0) {
+            return util.glslString(util.constructVector(config.dimensions, 1));
+          } else {
+            return "(" + childExprStrings.join(" * ") + ")";
+          }
+        }
+      }
+      if (fn instanceof C.ChildFn) {
+        domainTranslate = util.glslString(fn.getDomainTranslate());
+        domainTransformInv = util.glslString(util.safeInv(fn.getDomainTransform()));
+        rangeTranslate = util.glslString(fn.getRangeTranslate());
+        rangeTransform = util.glslString(fn.getRangeTransform());
+        exprString = parameter;
+        if (domainTranslate !== zeroVectorString) {
+          exprString = "(" + exprString + " - " + domainTranslate + ")";
+        }
+        if (domainTransformInv !== identityMatrixString) {
+          exprString = "(" + domainTransformInv + " * " + exprString + ")";
+        }
+        exprString = recurse(fn.fn, exprString);
+        if (rangeTransform !== identityMatrixString) {
+          exprString = "(" + rangeTransform + " * " + exprString + ")";
+        }
+        if (rangeTranslate !== zeroVectorString) {
+          exprString = "(" + exprString + " + " + rangeTranslate + ")";
+        }
+        return exprString;
+      }
+    };
+    exprString = recurse(fn, "inputVal", true);
+    result = {
+      exprString: exprString,
+      dependencies: dependencies
+    };
+    cache[id] = result;
     return result;
+  };
+
+  getDependencies = function(fn) {
+    return getExprStringAndDependencies(fn).dependencies;
+  };
+
+  getAllDependencies = function(fn) {
+    var allDependencies, recurse;
+    allDependencies = [];
+    recurse = function(fn) {
+      var dependencies, dependency, _i, _len, _results;
+      dependencies = getDependencies(fn);
+      allDependencies = _.union(allDependencies, dependencies);
+      _results = [];
+      for (_i = 0, _len = dependencies.length; _i < _len; _i++) {
+        dependency = dependencies[_i];
+        _results.push(recurse(dependency));
+      }
+      return _results;
+    };
+    recurse(fn);
+    return allDependencies;
+  };
+
+  getGlslFnString = function(fn, name) {
+    var exprString;
+    if (name == null) {
+      name = C.id(fn);
+    }
+    exprString = getExprStringAndDependencies(fn).exprString;
+    return "" + vecType + " " + name + "(" + vecType + " inputVal) {return " + exprString + ";}";
+  };
+
+  Compiler.getGlsl = function(fn) {
+    var allDependencies, dependency, exprString, fnStrings;
+    exprString = getExprStringAndDependencies(fn).exprString;
+    allDependencies = getAllDependencies(fn);
+    allDependencies.reverse();
+    fnStrings = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = allDependencies.length; _i < _len; _i++) {
+        dependency = allDependencies[_i];
+        _results.push(getGlslFnString(dependency));
+      }
+      return _results;
+    })();
+    fnStrings.push(getGlslFnString(fn, "mainFn"));
+    return fnStrings.join("\n");
   };
 
 }).call(this);
@@ -788,10 +907,6 @@
   C.Fn = (function() {
     function Fn() {}
 
-    Fn.prototype.getExprString = function(parameter) {
-      throw "Not implemented";
-    };
-
     Fn.prototype.evaluate = function(x) {
       throw "Not implemented";
     };
@@ -807,13 +922,6 @@
       this.fnName = fnName;
       this.label = label;
     }
-
-    BuiltInFn.prototype.getExprString = function(parameter) {
-      if (this.fnName === "identity") {
-        return parameter;
-      }
-      return "" + this.fnName + "(" + parameter + ")";
-    };
 
     BuiltInFn.prototype.evaluate = function(x) {
       return builtIn.fnEvaluators[this.fnName](x);
@@ -866,47 +974,6 @@
       }
     };
 
-    CompoundFn.prototype.getExprString = function(parameter) {
-      var childExprStrings, childFn, exprString, visibleChildFns, _i, _len;
-      visibleChildFns = _.filter(this.childFns, function(childFn) {
-        return childFn.visible;
-      });
-      if (this.combiner === "last") {
-        if (visibleChildFns.length > 0) {
-          return _.last(visibleChildFns).getExprString(parameter);
-        } else {
-          return util.glslString(util.constructVector(config.dimensions, 0));
-        }
-      }
-      if (this.combiner === "composition") {
-        exprString = parameter;
-        for (_i = 0, _len = visibleChildFns.length; _i < _len; _i++) {
-          childFn = visibleChildFns[_i];
-          exprString = childFn.getExprString(exprString);
-        }
-        return exprString;
-      }
-      childExprStrings = visibleChildFns.map((function(_this) {
-        return function(childFn) {
-          return childFn.getExprString(parameter);
-        };
-      })(this));
-      if (this.combiner === "sum") {
-        if (childExprStrings.length === 0) {
-          return util.glslString(util.constructVector(config.dimensions, 0));
-        } else {
-          return "(" + childExprStrings.join(" + ") + ")";
-        }
-      }
-      if (this.combiner === "product") {
-        if (childExprStrings.length === 0) {
-          return util.glslString(util.constructVector(config.dimensions, 1));
-        } else {
-          return "(" + childExprStrings.join(" * ") + ")";
-        }
-      }
-    };
-
     CompoundFn.prototype.duplicate = function() {
       var compoundFn;
       compoundFn = new C.CompoundFn();
@@ -929,10 +996,6 @@
       this.combiner = "last";
       this.plotLayout = new C.PlotLayout();
     }
-
-    DefinedFn.prototype.getExprString = function(parameter) {
-      return C.id(this) + "(" + parameter + ")";
-    };
 
     DefinedFn.prototype.duplicate = function() {
       return this;
@@ -1025,33 +1088,6 @@
       x = numeric.add(numeric.dot(rangeTransform, x), rangeTranslate);
       return x;
     };
-
-    ChildFn.prototype.getExprString = function(parameter) {
-      var domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate;
-      domainTranslate = util.glslString(this.getDomainTranslate());
-      domainTransformInv = util.glslString(util.safeInv(this.getDomainTransform()));
-      rangeTranslate = util.glslString(this.getRangeTranslate());
-      rangeTransform = util.glslString(this.getRangeTransform());
-      exprString = parameter;
-      if (domainTranslate !== this._zeroVectorString) {
-        exprString = "(" + exprString + " - " + domainTranslate + ")";
-      }
-      if (domainTransformInv !== this._identityMatrixString) {
-        exprString = "(" + domainTransformInv + " * " + exprString + ")";
-      }
-      exprString = this.fn.getExprString(exprString);
-      if (rangeTransform !== this._identityMatrixString) {
-        exprString = "(" + rangeTransform + " * " + exprString + ")";
-      }
-      if (rangeTranslate !== this._zeroVectorString) {
-        exprString = "(" + exprString + " + " + rangeTranslate + ")";
-      }
-      return exprString;
-    };
-
-    ChildFn.prototype._zeroVectorString = util.glslString(util.constructVector(config.dimensions, 0));
-
-    ChildFn.prototype._identityMatrixString = util.glslString(numeric.identity(config.dimensions));
 
     ChildFn.prototype.duplicate = function() {
       var childFn;
@@ -3494,10 +3530,9 @@ function HSLToRGB(h, s, l) {
       }
     },
     draw: function() {
-      var additionalCode, bounds, canvas, clippingRect, exprString, fnHolder, fns, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, fnHolder, fns, glsl, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
-      additionalCode = this.getAdditionalCode();
       shaderEls = document.querySelectorAll(".Shader");
       for (_i = 0, _len = shaderEls.length; _i < _len; _i++) {
         shaderEl = shaderEls[_i];
@@ -3520,13 +3555,13 @@ function HSLToRGB(h, s, l) {
         }
         for (_j = 0, _len1 = fns.length; _j < _len1; _j++) {
           fnHolder = fns[_j];
-          exprString = Compiler.getExprString(fnHolder.fn, "inputVal");
-          name = plot.type + "," + exprString + "," + additionalCode;
+          glsl = Compiler.getGlsl(fnHolder.fn);
+          name = plot.type + "," + glsl;
           if (!this.programs[name]) {
             if (plot.type === "cartesian" || plot.type === "cartesian2") {
-              createCartesianProgram(this.glod, name, exprString, additionalCode);
+              createCartesianProgram(this.glod, name, glsl);
             } else if (plot.type === "colorMap") {
-              createColorMapProgram(this.glod, name, exprString, additionalCode);
+              createColorMapProgram(this.glod, name, glsl);
             }
             this.programs[name] = true;
           }
@@ -3632,11 +3667,11 @@ function HSLToRGB(h, s, l) {
     return glod.createVBO("samples").bufferDataStatic("samples", new Float32Array(samplesArray));
   };
 
-  createCartesianProgram = function(glod, name, expr, additionalCode) {
+  createCartesianProgram = function(glod, name, glsl) {
     var fragment, matType, vecType, vertex;
     vecType = util.glslVectorType(config.dimensions);
     matType = util.glslMatrixType(config.dimensions);
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\n" + additionalCode + "\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = " + expr + ";\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\n" + glsl + "\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = mainFn(inputVal);\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
@@ -3693,10 +3728,10 @@ function HSLToRGB(h, s, l) {
     return glod.end();
   };
 
-  createColorMapProgram = function(glod, name, expr, additionalCode) {
+  createColorMapProgram = function(glod, name, glsl) {
     var fragment, vertex;
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\n" + additionalCode + "\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = " + expr + ";\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\n" + glsl + "\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = mainFn(inputVal);\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 

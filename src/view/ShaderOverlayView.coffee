@@ -29,8 +29,6 @@ R.create "ShaderOverlayView",
 
     usedPrograms = {}
 
-    additionalCode = @getAdditionalCode()
-
     shaderEls = document.querySelectorAll(".Shader")
     for shaderEl in shaderEls
       continue unless shaderEl.isOnScreen()
@@ -52,14 +50,14 @@ R.create "ShaderOverlayView",
         scaleFactor = 1
 
       for fnHolder in fns
-        exprString = Compiler.getExprString(fnHolder.fn, "inputVal")
-        name = plot.type + "," + exprString + "," + additionalCode
+        glsl = Compiler.getGlsl(fnHolder.fn)
+        name = plot.type + "," + glsl
         unless @programs[name]
 
           if plot.type == "cartesian" or plot.type == "cartesian2"
-            createCartesianProgram(@glod, name, exprString, additionalCode)
+            createCartesianProgram(@glod, name, glsl)
           else if plot.type == "colorMap"
-            createColorMapProgram(@glod, name, exprString, additionalCode)
+            createColorMapProgram(@glod, name, glsl)
 
           @programs[name] = true
         usedPrograms[name] = true
@@ -174,7 +172,7 @@ bufferCartesianSamples = (glod, numSamples) ->
 # Shader Programs
 # =============================================================================
 
-createCartesianProgram = (glod, name, expr, additionalCode) ->
+createCartesianProgram = (glod, name, glsl) ->
 
   vecType = util.glslVectorType(config.dimensions)
   matType = util.glslMatrixType(config.dimensions)
@@ -192,12 +190,12 @@ createCartesianProgram = (glod, name, expr, additionalCode) ->
 
   uniform vec2 pixelScale;
 
-  #{additionalCode}
+  #{glsl}
 
   void main() {
     #{vecType} inputVal, outputVal;
     inputVal = domainStart + domainStep * sample;
-    outputVal = #{expr};
+    outputVal = mainFn(inputVal);
 
     #{vecType} position = domainTransform * (inputVal - domainCenter) +
                           rangeTransform * (outputVal - rangeCenter);
@@ -283,7 +281,7 @@ drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
 
 
 
-createColorMapProgram = (glod, name, expr, additionalCode) ->
+createColorMapProgram = (glod, name, glsl) ->
 
   vertex = """
   precision highp float;
@@ -310,7 +308,7 @@ createColorMapProgram = (glod, name, expr, additionalCode) ->
 
   varying vec2 vPosition;
 
-  #{additionalCode}
+  #{glsl}
 
   float lerp(float x, float dMin, float dMax, float rMin, float rMax) {
     float ratio = (x - dMin) / (dMax - dMin);
@@ -324,7 +322,7 @@ createColorMapProgram = (glod, name, expr, additionalCode) ->
       0.,
       0.
     );
-    vec4 outputVal = #{expr};
+    vec4 outputVal = mainFn(inputVal);
 
     float value = outputVal.x;
     vec3 color;
