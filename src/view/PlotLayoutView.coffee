@@ -95,13 +95,13 @@ R.create "PlotView",
 
 
   render: ->
-    exprs = []
+    fns = []
 
     if @plot.type == "colorMap"
 
       # Main
-      exprs.push {
-        exprString: Compiler.getExprString(@fn, "inputVal")
+      fns.push {
+        fn: @fn
       }
 
     else
@@ -110,35 +110,35 @@ R.create "PlotView",
 
       # Child Fns
       for childFn in expandedChildFns
-        exprs.push {
-          exprString: Compiler.getExprString(childFn, "inputVal")
+        fns.push {
+          fn: childFn
           color: config.color.child
         }
 
       # Hovered
       if UI.hoveredChildFn and _.contains(expandedChildFns, UI.hoveredChildFn)
-        exprs.push {
-          exprString: Compiler.getExprString(UI.hoveredChildFn, "inputVal")
+        fns.push {
+          fn: UI.hoveredChildFn
           color: config.color.hovered
         }
 
       # Main
-      exprs.push {
-        exprString: Compiler.getExprString(@fn, "inputVal")
+      fns.push {
+        fn: @fn
         color: config.color.main
       }
 
       # Selected
       for childFn in UI.selectedChildFns
-        exprs.push {
-          exprString: Compiler.getExprString(childFn, "inputVal")
+        fns.push {
+          fn: childFn
           color: config.color.selected
         }
 
-      # Remove redundant exprs
-      exprs = _.reject exprs, (expr, exprIndex) ->
-        for i in [exprIndex+1 ... exprs.length]
-          if exprs[i].exprString == expr.exprString
+      # Remove redundant fns
+      fns = _.reject fns, (fnHolder, fnIndex) ->
+        for i in [fnIndex+1 ... fns.length]
+          if fns[i].fn == fnHolder.fn
             return true
         return false
 
@@ -154,7 +154,7 @@ R.create "PlotView",
 
       R.ShaderCartesianView {
         plot: @plot
-        exprs: exprs
+        fns: fns
         isThumbnail: false
       }
 

@@ -41,7 +41,7 @@ R.create "ShaderOverlayView",
       setViewport(@glod, rect, clippingRect)
 
       shaderView = shaderEl.dataFor
-      exprs = shaderView.exprs
+      fns = shaderView.fns
       plot = shaderView.plot
 
       if shaderView.isThumbnail
@@ -49,20 +49,21 @@ R.create "ShaderOverlayView",
       else
         scaleFactor = 1
 
-      for expr in exprs
-        name = plot.type + "," + expr.exprString
+      for fnHolder in fns
+        exprString = Compiler.getExprString(fnHolder.fn, "inputVal")
+        name = plot.type + "," + exprString
         unless @programs[name]
 
           if plot.type == "cartesian" or plot.type == "cartesian2"
-            createCartesianProgram(@glod, name, expr.exprString)
+            createCartesianProgram(@glod, name, exprString)
           else if plot.type == "colorMap"
-            createColorMapProgram(@glod, name, expr.exprString)
+            createColorMapProgram(@glod, name, exprString)
 
           @programs[name] = true
         usedPrograms[name] = true
 
         if plot.type == "cartesian" or plot.type == "cartesian2"
-          drawCartesianProgram(@glod, name, expr.color, plot, rect.width, rect.height, scaleFactor)
+          drawCartesianProgram(@glod, name, fnHolder.color, plot, rect.width, rect.height, scaleFactor)
         else if plot.type == "colorMap"
           bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor)
           drawColorMapProgram(@glod, name, bounds)

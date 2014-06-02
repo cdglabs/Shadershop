@@ -1,7 +1,7 @@
 R.create "ShaderCartesianView",
   propTypes:
     plot: C.Plot
-    exprs: Array # [{exprString, color}]
+    fns: Array # [{fn, color}]
     isThumbnail: Boolean
 
   render: ->

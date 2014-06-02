@@ -12,9 +12,9 @@ R.create "ThumbnailPlotLayoutView",
       R.ShaderCartesianView {
         plot: plot
         isThumbnail: true
-        exprs: [
+        fns: [
           {
-            exprString: Compiler.getExprString(@fn, "inputVal")
+            fn: @fn
             color: config.color.main
           }
         ]

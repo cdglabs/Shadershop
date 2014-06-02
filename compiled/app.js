@@ -2855,43 +2855,43 @@ function HSLToRGB(h, s, l) {
       return found;
     },
     render: function() {
-      var childFn, expandedChildFns, exprs, _i, _j, _len, _len1, _ref;
-      exprs = [];
+      var childFn, expandedChildFns, fns, _i, _j, _len, _len1, _ref;
+      fns = [];
       if (this.plot.type === "colorMap") {
-        exprs.push({
-          exprString: Compiler.getExprString(this.fn, "inputVal")
+        fns.push({
+          fn: this.fn
         });
       } else {
         expandedChildFns = this._getExpandedChildFns();
         for (_i = 0, _len = expandedChildFns.length; _i < _len; _i++) {
           childFn = expandedChildFns[_i];
-          exprs.push({
-            exprString: Compiler.getExprString(childFn, "inputVal"),
+          fns.push({
+            fn: childFn,
             color: config.color.child
           });
         }
         if (UI.hoveredChildFn && _.contains(expandedChildFns, UI.hoveredChildFn)) {
-          exprs.push({
-            exprString: Compiler.getExprString(UI.hoveredChildFn, "inputVal"),
+          fns.push({
+            fn: UI.hoveredChildFn,
             color: config.color.hovered
           });
         }
-        exprs.push({
-          exprString: Compiler.getExprString(this.fn, "inputVal"),
+        fns.push({
+          fn: this.fn,
           color: config.color.main
         });
         _ref = UI.selectedChildFns;
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           childFn = _ref[_j];
-          exprs.push({
-            exprString: Compiler.getExprString(childFn, "inputVal"),
+          fns.push({
+            fn: childFn,
             color: config.color.selected
           });
         }
-        exprs = _.reject(exprs, function(expr, exprIndex) {
+        fns = _.reject(fns, function(fnHolder, fnIndex) {
           var i, _k, _ref1, _ref2;
-          for (i = _k = _ref1 = exprIndex + 1, _ref2 = exprs.length; _ref1 <= _ref2 ? _k < _ref2 : _k > _ref2; i = _ref1 <= _ref2 ? ++_k : --_k) {
-            if (exprs[i].exprString === expr.exprString) {
+          for (i = _k = _ref1 = fnIndex + 1, _ref2 = fns.length; _ref1 <= _ref2 ? _k < _ref2 : _k > _ref2; i = _ref1 <= _ref2 ? ++_k : --_k) {
+            if (fns[i].fn === fnHolder.fn) {
               return true;
             }
           }
@@ -2909,7 +2909,7 @@ function HSLToRGB(h, s, l) {
         isThumbnail: false
       }), R.ShaderCartesianView({
         plot: this.plot,
-        exprs: exprs,
+        fns: fns,
         isThumbnail: false
       }), R.SliceControlsView({
         plot: this.plot
@@ -3473,7 +3473,7 @@ function HSLToRGB(h, s, l) {
       }
     },
     draw: function() {
-      var bounds, canvas, clippingRect, expr, exprs, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
+      var bounds, canvas, clippingRect, exprString, fnHolder, fns, junk, name, plot, rect, scaleFactor, shaderEl, shaderEls, shaderView, usedPrograms, _i, _j, _len, _len1, _ref, _results;
       canvas = this.getDOMNode();
       usedPrograms = {};
       shaderEls = document.querySelectorAll(".Shader");
@@ -3489,27 +3489,28 @@ function HSLToRGB(h, s, l) {
         }
         setViewport(this.glod, rect, clippingRect);
         shaderView = shaderEl.dataFor;
-        exprs = shaderView.exprs;
+        fns = shaderView.fns;
         plot = shaderView.plot;
         if (shaderView.isThumbnail) {
           scaleFactor = window.innerHeight / rect.height;
         } else {
           scaleFactor = 1;
         }
-        for (_j = 0, _len1 = exprs.length; _j < _len1; _j++) {
-          expr = exprs[_j];
-          name = plot.type + "," + expr.exprString;
+        for (_j = 0, _len1 = fns.length; _j < _len1; _j++) {
+          fnHolder = fns[_j];
+          exprString = Compiler.getExprString(fnHolder.fn, "inputVal");
+          name = plot.type + "," + exprString;
           if (!this.programs[name]) {
             if (plot.type === "cartesian" || plot.type === "cartesian2") {
-              createCartesianProgram(this.glod, name, expr.exprString);
+              createCartesianProgram(this.glod, name, exprString);
             } else if (plot.type === "colorMap") {
-              createColorMapProgram(this.glod, name, expr.exprString);
+              createColorMapProgram(this.glod, name, exprString);
             }
             this.programs[name] = true;
           }
           usedPrograms[name] = true;
           if (plot.type === "cartesian" || plot.type === "cartesian2") {
-            drawCartesianProgram(this.glod, name, expr.color, plot, rect.width, rect.height, scaleFactor);
+            drawCartesianProgram(this.glod, name, fnHolder.color, plot, rect.width, rect.height, scaleFactor);
           } else if (plot.type === "colorMap") {
             bounds = plot.getScaledBounds(rect.width, rect.height, scaleFactor);
             drawColorMapProgram(this.glod, name, bounds);
@@ -3696,9 +3697,9 @@ function HSLToRGB(h, s, l) {
       }), R.ShaderCartesianView({
         plot: plot,
         isThumbnail: true,
-        exprs: [
+        fns: [
           {
-            exprString: Compiler.getExprString(this.fn, "inputVal"),
+            fn: this.fn,
             color: config.color.main
           }
         ]
@@ -3814,7 +3815,7 @@ function HSLToRGB(h, s, l) {
   R.create("ShaderCartesianView", {
     propTypes: {
       plot: C.Plot,
-      exprs: Array,
+      fns: Array,
       isThumbnail: Boolean
     },
     render: function() {
