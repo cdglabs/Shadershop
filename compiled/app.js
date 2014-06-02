@@ -588,7 +588,7 @@
 
   refresh();
 
-  if (location.protocol === "file:" && navigator.userAgent.indexOf("Firefox") === -1) {
+  if (location.protocol === "file:" && navigator.userAgent.indexOf("Firefox") === -1 && location.href.indexOf("dev.html") !== -1) {
     setInterval(function() {
       return document.styleSheets[0].reload();
     }, 1000);

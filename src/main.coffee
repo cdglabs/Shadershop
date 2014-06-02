@@ -90,7 +90,7 @@ refresh()
 # =============================================================================
 
 # Firefox crashes when the stylesheet reloads.
-if location.protocol == "file:" and navigator.userAgent.indexOf("Firefox") == -1
+if location.protocol == "file:" and navigator.userAgent.indexOf("Firefox") == -1 and location.href.indexOf("dev.html") != -1
   setInterval(->
     document.styleSheets[0].reload()
   , 1000)
