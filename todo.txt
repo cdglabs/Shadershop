@@ -56,13 +56,7 @@ Palette
 
 
 
-Priority
-  need duplicate
-    would be nice to have drag multiple, but not needed
-
 Nice to have
-  labels on axes
-
   flexible color scale for colorMap
 
   rotate/scale modifier when dragging transform points
