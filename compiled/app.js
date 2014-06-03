@@ -449,7 +449,7 @@
     recurse = function(fn) {
       var dependencies, dependency, _i, _len, _results;
       dependencies = getDependencies(fn);
-      allDependencies = _.union(allDependencies, dependencies);
+      allDependencies = allDependencies.concat(dependencies);
       _results = [];
       for (_i = 0, _len = dependencies.length; _i < _len; _i++) {
         dependency = dependencies[_i];
@@ -458,6 +458,8 @@
       return _results;
     };
     recurse(fn);
+    allDependencies.reverse();
+    allDependencies = _.unique(allDependencies);
     return allDependencies;
   };
 
@@ -474,7 +476,6 @@
     var allDependencies, dependency, exprString, fnStrings;
     exprString = getExprStringAndDependencies(fn).exprString;
     allDependencies = getAllDependencies(fn);
-    allDependencies.reverse();
     fnStrings = (function() {
       var _i, _len, _results;
       _results = [];

@@ -92,13 +92,20 @@ getDependencies = (fn) ->
   return getExprStringAndDependencies(fn).dependencies
 
 getAllDependencies = (fn) ->
+  # Returns all dependencies in order e.g. [A, B] then A does not depend on B,
+  # so the dependencies can be listed in order in code without a problem.
+
   allDependencies = []
   recurse = (fn) ->
     dependencies = getDependencies(fn)
-    allDependencies = _.union(allDependencies, dependencies)
+    allDependencies = allDependencies.concat(dependencies)
     for dependency in dependencies
       recurse(dependency)
   recurse(fn)
+
+  allDependencies.reverse()
+  allDependencies = _.unique(allDependencies)
+
   return allDependencies
 
 getGlslFnString = (fn, name) ->
@@ -110,8 +117,6 @@ getGlslFnString = (fn, name) ->
 Compiler.getGlsl = (fn) ->
   {exprString} = getExprStringAndDependencies(fn)
   allDependencies = getAllDependencies(fn)
-
-  allDependencies.reverse()
 
   fnStrings = (getGlslFnString(dependency) for dependency in allDependencies)
 
