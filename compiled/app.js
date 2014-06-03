@@ -2385,10 +2385,7 @@ function HSLToRGB(h, s, l) {
       }, "Add"), R.span({
         className: "OutlineCombinerButton",
         onClick: this._multiply
-      }, "Multiply"), R.span({
-        className: "OutlineCombinerButton",
-        onClick: this._define
-      }, "Define"));
+      }, "Multiply"));
     },
     shouldComponentUpdate: function() {
       return false;

@@ -27,7 +27,7 @@ R.create "OutlineCombinerToolbar",
       R.span {className: "OutlineCombinerButton", onClick: @_compose}, "Compose"
       R.span {className: "OutlineCombinerButton", onClick: @_add}, "Add"
       R.span {className: "OutlineCombinerButton", onClick: @_multiply}, "Multiply"
-      R.span {className: "OutlineCombinerButton", onClick: @_define}, "Define"
+      # R.span {className: "OutlineCombinerButton", onClick: @_define}, "Define"
 
   shouldComponentUpdate: -> false
 
