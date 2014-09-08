@@ -1,3 +1,21 @@
+Changes to presentation
+  Have a small explainer on composition and ordering
+    Show Compose Sine Fract and Compose Fract Sine
+  Maybe have a slide showing overview of the noise function construction process steps (i.e. custom functions)
+
+
+
+Changes to system
+  Send in selectedChildFn transforms as uniforms to speed things up
+  Show the symbolic representation somewhere...
+
+
+
+
+
+
+
+
 Architecture
   Move "builtIn" into its own file.
   Move "combiners" into their own thing. Think of better name.

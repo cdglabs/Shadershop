@@ -1,3 +1,62 @@
+###
+
+The idea here is that we're creating intermediate representations of each fn,
+currently consisting of exprString:String and dependencies:[DefinedFn]. The
+intermediate representation is created by getExprStringAndDependencies.
+
+We currently cache each intermediate representation, and throw away the entire
+cache if any function changes.
+
+Cacheing is important because:
+
+We can determine both the exprString and dependencies in a single pass, but we
+usually only need (care to think about) one of these at a time.
+
+We need to refer to the dependencies very frequently in order to compute
+allDependencies. We don't want to repeat the work of figuring out
+dependencies.
+
+We need the exprString of a Fn for every Fn that is recursively dependent on
+it.
+
+
+What invalidates the cache, that is, what makes a Fn's intermediate
+representation dirty?
+
+
+
+What else do we need to add to the intermediate representation?
+
+Dependencies on uniforms for scrubbing optimization. If only one ChildFn is
+selected, then it will use uniform variables as its translate/transform
+vectors/matrices so as to not have to recompile as the control points are
+dragged around.
+
+Dependencies on textures for ImageFn's.
+
+
+What are other uses for intermediate representation?
+
+Human readable "compiler".
+
+
+What else might want to use this cache strategy?
+
+Variables already kind of use it. We cache the (numeric) value of the Variable
+even though it is derived from the stringValue (though kind of not, since an
+invalid stringValue results in the last working value). We dirty check that by
+just comparing is stringValue is the same as the last time variable.getValue()
+was called.
+
+The matrices/vectors in ChildFn probably want to do their own cacheing. Right
+now they have to put together their values by getting the value of each
+variable, which seems (?) expensive just because there are so many variables.
+Also the matrix inversion function needed for the "divide" in domainTransform
+is expensive and ought to be cached.
+
+###
+
+
 window.Compiler = Compiler = {}
 
 # Constants
