@@ -6,8 +6,8 @@ Changes to presentation
 
 
 Changes to system
-  Send in selectedChildFn transforms as uniforms to speed things up
-
+  Rotate modifier
+  Snap on/off modifier
 
 
 

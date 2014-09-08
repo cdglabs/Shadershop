@@ -192,6 +192,7 @@ Actions.selectFn = (fn) ->
   return unless fn instanceof C.DefinedFn
   UI.selectedFn = fn
   UI.selectedChildFns = []
+  Compiler.setDirty()
 
 Actions.selectChildFn = (childFn) ->
   if childFn == null
@@ -199,6 +200,7 @@ Actions.selectChildFn = (childFn) ->
   else
     UI.selectedChildFns = [childFn]
   ensureSelectedChildFnsVisible()
+  Compiler.setDirty()
 
 Actions.toggleSelectChildFn = (childFn) ->
   if _.contains(UI.selectedChildFns, childFn)
@@ -206,6 +208,7 @@ Actions.toggleSelectChildFn = (childFn) ->
   else
     UI.selectedChildFns.push(childFn)
   ensureSelectedChildFnsVisible()
+  Compiler.setDirty()
 
 Actions.hoverChildFn = (childFn) ->
   UI.hoveredChildFn = childFn

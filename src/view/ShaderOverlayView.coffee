@@ -188,6 +188,9 @@ createCartesianProgram = (glod, name, glsl) ->
   uniform #{vecType} domainCenter, rangeCenter;
   uniform #{matType} domainTransform, rangeTransform;
 
+  uniform #{vecType} selectedDomainTranslate, selectedRangeTranslate;
+  uniform #{matType} selectedDomainTransformInv, selectedRangeTransform;
+
   uniform vec2 pixelScale;
 
   #{glsl}
@@ -274,6 +277,7 @@ drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
   glod.valuev("domainTransform", util.glslMatrixArray(domainTransform))
   glod.valuev("rangeTransform", util.glslMatrixArray(rangeTransform))
   glod.valuev("pixelScale", pixelScale)
+  addSelectedChildFnUniforms(glod)
 
   glod.ready().lineStrip().drawArrays(0, numSamples)
 
@@ -282,6 +286,9 @@ drawCartesianProgram = (glod, name, color, plot, width, height, scaleFactor) ->
 
 
 createColorMapProgram = (glod, name, glsl) ->
+
+  vecType = util.glslVectorType(config.dimensions)
+  matType = util.glslMatrixType(config.dimensions)
 
   vertex = """
   precision highp float;
@@ -301,10 +308,10 @@ createColorMapProgram = (glod, name, glsl) ->
   precision highp float;
   precision highp int;
 
-  uniform float xMin;
-  uniform float xMax;
-  uniform float yMin;
-  uniform float yMax;
+  uniform float xMin, xMax, yMin, yMax;
+
+  uniform #{vecType} selectedDomainTranslate, selectedRangeTranslate;
+  uniform #{matType} selectedDomainTransformInv, selectedRangeTransform;
 
   varying vec2 vPosition;
 
@@ -353,6 +360,7 @@ drawColorMapProgram = (glod, name, bounds) ->
   glod.value("xMax", bounds.xMax)
   glod.value("yMin", bounds.yMin)
   glod.value("yMax", bounds.yMax)
+  addSelectedChildFnUniforms(glod)
 
   glod.ready().triangles().drawArrays(0, 6)
 
@@ -360,6 +368,22 @@ drawColorMapProgram = (glod, name, bounds) ->
 
 
 
+addSelectedChildFnUniforms = (glod) ->
+  selectedChildFn = UI.getSingleSelectedChildFn()
+  return unless selectedChildFn
+  domainTranslate = selectedChildFn.getDomainTranslate()
+  domainTransformInv = packMatrix util.safeInv(selectedChildFn.getDomainTransform())
+  rangeTranslate  = selectedChildFn.getRangeTranslate()
+  rangeTransform  = packMatrix selectedChildFn.getRangeTransform()
+
+  glod.valuev("selectedDomainTranslate", domainTranslate)
+  glod.valuev("selectedDomainTransformInv", domainTransformInv)
+  glod.valuev("selectedRangeTranslate", rangeTranslate)
+  glod.valuev("selectedRangeTransform", rangeTransform)
+
+packMatrix = (m) ->
+  m = numeric.transpose(m)
+  _.flatten(m)
 
 
 

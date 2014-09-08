@@ -291,7 +291,8 @@
       return;
     }
     UI.selectedFn = fn;
-    return UI.selectedChildFns = [];
+    UI.selectedChildFns = [];
+    return Compiler.setDirty();
   };
 
   Actions.selectChildFn = function(childFn) {
@@ -300,7 +301,8 @@
     } else {
       UI.selectedChildFns = [childFn];
     }
-    return ensureSelectedChildFnsVisible();
+    ensureSelectedChildFnsVisible();
+    return Compiler.setDirty();
   };
 
   Actions.toggleSelectChildFn = function(childFn) {
@@ -309,7 +311,8 @@
     } else {
       UI.selectedChildFns.push(childFn);
     }
-    return ensureSelectedChildFnsVisible();
+    ensureSelectedChildFnsVisible();
+    return Compiler.setDirty();
   };
 
   Actions.hoverChildFn = function(childFn) {
@@ -467,6 +470,13 @@ is expensive and ought to be cached.
         }
       }
       if (fn instanceof C.ChildFn) {
+        if (fn === UI.getSingleSelectedChildFn()) {
+          exprString = parameter;
+          exprString = "selectedDomainTransformInv * (" + exprString + " - selectedDomainTranslate)";
+          exprString = recurse(fn.fn, exprString);
+          exprString = "((selectedRangeTransform * " + exprString + ") + selectedRangeTranslate)";
+          return exprString;
+        }
         domainTranslate = util.glslString(fn.getDomainTranslate());
         domainTransformInv = util.glslString(util.safeInv(fn.getDomainTransform()));
         rangeTranslate = util.glslString(fn.getRangeTranslate());
@@ -587,6 +597,14 @@ is expensive and ought to be cached.
         }
       }
       return expanded;
+    };
+
+    _Class.prototype.getSingleSelectedChildFn = function() {
+      if (this.selectedChildFns.length === 1) {
+        return this.selectedChildFns[0];
+      } else {
+        return null;
+      }
     };
 
     _Class.prototype.handleWindowMouseMove = function(e) {
@@ -3566,7 +3584,7 @@ function HSLToRGB(h, s, l) {
 
 }).call(this);
 }, "view/ShaderOverlayView": function(exports, require, module) {(function() {
-  var Glod, bufferCartesianSamples, bufferQuad, createCartesianProgram, createColorMapProgram, createProgramFromSrc, drawCartesianProgram, drawColorMapProgram, setViewport,
+  var Glod, addSelectedChildFnUniforms, bufferCartesianSamples, bufferQuad, createCartesianProgram, createColorMapProgram, createProgramFromSrc, drawCartesianProgram, drawColorMapProgram, packMatrix, setViewport,
     __hasProp = {}.hasOwnProperty;
 
   Glod = require("./plot/glod");
@@ -3737,7 +3755,7 @@ function HSLToRGB(h, s, l) {
     var fragment, matType, vecType, vertex;
     vecType = util.glslVectorType(config.dimensions);
     matType = util.glslMatrixType(config.dimensions);
-    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform vec2 pixelScale;\n\n" + glsl + "\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = mainFn(inputVal);\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
+    vertex = "precision highp float;\nprecision highp int;\n\nattribute float sample;\n\nuniform " + vecType + " domainStart, domainStep;\n\nuniform " + vecType + " domainCenter, rangeCenter;\nuniform " + matType + " domainTransform, rangeTransform;\n\nuniform " + vecType + " selectedDomainTranslate, selectedRangeTranslate;\nuniform " + matType + " selectedDomainTransformInv, selectedRangeTransform;\n\nuniform vec2 pixelScale;\n\n" + glsl + "\n\nvoid main() {\n  " + vecType + " inputVal, outputVal;\n  inputVal = domainStart + domainStep * sample;\n  outputVal = mainFn(inputVal);\n\n  " + vecType + " position = domainTransform * (inputVal - domainCenter) +\n                        rangeTransform * (outputVal - rangeCenter);\n\n  gl_Position = vec4(vec2(position.x, position.y) * pixelScale, 0., 1.);\n}";
     fragment = "precision highp float;\nprecision highp int;\n\nuniform vec4 color;\n\nvoid main() {\n  gl_FragColor = color;\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
@@ -3790,14 +3808,17 @@ function HSLToRGB(h, s, l) {
     glod.valuev("domainTransform", util.glslMatrixArray(domainTransform));
     glod.valuev("rangeTransform", util.glslMatrixArray(rangeTransform));
     glod.valuev("pixelScale", pixelScale);
+    addSelectedChildFnUniforms(glod);
     glod.ready().lineStrip().drawArrays(0, numSamples);
     return glod.end();
   };
 
   createColorMapProgram = function(glod, name, glsl) {
-    var fragment, vertex;
+    var fragment, matType, vecType, vertex;
+    vecType = util.glslVectorType(config.dimensions);
+    matType = util.glslMatrixType(config.dimensions);
     vertex = "precision highp float;\nprecision highp int;\n\nattribute vec4 position;\nvarying vec2 vPosition;\n\nvoid main() {\n  vPosition = position.xy;\n  gl_Position = position;\n}";
-    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin;\nuniform float xMax;\nuniform float yMin;\nuniform float yMax;\n\nvarying vec2 vPosition;\n\n" + glsl + "\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = mainFn(inputVal);\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
+    fragment = "precision highp float;\nprecision highp int;\n\nuniform float xMin, xMax, yMin, yMax;\n\nuniform " + vecType + " selectedDomainTranslate, selectedRangeTranslate;\nuniform " + matType + " selectedDomainTransformInv, selectedRangeTransform;\n\nvarying vec2 vPosition;\n\n" + glsl + "\n\nfloat lerp(float x, float dMin, float dMax, float rMin, float rMax) {\n  float ratio = (x - dMin) / (dMax - dMin);\n  return ratio * (rMax - rMin) + rMin;\n}\n\nvoid main() {\n  vec4 inputVal = vec4(\n    lerp(vPosition.x, -1., 1., xMin, xMax),\n    lerp(vPosition.y, -1., 1., yMin, yMax),\n    0.,\n    0.\n  );\n  vec4 outputVal = mainFn(inputVal);\n\n  float value = outputVal.x;\n  vec3 color;\n\n  float normvalue = clamp(0., 1., abs(value));\n  if (value > 0.) {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapPositive + "), normvalue);\n  } else {\n    color = mix(vec3(" + config.colorMapZero + "), vec3(" + config.colorMapNegative + "), normvalue);\n  }\n\n  //color = vec3(value, value, value);\n\n  gl_FragColor = vec4(color, 1.);\n}";
     return createProgramFromSrc(glod, name, vertex, fragment);
   };
 
@@ -3810,8 +3831,30 @@ function HSLToRGB(h, s, l) {
     glod.value("xMax", bounds.xMax);
     glod.value("yMin", bounds.yMin);
     glod.value("yMax", bounds.yMax);
+    addSelectedChildFnUniforms(glod);
     glod.ready().triangles().drawArrays(0, 6);
     return glod.end();
+  };
+
+  addSelectedChildFnUniforms = function(glod) {
+    var domainTransformInv, domainTranslate, rangeTransform, rangeTranslate, selectedChildFn;
+    selectedChildFn = UI.getSingleSelectedChildFn();
+    if (!selectedChildFn) {
+      return;
+    }
+    domainTranslate = selectedChildFn.getDomainTranslate();
+    domainTransformInv = packMatrix(util.safeInv(selectedChildFn.getDomainTransform()));
+    rangeTranslate = selectedChildFn.getRangeTranslate();
+    rangeTransform = packMatrix(selectedChildFn.getRangeTransform());
+    glod.valuev("selectedDomainTranslate", domainTranslate);
+    glod.valuev("selectedDomainTransformInv", domainTransformInv);
+    glod.valuev("selectedRangeTranslate", rangeTranslate);
+    return glod.valuev("selectedRangeTransform", rangeTransform);
+  };
+
+  packMatrix = function(m) {
+    m = numeric.transpose(m);
+    return _.flatten(m);
   };
 
 }).call(this);

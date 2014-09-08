@@ -34,6 +34,12 @@ window.UI = UI = new class
         return true
     return expanded
 
+  getSingleSelectedChildFn: ->
+    if @selectedChildFns.length == 1
+      return @selectedChildFns[0]
+    else
+      return null
+
 
   # ===========================================================================
   # Dragging and Mouse Position

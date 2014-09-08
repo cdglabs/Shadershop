@@ -116,6 +116,13 @@ getExprStringAndDependencies = (fn) ->
           return "(" + childExprStrings.join(" * ") + ")"
 
     if fn instanceof C.ChildFn
+      if fn == UI.getSingleSelectedChildFn()
+        exprString = parameter
+        exprString = "selectedDomainTransformInv * (#{exprString} - selectedDomainTranslate)"
+        exprString = recurse(fn.fn, exprString)
+        exprString = "((selectedRangeTransform * #{exprString}) + selectedRangeTranslate)"
+        return exprString
+
       domainTranslate    = util.glslString(fn.getDomainTranslate())
       domainTransformInv = util.glslString(util.safeInv(fn.getDomainTransform()))
       rangeTranslate     = util.glslString(fn.getRangeTranslate())
