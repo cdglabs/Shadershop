@@ -54,13 +54,20 @@ canvas,
   right: 0px;
   width: 270px;
   top: 0px;
-  bottom: 300px;
+  bottom: 356px;
 }
 .Inspector {
   position: absolute;
   right: 0px;
   width: 270px;
-  height: 300px;
+  height: 266px;
+  bottom: 90px;
+}
+.Symbolic {
+  position: absolute;
+  right: 0px;
+  width: 270px;
+  height: 90px;
   bottom: 0px;
 }
 .DraggingObject {

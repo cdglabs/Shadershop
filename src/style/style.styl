@@ -4,7 +4,8 @@ PlotBackgroundColor = #FAF8F2
 
 LeftSidebarWidth = 180px
 RightSidebarWidth = 270px
-InspectorHeight = 300px
+InspectorHeight = 266px
+SymbolicHeight = 90px
 
 HeaderSize = 18px
 
@@ -104,13 +105,20 @@ canvas, .Shader
   right 0px
   width RightSidebarWidth
   top 0px
-  bottom InspectorHeight
+  bottom InspectorHeight + SymbolicHeight
 
 .Inspector
   position absolute
   right 0px
   width RightSidebarWidth
   height InspectorHeight
+  bottom SymbolicHeight
+
+.Symbolic
+  position absolute
+  right 0px
+  width RightSidebarWidth
+  height SymbolicHeight
   bottom 0px
 
 

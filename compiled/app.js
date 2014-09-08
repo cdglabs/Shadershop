@@ -330,7 +330,65 @@
   };
 
 }).call(this);
-}, "Compiler": function(exports, require, module) {(function() {
+}, "Compiler": function(exports, require, module) {
+/*
+
+The idea here is that we're creating intermediate representations of each fn,
+currently consisting of exprString:String and dependencies:[DefinedFn]. The
+intermediate representation is created by getExprStringAndDependencies.
+
+We currently cache each intermediate representation, and throw away the entire
+cache if any function changes.
+
+Cacheing is important because:
+
+We can determine both the exprString and dependencies in a single pass, but we
+usually only need (care to think about) one of these at a time.
+
+We need to refer to the dependencies very frequently in order to compute
+allDependencies. We don't want to repeat the work of figuring out
+dependencies.
+
+We need the exprString of a Fn for every Fn that is recursively dependent on
+it.
+
+
+What invalidates the cache, that is, what makes a Fn's intermediate
+representation dirty?
+
+
+
+What else do we need to add to the intermediate representation?
+
+Dependencies on uniforms for scrubbing optimization. If only one ChildFn is
+selected, then it will use uniform variables as its translate/transform
+vectors/matrices so as to not have to recompile as the control points are
+dragged around.
+
+Dependencies on textures for ImageFn's.
+
+
+What are other uses for intermediate representation?
+
+Human readable "compiler".
+
+
+What else might want to use this cache strategy?
+
+Variables already kind of use it. We cache the (numeric) value of the Variable
+even though it is derived from the stringValue (though kind of not, since an
+invalid stringValue results in the last working value). We dirty check that by
+just comparing is stringValue is the same as the last time variable.getValue()
+was called.
+
+The matrices/vectors in ChildFn probably want to do their own cacheing. Right
+now they have to put together their values by getting the value of each
+variable, which seems (?) expensive just because there are so many variables.
+Also the matrix inversion function needed for the "divide" in domainTransform
+is expensive and ought to be cached.
+ */
+
+(function() {
   var Compiler, cache, getAllDependencies, getDependencies, getExprStringAndDependencies, getGlslFnString, identityMatrixString, vecType, zeroVectorString;
 
   window.Compiler = Compiler = {};
@@ -2188,7 +2246,7 @@ function HSLToRGB(h, s, l) {
         appRoot: this.appRoot
       }), R.OutlineView({
         definedFn: UI.selectedFn
-      }), R.InspectorView({}), R.DraggingView({}), R.ShaderOverlayView({
+      }), R.InspectorView({}), R.SymbolicView({}), R.DraggingView({}), R.ShaderOverlayView({
         ref: "shaderOverlay"
       }));
     }
@@ -3492,6 +3550,8 @@ function HSLToRGB(h, s, l) {
 
   require("./VariableView");
 
+  require("./SymbolicView");
+
   require("./plot/GridView");
 
   require("./plot/ShaderCartesianView");
@@ -3744,6 +3804,159 @@ function HSLToRGB(h, s, l) {
     glod.value("yMax", bounds.yMax);
     glod.ready().triangles().drawArrays(0, 6);
     return glod.end();
+  };
+
+}).call(this);
+}, "view/SymbolicView": function(exports, require, module) {(function() {
+  var formatMatrix, formatVector, nonIdentityCell, nonIdentitySize, stringifyFn;
+
+  R.create("SymbolicView", {
+    render: function() {
+      return R.div({
+        className: "Symbolic"
+      }, R.div({
+        className: "Header"
+      }, "Symbolic"), R.div({
+        className: "Scroller"
+      }, UI.selectedChildFns.length === 1 ? R.div({}, stringifyFn(UI.selectedChildFns[0])) : void 0, R.div({}, stringifyFn(UI.selectedFn, "x", true))));
+    }
+  });
+
+  nonIdentityCell = function(x, y, m) {
+    var identityCell;
+    identityCell = x === y ? 1 : 0;
+    return m[x][y] !== identityCell;
+  };
+
+  nonIdentitySize = function(m) {
+    var d, found, size, x, y, _i, _j, _k, _ref;
+    size = 0;
+    for (d = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; d = 0 <= _ref ? ++_i : --_i) {
+      found = false;
+      y = d;
+      for (x = _j = 0; 0 <= d ? _j <= d : _j >= d; x = 0 <= d ? ++_j : --_j) {
+        if (nonIdentityCell(x, y, m)) {
+          found = true;
+        }
+      }
+      x = d;
+      for (y = _k = 0; 0 <= d ? _k <= d : _k >= d; y = 0 <= d ? ++_k : --_k) {
+        if (nonIdentityCell(x, y, m)) {
+          found = true;
+        }
+      }
+      if (found) {
+        size = d + 1;
+      }
+    }
+    return size;
+  };
+
+  formatMatrix = function(m) {
+    var size;
+    size = nonIdentitySize(m);
+    if (size === 0) {
+      return null;
+    }
+    if (size === 1) {
+      return m[0][0];
+    }
+    return "TODO" + size;
+  };
+
+  formatVector = function(v) {
+    var d, size, _i, _ref;
+    size = 0;
+    for (d = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; d = 0 <= _ref ? ++_i : --_i) {
+      if (v[d] !== 0) {
+        size = d + 1;
+      }
+    }
+    if (size === 0) {
+      return null;
+    }
+    if (size === 1) {
+      return v[0];
+    }
+    return "TODO";
+  };
+
+  stringifyFn = function(fn, freeVariable, force) {
+    var childFn, domainTransform, domainTranslate, rangeTransform, rangeTranslate, s, strings, _i, _len, _ref;
+    if (freeVariable == null) {
+      freeVariable = "x";
+    }
+    if (force == null) {
+      force = false;
+    }
+    if (fn instanceof C.BuiltInFn) {
+      return fn.label + ("(" + freeVariable + ")");
+    }
+    if (fn instanceof C.DefinedFn && !force) {
+      return fn.label + ("(" + freeVariable + ")");
+    }
+    if (fn instanceof C.CompoundFn) {
+      if (fn.combiner === "last") {
+        return stringifyFn(_.last(fn.childFns), freeVariable);
+      }
+      if (fn.combiner === "composition") {
+        s = freeVariable;
+        _ref = fn.childFns;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          childFn = _ref[_i];
+          s = stringifyFn(childFn, s);
+        }
+        return s;
+      }
+      if (fn.combiner === "sum") {
+        strings = (function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = fn.childFns;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            childFn = _ref1[_j];
+            _results.push(stringifyFn(childFn, freeVariable));
+          }
+          return _results;
+        })();
+        return strings.join(" + ");
+      }
+      if (fn.combiner === "product") {
+        strings = (function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = fn.childFns;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            childFn = _ref1[_j];
+            _results.push("(" + (stringifyFn(childFn, freeVariable)) + ")");
+          }
+          return _results;
+        })();
+        return strings.join(" * ");
+      }
+      return "TODO";
+    }
+    if (fn instanceof C.ChildFn) {
+      domainTranslate = formatVector(fn.getDomainTranslate());
+      domainTransform = formatMatrix(fn.getDomainTransform());
+      rangeTranslate = formatVector(fn.getRangeTranslate());
+      rangeTransform = formatMatrix(fn.getRangeTransform());
+      s = freeVariable;
+      if (domainTranslate != null) {
+        s = "(" + s + " - " + domainTranslate + ")";
+      }
+      if (domainTransform != null) {
+        s = "" + s + " / " + domainTransform;
+      }
+      s = stringifyFn(fn.fn, s);
+      if (rangeTransform != null) {
+        s = "" + s + " * " + rangeTransform;
+      }
+      if (rangeTranslate != null) {
+        s = "" + s + " + " + rangeTranslate;
+      }
+      return s;
+    }
   };
 
 }).call(this);

@@ -127,6 +127,7 @@ require("./ThumbnailPlotLayoutView")
 require("./OutlineView")
 require("./InspectorView")
 require("./VariableView")
+require("./SymbolicView")
 
 require("./plot/GridView")
 require("./plot/ShaderCartesianView")
