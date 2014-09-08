@@ -11,6 +11,8 @@ window.UI = UI = new class
 
     @expandedChildFns = {}
 
+    @showSymbolic = false
+
     @registerEvents()
 
   registerEvents: ->

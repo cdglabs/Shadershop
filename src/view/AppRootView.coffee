@@ -54,3 +54,7 @@ R.create "DebugView",
 
 key "ctrl+R", ->
   reset()
+
+key "ctrl+S", ->
+  UI.showSymbolic = !UI.showSymbolic
+  return true

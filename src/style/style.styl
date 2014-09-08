@@ -5,7 +5,6 @@ PlotBackgroundColor = #FAF8F2
 LeftSidebarWidth = 180px
 RightSidebarWidth = 270px
 InspectorHeight = 266px
-SymbolicHeight = 90px
 
 HeaderSize = 18px
 
@@ -21,6 +20,7 @@ LineControlSize = 2px
 
 ShaderOverlayZIndex = 10
 PlotControlZIndex = 20
+SymbolicZIndex = 30
 
 
 
@@ -105,21 +105,28 @@ canvas, .Shader
   right 0px
   width RightSidebarWidth
   top 0px
-  bottom InspectorHeight + SymbolicHeight
+  bottom InspectorHeight
 
 .Inspector
   position absolute
   right 0px
   width RightSidebarWidth
   height InspectorHeight
-  bottom SymbolicHeight
+  bottom 0px
 
 .Symbolic
   position absolute
-  right 0px
-  width RightSidebarWidth
-  height SymbolicHeight
-  bottom 0px
+  bottom 90px
+  left LeftSidebarWidth
+  right RightSidebarWidth
+  z-index SymbolicZIndex
+
+  text-align center
+  font-size 24px
+  span
+    padding 4px 8px
+    border-radius 12px
+    background-color rgba(255,255,255,0.7)
 
 
 // ============================================================================

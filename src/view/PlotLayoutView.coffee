@@ -21,6 +21,7 @@ R.create "PlotLayoutView",
           R.PlotView {
             fn: @fn
             plot: plot
+            showSliceControl: plotLocations.length > 1
           }
 
       # Settings Button
@@ -45,6 +46,7 @@ R.create "PlotView",
   propTypes:
     fn: C.DefinedFn
     plot: C.Plot
+    showSliceControl: Boolean
 
   _getExpandedChildFns: ->
     result = []
@@ -158,9 +160,10 @@ R.create "PlotView",
         isThumbnail: false
       }
 
-      R.SliceControlsView {
-        plot: @plot
-      }
+      if @showSliceControl
+        R.SliceControlsView {
+          plot: @plot
+        }
 
       if UI.selectedChildFns.length == 1
         R.ChildFnControlsView {

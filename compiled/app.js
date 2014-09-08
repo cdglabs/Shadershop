@@ -566,6 +566,7 @@ is expensive and ought to be cached.
       this.selectedChildFns = [];
       this.hoveredChildFn = null;
       this.expandedChildFns = {};
+      this.showSymbolic = false;
       this.registerEvents();
     }
 
@@ -2286,6 +2287,11 @@ function HSLToRGB(h, s, l) {
     return reset();
   });
 
+  key("ctrl+S", function() {
+    UI.showSymbolic = !UI.showSymbolic;
+    return true;
+  });
+
 }).call(this);
 }, "view/InspectorView": function(exports, require, module) {(function() {
   R.create("InspectorView", {
@@ -2876,7 +2882,8 @@ function HSLToRGB(h, s, l) {
             key: index
           }, R.PlotView({
             fn: this.fn,
-            plot: plot
+            plot: plot,
+            showSliceControl: plotLocations.length > 1
           })));
         }
         return _results;
@@ -2905,7 +2912,8 @@ function HSLToRGB(h, s, l) {
   R.create("PlotView", {
     propTypes: {
       fn: C.DefinedFn,
-      plot: C.Plot
+      plot: C.Plot,
+      showSliceControl: Boolean
     },
     _getExpandedChildFns: function() {
       var recurse, result;
@@ -3024,9 +3032,9 @@ function HSLToRGB(h, s, l) {
         plot: this.plot,
         fns: fns,
         isThumbnail: false
-      }), R.SliceControlsView({
+      }), this.showSliceControl ? R.SliceControlsView({
         plot: this.plot
-      }), UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
+      }) : void 0, UI.selectedChildFns.length === 1 ? R.ChildFnControlsView({
         childFn: UI.selectedChildFns[0],
         plot: this.plot
       }) : void 0);
@@ -3812,13 +3820,14 @@ function HSLToRGB(h, s, l) {
 
   R.create("SymbolicView", {
     render: function() {
-      return R.div({
+      var string;
+      if (!UI.showSymbolic) {
+        return R.div();
+      }
+      string = stringifyFn(UI.selectedFn, "x", true);
+      return R.div({}, string ? R.div({
         className: "Symbolic"
-      }, R.div({
-        className: "Header"
-      }, "Symbolic"), R.div({
-        className: "Scroller"
-      }, UI.selectedChildFns.length === 1 ? R.div({}, stringifyFn(UI.selectedChildFns[0])) : void 0, R.div({}, stringifyFn(UI.selectedFn, "x", true))));
+      }, R.span({}, stringifyFn(UI.selectedFn, "x", true))) : void 0);
     }
   });
 
@@ -3861,7 +3870,7 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return m[0][0];
     }
-    return "TODO" + size;
+    return "M" + size;
   };
 
   formatVector = function(v) {
@@ -3878,7 +3887,7 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return v[0];
     }
-    return "TODO";
+    return "V" + size;
   };
 
   stringifyFn = function(fn, freeVariable, force) {
@@ -3890,10 +3899,14 @@ function HSLToRGB(h, s, l) {
       force = false;
     }
     if (fn instanceof C.BuiltInFn) {
-      return fn.label + ("(" + freeVariable + ")");
+      if (fn.label === "Line") {
+        return freeVariable;
+      } else {
+        return fn.label + ("( " + freeVariable + " )");
+      }
     }
     if (fn instanceof C.DefinedFn && !force) {
-      return fn.label + ("(" + freeVariable + ")");
+      return fn.label + ("( " + freeVariable + " )");
     }
     if (fn instanceof C.CompoundFn) {
       if (fn.combiner === "last") {
@@ -3934,7 +3947,6 @@ function HSLToRGB(h, s, l) {
         })();
         return strings.join(" * ");
       }
-      return "TODO";
     }
     if (fn instanceof C.ChildFn) {
       domainTranslate = formatVector(fn.getDomainTranslate());

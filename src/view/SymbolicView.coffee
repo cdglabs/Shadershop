@@ -1,13 +1,14 @@
 R.create "SymbolicView",
   render: ->
-    R.div {className: "Symbolic"},
-      R.div {className: "Header"}, "Symbolic"
-      R.div {className: "Scroller"},
-        if UI.selectedChildFns.length == 1
-          R.div {},
-            stringifyFn(UI.selectedChildFns[0])
-        R.div {},
-          stringifyFn(UI.selectedFn, "x", true)
+    return R.div() if !UI.showSymbolic
+
+    string = stringifyFn(UI.selectedFn, "x", true)
+
+    R.div {},
+      if string
+        R.div {className: "Symbolic"},
+          R.span {},
+            stringifyFn(UI.selectedFn, "x", true)
 
 
 
@@ -44,7 +45,7 @@ formatMatrix = (m) ->
   if size == 1
     return m[0][0]
 
-  return "TODO#{size}"
+  return "M#{size}"
 
 formatVector = (v) ->
   size = 0
@@ -57,15 +58,18 @@ formatVector = (v) ->
   if size == 1
     return v[0]
 
-  return "TODO"
+  return "V#{size}"
 
 
 stringifyFn = (fn, freeVariable="x", force=false) ->
   if fn instanceof C.BuiltInFn
-    return fn.label + "(#{freeVariable})"
+    if fn.label == "Line"
+      return freeVariable
+    else
+      return fn.label + "( #{freeVariable} )"
 
   if fn instanceof C.DefinedFn and !force
-    return fn.label + "(#{freeVariable})"
+    return fn.label + "( #{freeVariable} )"
 
   if fn instanceof C.CompoundFn
     if fn.combiner == "last"
@@ -86,10 +90,6 @@ stringifyFn = (fn, freeVariable="x", force=false) ->
       strings = for childFn in fn.childFns
         "(#{stringifyFn(childFn, freeVariable)})"
       return strings.join(" * ")
-
-    return "TODO"
-    # if fn.combiner == "composition"
-    #   s = freeVariable
 
   if fn instanceof C.ChildFn
     domainTranslate = formatVector fn.getDomainTranslate()

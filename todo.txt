@@ -7,7 +7,6 @@ Changes to presentation
 
 Changes to system
   Send in selectedChildFn transforms as uniforms to speed things up
-  Show the symbolic representation somewhere...
 
 
 
