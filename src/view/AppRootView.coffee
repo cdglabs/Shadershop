@@ -52,9 +52,9 @@ R.create "DebugView",
       R.button {onClick: reset}, "Reset"
 
 
-key "ctrl+R", ->
-  reset()
 
-key "ctrl+S", ->
-  UI.showSymbolic = !UI.showSymbolic
-  return true
+
+
+
+
+

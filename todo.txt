@@ -2,12 +2,14 @@ Changes to presentation
   Have a small explainer on composition and ordering
     Show Compose Sine Fract and Compose Fract Sine
   Maybe have a slide showing overview of the noise function construction process steps (i.e. custom functions)
+    Random, Step Random, Noise, Fractal Noise
 
 
 
 Changes to system
   Rotate modifier
   Snap on/off modifier
+  When you create a new fn, give it the plot of the currently editing fn
 
 
 

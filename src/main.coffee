@@ -7,6 +7,7 @@ require("./model/C")
 require("./Actions")
 require("./Compiler")
 require("./view/R")
+require("./keyCommands")
 
 
 
