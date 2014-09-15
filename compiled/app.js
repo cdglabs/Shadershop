@@ -577,7 +577,7 @@ is expensive and ought to be cached.
       this.selectedChildFns = [];
       this.hoveredChildFn = null;
       this.expandedChildFns = {};
-      this.showSymbolic = false;
+      this.showSymbolic = true;
       this.registerEvents();
     }
 
