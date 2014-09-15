@@ -43,7 +43,7 @@ formatMatrix = (m) ->
     return null
 
   if size == 1
-    return m[0][0]
+    return formatNumber m[0][0]
 
   return "M#{size}"
 
@@ -56,9 +56,17 @@ formatVector = (v) ->
   if size == 0
     return null
   if size == 1
-    return v[0]
+    return formatNumber v[0]
 
   return "V#{size}"
+
+
+formatNumber = (n) ->
+  s = n.toFixed(3)
+  # remove excess 0s after decimal point
+  if s.indexOf(".") != -1
+    s = s.replace(/0*$/, "")
+  return s
 
 
 stringifyFn = (fn, freeVariable="x", force=false) ->
@@ -72,22 +80,24 @@ stringifyFn = (fn, freeVariable="x", force=false) ->
     return fn.label + "( #{freeVariable} )"
 
   if fn instanceof C.CompoundFn
+    visibleChildFns = _.filter fn.childFns, (childFn) -> childFn.visible
+
     if fn.combiner == "last"
-      return stringifyFn(_.last(fn.childFns), freeVariable)
+      return stringifyFn(_.last(visibleChildFns), freeVariable)
 
     if fn.combiner == "composition"
       s = freeVariable
-      for childFn in fn.childFns
+      for childFn in visibleChildFns
         s = stringifyFn(childFn, s)
       return s
 
     if fn.combiner == "sum"
-      strings = for childFn in fn.childFns
+      strings = for childFn in visibleChildFns
         stringifyFn(childFn, freeVariable)
       return strings.join(" + ")
 
     if fn.combiner == "product"
-      strings = for childFn in fn.childFns
+      strings = for childFn in visibleChildFns
         "(#{stringifyFn(childFn, freeVariable)})"
       return strings.join(" * ")
 

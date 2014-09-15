@@ -39003,7 +39003,7 @@ function HSLToRGB(h, s, l) {
 
 }).call(this);
 }, "view/SymbolicView": function(exports, require, module) {(function() {
-  var formatMatrix, formatVector, nonIdentityCell, nonIdentitySize, stringifyFn;
+  var formatMatrix, formatNumber, formatVector, nonIdentityCell, nonIdentitySize, stringifyFn;
 
   R.create("SymbolicView", {
     render: function() {
@@ -39055,7 +39055,7 @@ function HSLToRGB(h, s, l) {
       return null;
     }
     if (size === 1) {
-      return m[0][0];
+      return formatNumber(m[0][0]);
     }
     return "M" + size;
   };
@@ -39072,13 +39072,22 @@ function HSLToRGB(h, s, l) {
       return null;
     }
     if (size === 1) {
-      return v[0];
+      return formatNumber(v[0]);
     }
     return "V" + size;
   };
 
+  formatNumber = function(n) {
+    var s;
+    s = n.toFixed(3);
+    if (s.indexOf(".") !== -1) {
+      s = s.replace(/0*$/, "");
+    }
+    return s;
+  };
+
   stringifyFn = function(fn, freeVariable, force) {
-    var childFn, domainTransform, domainTranslate, rangeTransform, rangeTranslate, s, strings, _i, _len, _ref;
+    var childFn, domainTransform, domainTranslate, rangeTransform, rangeTranslate, s, strings, visibleChildFns, _i, _len;
     if (freeVariable == null) {
       freeVariable = "x";
     }
@@ -39096,25 +39105,26 @@ function HSLToRGB(h, s, l) {
       return fn.label + ("( " + freeVariable + " )");
     }
     if (fn instanceof C.CompoundFn) {
+      visibleChildFns = _.filter(fn.childFns, function(childFn) {
+        return childFn.visible;
+      });
       if (fn.combiner === "last") {
-        return stringifyFn(_.last(fn.childFns), freeVariable);
+        return stringifyFn(_.last(visibleChildFns), freeVariable);
       }
       if (fn.combiner === "composition") {
         s = freeVariable;
-        _ref = fn.childFns;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          childFn = _ref[_i];
+        for (_i = 0, _len = visibleChildFns.length; _i < _len; _i++) {
+          childFn = visibleChildFns[_i];
           s = stringifyFn(childFn, s);
         }
         return s;
       }
       if (fn.combiner === "sum") {
         strings = (function() {
-          var _j, _len1, _ref1, _results;
-          _ref1 = fn.childFns;
+          var _j, _len1, _results;
           _results = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            childFn = _ref1[_j];
+          for (_j = 0, _len1 = visibleChildFns.length; _j < _len1; _j++) {
+            childFn = visibleChildFns[_j];
             _results.push(stringifyFn(childFn, freeVariable));
           }
           return _results;
@@ -39123,11 +39133,10 @@ function HSLToRGB(h, s, l) {
       }
       if (fn.combiner === "product") {
         strings = (function() {
-          var _j, _len1, _ref1, _results;
-          _ref1 = fn.childFns;
+          var _j, _len1, _results;
           _results = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            childFn = _ref1[_j];
+          for (_j = 0, _len1 = visibleChildFns.length; _j < _len1; _j++) {
+            childFn = visibleChildFns[_j];
             _results.push("(" + (stringifyFn(childFn, freeVariable)) + ")");
           }
           return _results;
