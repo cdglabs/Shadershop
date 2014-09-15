@@ -37462,34 +37462,41 @@ function HSLToRGB(h, s, l) {
       fn: C.ChildFn
     },
     render: function() {
-      var className, coordIndex, rowIndex, variable;
-      return R.table({}, R.tr({
+      var className, coordIndex, dimensions, rowIndex, variable;
+      dimensions = UI.selectedFn.plotLayout.display2d ? 2 : 1;
+      return R.table({}, R.tbody({}, R.tr({
         style: {
           color: config.domainLabelColor
         }
       }, R.th({}), (function() {
-        var _i, _ref, _results;
+        var _i, _results;
         _results = [];
-        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
-          _results.push(R.th({}, "d" + (coordIndex + 1)));
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
+          _results.push(R.th({
+            key: coordIndex
+          }, "d" + (coordIndex + 1)));
         }
         return _results;
       })()), R.tr({
         className: "Translate"
       }, R.td({
         className: "icon-move"
-      }), this.fn.domainTranslate.map((function(_this) {
-        return function(variable) {
-          return R.td({
+      }), (function() {
+        var _i, _results;
+        _results = [];
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
+          variable = this.fn.domainTranslate[coordIndex];
+          _results.push(R.td({
             key: C.id(variable)
           }, R.VariableView({
             variable: variable
-          }));
-        };
-      })(this))), (function() {
-        var _i, _ref, _results;
+          })));
+        }
+        return _results;
+      }).call(this)), (function() {
+        var _i, _results;
         _results = [];
-        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
           className = R.cx({
             "icon-resize-full-alt": coordIndex === 0
           });
@@ -37498,9 +37505,9 @@ function HSLToRGB(h, s, l) {
           }, R.td({
             className: className
           }), (function() {
-            var _j, _ref1, _results1;
+            var _j, _results1;
             _results1 = [];
-            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
+            for (rowIndex = _j = 0; 0 <= dimensions ? _j < dimensions : _j > dimensions; rowIndex = 0 <= dimensions ? ++_j : --_j) {
               variable = this.fn.domainTransform[rowIndex][coordIndex];
               _results1.push(R.td({
                 key: C.id(variable)
@@ -37517,28 +37524,34 @@ function HSLToRGB(h, s, l) {
           color: config.rangeLabelColor
         }
       }, R.th({}), (function() {
-        var _i, _ref, _results;
+        var _i, _results;
         _results = [];
-        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
-          _results.push(R.th({}, "r" + (coordIndex + 1)));
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
+          _results.push(R.th({
+            key: coordIndex
+          }, "r" + (coordIndex + 1)));
         }
         return _results;
       })()), R.tr({
         className: "Translate"
       }, R.td({
         className: "icon-move"
-      }), this.fn.rangeTranslate.map((function(_this) {
-        return function(variable) {
-          return R.td({
+      }), (function() {
+        var _i, _results;
+        _results = [];
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
+          variable = this.fn.rangeTranslate[coordIndex];
+          _results.push(R.td({
             key: C.id(variable)
           }, R.VariableView({
             variable: variable
-          }));
-        };
-      })(this))), (function() {
-        var _i, _ref, _results;
+          })));
+        }
+        return _results;
+      }).call(this)), (function() {
+        var _i, _results;
         _results = [];
-        for (coordIndex = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; coordIndex = 0 <= _ref ? ++_i : --_i) {
+        for (coordIndex = _i = 0; 0 <= dimensions ? _i < dimensions : _i > dimensions; coordIndex = 0 <= dimensions ? ++_i : --_i) {
           className = R.cx({
             "icon-resize-full-alt": coordIndex === 0
           });
@@ -37547,9 +37560,9 @@ function HSLToRGB(h, s, l) {
           }, R.td({
             className: className
           }), (function() {
-            var _j, _ref1, _results1;
+            var _j, _results1;
             _results1 = [];
-            for (rowIndex = _j = 0, _ref1 = config.dimensions; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; rowIndex = 0 <= _ref1 ? ++_j : --_j) {
+            for (rowIndex = _j = 0; 0 <= dimensions ? _j < dimensions : _j > dimensions; rowIndex = 0 <= dimensions ? ++_j : --_j) {
               variable = this.fn.rangeTransform[rowIndex][coordIndex];
               _results1.push(R.td({
                 key: C.id(variable)
@@ -37561,7 +37574,7 @@ function HSLToRGB(h, s, l) {
           }).call(this)));
         }
         return _results;
-      }).call(this));
+      }).call(this)));
     }
   });
 
