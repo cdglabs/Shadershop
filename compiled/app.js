@@ -329,7 +329,8 @@
     var id;
     id = C.id(childFn);
     UI.expandedChildFns[id] = expanded;
-    return ensureSelectedChildFnsVisible();
+    ensureSelectedChildFnsVisible();
+    return Compiler.setDirty();
   };
 
 }).call(this);

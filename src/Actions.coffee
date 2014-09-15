@@ -221,6 +221,7 @@ Actions.setChildFnExpanded = (childFn, expanded) ->
   id = C.id(childFn)
   UI.expandedChildFns[id] = expanded
   ensureSelectedChildFnsVisible()
+  Compiler.setDirty()
 
 
 
