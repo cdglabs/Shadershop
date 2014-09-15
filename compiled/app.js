@@ -39057,7 +39057,7 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return formatNumber(m[0][0]);
     }
-    return "M" + size;
+    return "M";
   };
 
   formatVector = function(v) {
@@ -39074,7 +39074,7 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return formatNumber(v[0]);
     }
-    return "V" + size;
+    return "V";
   };
 
   formatNumber = function(n) {

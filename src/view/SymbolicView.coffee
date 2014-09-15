@@ -45,7 +45,7 @@ formatMatrix = (m) ->
   if size == 1
     return formatNumber m[0][0]
 
-  return "M#{size}"
+  return "M"
 
 formatVector = (v) ->
   size = 0
@@ -58,7 +58,7 @@ formatVector = (v) ->
   if size == 1
     return formatNumber v[0]
 
-  return "V#{size}"
+  return "V"
 
 
 formatNumber = (n) ->
