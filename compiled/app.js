@@ -39007,14 +39007,15 @@ function HSLToRGB(h, s, l) {
 
   R.create("SymbolicView", {
     render: function() {
-      var string;
+      var freeVariable, string;
       if (!UI.showSymbolic) {
         return R.div();
       }
-      string = stringifyFn(UI.selectedFn, "x", true);
+      freeVariable = "x";
+      string = stringifyFn(UI.selectedFn, freeVariable, true);
       return R.div({}, string ? R.div({
         className: "Symbolic"
-      }, R.span({}, stringifyFn(UI.selectedFn, "x", true))) : void 0);
+      }, string) : void 0);
     }
   });
 
@@ -39061,7 +39062,7 @@ function HSLToRGB(h, s, l) {
   };
 
   formatVector = function(v) {
-    var d, size, _i, _ref;
+    var d, numbers, size, _i, _j, _ref;
     size = 0;
     for (d = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; d = 0 <= _ref ? ++_i : --_i) {
       if (v[d] !== 0) {
@@ -39073,24 +39074,26 @@ function HSLToRGB(h, s, l) {
     }
     if (size === 1) {
       return formatNumber(v[0]);
+    } else {
+      numbers = [];
+      for (d = _j = 0; 0 <= size ? _j < size : _j > size; d = 0 <= size ? ++_j : --_j) {
+        numbers.push(formatNumber(v[d]));
+      }
+      return "(" + (numbers.join(", ")) + ")";
     }
-    return "V";
   };
 
   formatNumber = function(n) {
     var s;
     s = n.toFixed(3);
     if (s.indexOf(".") !== -1) {
-      s = s.replace(/0*$/, "");
+      s = s.replace(/\.?0*$/, "");
     }
     return s;
   };
 
   stringifyFn = function(fn, freeVariable, force) {
     var childFn, domainTransform, domainTranslate, rangeTransform, rangeTranslate, s, strings, visibleChildFns, _i, _len;
-    if (freeVariable == null) {
-      freeVariable = "x";
-    }
     if (force == null) {
       force = false;
     }

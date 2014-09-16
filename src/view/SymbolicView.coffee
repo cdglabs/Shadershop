@@ -2,13 +2,13 @@ R.create "SymbolicView",
   render: ->
     return R.div() if !UI.showSymbolic
 
-    string = stringifyFn(UI.selectedFn, "x", true)
+    freeVariable = "x"
+
+    string = stringifyFn(UI.selectedFn, freeVariable, true)
 
     R.div {},
       if string
-        R.div {className: "Symbolic"},
-          R.span {},
-            stringifyFn(UI.selectedFn, "x", true)
+        R.div {className: "Symbolic"}, string
 
 
 
@@ -57,19 +57,22 @@ formatVector = (v) ->
     return null
   if size == 1
     return formatNumber v[0]
-
-  return "V"
+  else
+    numbers = []
+    for d in [0...size]
+      numbers.push formatNumber v[d]
+    return "(#{numbers.join(", ")})"
 
 
 formatNumber = (n) ->
   s = n.toFixed(3)
   # remove excess 0s after decimal point
   if s.indexOf(".") != -1
-    s = s.replace(/0*$/, "")
+    s = s.replace(/\.?0*$/, "")
   return s
 
 
-stringifyFn = (fn, freeVariable="x", force=false) ->
+stringifyFn = (fn, freeVariable, force=false) ->
   if fn instanceof C.BuiltInFn
     if fn.label == "Line"
       return freeVariable
