@@ -21,7 +21,7 @@ R.create "InspectorTableView",
         R.tr {style: {color: config.domainLabelColor}},
           R.th {}
           for coordIndex in [0...dimensions]
-            R.th {key: coordIndex}, "d"+(coordIndex+1)
+            R.th {key: coordIndex}, "x"+(coordIndex+1)
 
         R.tr {className: "Translate"},
           R.td {className: "icon-move"}
@@ -44,7 +44,7 @@ R.create "InspectorTableView",
         R.tr {style: {color: config.rangeLabelColor}},
           R.th {}
           for coordIndex in [0...dimensions]
-            R.th {key: coordIndex}, "r"+(coordIndex+1)
+            R.th {key: coordIndex}, "y"+(coordIndex+1)
 
         R.tr {className: "Translate"},
           R.td {className: "icon-move"}

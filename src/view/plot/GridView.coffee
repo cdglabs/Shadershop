@@ -29,18 +29,18 @@ R.create "GridView",
       xCoord = dimensions[0].indexOf(1)
       if xCoord < config.dimensions
         params.xLabelColor = config.domainLabelColor
-        params.xLabel = "d" + (xCoord+1)
+        params.xLabel = "x" + (xCoord+1)
       else
         params.xLabelColor = config.rangeLabelColor
-        params.xLabel = "r" + (xCoord+1 - config.dimensions)
+        params.xLabel = "y" + (xCoord+1 - config.dimensions)
 
       yCoord = dimensions[1].indexOf(1)
       if yCoord < config.dimensions
         params.yLabelColor = config.domainLabelColor
-        params.yLabel = "d" + (yCoord+1)
+        params.yLabel = "x" + (yCoord+1)
       else
         params.yLabelColor = config.rangeLabelColor
-        params.yLabel = "r" + (yCoord+1 - config.dimensions)
+        params.yLabel = "y" + (yCoord+1 - config.dimensions)
 
     return params
 
