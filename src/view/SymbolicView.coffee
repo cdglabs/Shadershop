@@ -2,13 +2,17 @@ R.create "SymbolicView",
   render: ->
     return R.div() if !UI.showSymbolic
 
-    freeVariable = "x"
+    d = dimensionsToDisplay()
+    if d == 1
+      freeVariable = "x"
+    else
+      freeVariable = '<span class="SymbolVector"><span class="SymbolCell">x₁</span><span class="SymbolCell">x₂</span></span>'
 
     string = stringifyFn(UI.selectedFn, freeVariable, true)
 
     R.div {},
       if string
-        R.div {className: "Symbolic"}, string
+        R.div {className: "Symbolic", dangerouslySetInnerHTML: {__html: string}}
 
 
 # HACK
@@ -64,7 +68,13 @@ formatMatrix = (m) ->
   if size == 1
     return formatNumber m[0][0]
 
-  return "M"
+  rows = []
+  for rowIndex in [0...size]
+    row = []
+    for colIndex in [0...size]
+      row.push '<span class="SymbolCell">' + formatNumber(m[rowIndex][colIndex]) + '</span>'
+    rows.push '<span class="SymbolRow">' + row.join("") + '</span>'
+  return '<span class="SymbolMatrix">' + rows.join("") + '</span>'
 
 formatVector = (v) ->
   if isVectorIdentity(v)
@@ -74,10 +84,10 @@ formatVector = (v) ->
   if size == 1
     return formatNumber v[0]
 
-  numbers = []
+  cells = []
   for d in [0...size]
-    numbers.push formatNumber v[d]
-  return "(#{numbers.join(", ")})"
+    cells.push '<span class="SymbolCell">' + formatNumber(v[d]) + '</span>'
+  return '<span class="SymbolVector">' + cells.join("") + '</span>'
 
 
 

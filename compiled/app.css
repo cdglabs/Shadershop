@@ -69,13 +69,6 @@ canvas,
   left: 180px;
   right: 270px;
   z-index: 30;
-  text-align: center;
-  font-size: 24px;
-  margin: 0px 10px;
-  border-radius: 8px;
-  padding: 0px 4px;
-  line-height: 1.5;
-  background-color: rgba(255,255,255,0.8);
 }
 .DraggingObject {
   position: fixed;
@@ -345,6 +338,41 @@ th {
 th {
   padding: 2px 6px;
   text-align: left;
+}
+.Symbolic {
+  text-align: center;
+  font-size: 24px;
+  margin: 0px 10px;
+  border-radius: 8px;
+  padding: 0px 4px;
+  line-height: 36px;
+  background-color: rgba(255,255,255,0.8);
+}
+.SymbolVector,
+.SymbolMatrix {
+  display: inline-table;
+  position: relative;
+  border-collapse: collapse;
+}
+.SymbolVector {
+  top: -2px;
+}
+.SymbolMatrix {
+  top: -10px;
+  height: 36px;
+}
+.SymbolRow {
+  display: table-row;
+}
+.SymbolRow > .SymbolCell {
+  font-size: 12px;
+}
+.SymbolCell {
+  display: table-cell;
+  padding: 3px;
+  font-size: 16px;
+  line-height: 1;
+  background-color: rgba(0,0,0,0.2);
 }
 .TextButton {
   cursor: pointer;

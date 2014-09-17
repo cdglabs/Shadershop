@@ -39007,15 +39007,23 @@ function HSLToRGB(h, s, l) {
 
   R.create("SymbolicView", {
     render: function() {
-      var freeVariable, string;
+      var d, freeVariable, string;
       if (!UI.showSymbolic) {
         return R.div();
       }
-      freeVariable = "x";
+      d = dimensionsToDisplay();
+      if (d === 1) {
+        freeVariable = "x";
+      } else {
+        freeVariable = '<span class="SymbolVector"><span class="SymbolCell">x₁</span><span class="SymbolCell">x₂</span></span>';
+      }
       string = stringifyFn(UI.selectedFn, freeVariable, true);
       return R.div({}, string ? R.div({
-        className: "Symbolic"
-      }, string) : void 0);
+        className: "Symbolic",
+        dangerouslySetInnerHTML: {
+          __html: string
+        }
+      }) : void 0);
     }
   });
 
@@ -39081,7 +39089,7 @@ function HSLToRGB(h, s, l) {
   };
 
   formatMatrix = function(m) {
-    var size;
+    var colIndex, row, rowIndex, rows, size, _i, _j;
     if (isMatrixIdentity(m)) {
       return null;
     }
@@ -39089,11 +39097,19 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return formatNumber(m[0][0]);
     }
-    return "M";
+    rows = [];
+    for (rowIndex = _i = 0; 0 <= size ? _i < size : _i > size; rowIndex = 0 <= size ? ++_i : --_i) {
+      row = [];
+      for (colIndex = _j = 0; 0 <= size ? _j < size : _j > size; colIndex = 0 <= size ? ++_j : --_j) {
+        row.push('<span class="SymbolCell">' + formatNumber(m[rowIndex][colIndex]) + '</span>');
+      }
+      rows.push('<span class="SymbolRow">' + row.join("") + '</span>');
+    }
+    return '<span class="SymbolMatrix">' + rows.join("") + '</span>';
   };
 
   formatVector = function(v) {
-    var d, numbers, size, _i;
+    var cells, d, size, _i;
     if (isVectorIdentity(v)) {
       return null;
     }
@@ -39101,11 +39117,11 @@ function HSLToRGB(h, s, l) {
     if (size === 1) {
       return formatNumber(v[0]);
     }
-    numbers = [];
+    cells = [];
     for (d = _i = 0; 0 <= size ? _i < size : _i > size; d = 0 <= size ? ++_i : --_i) {
-      numbers.push(formatNumber(v[d]));
+      cells.push('<span class="SymbolCell">' + formatNumber(v[d]) + '</span>');
     }
-    return "(" + (numbers.join(", ")) + ")";
+    return '<span class="SymbolVector">' + cells.join("") + '</span>';
   };
 
   formatNumber = function(n) {
