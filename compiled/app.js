@@ -39003,7 +39003,7 @@ function HSLToRGB(h, s, l) {
 
 }).call(this);
 }, "view/SymbolicView": function(exports, require, module) {(function() {
-  var formatMatrix, formatNumber, formatVector, nonIdentityCell, nonIdentitySize, stringifyFn;
+  var dimensionsToDisplay, formatMatrix, formatNumber, formatVector, isMatrixIdentity, isVectorIdentity, nonIdentityCell, nonIdentitySize, stringifyFn;
 
   R.create("SymbolicView", {
     render: function() {
@@ -39018,6 +39018,37 @@ function HSLToRGB(h, s, l) {
       }, string) : void 0);
     }
   });
+
+  dimensionsToDisplay = function() {
+    if (UI.selectedFn.plotLayout.display2d) {
+      return 2;
+    } else {
+      return 1;
+    }
+  };
+
+  isVectorIdentity = function(v) {
+    return _.all(v, function(n) {
+      return n === 0;
+    });
+  };
+
+  isMatrixIdentity = function(m) {
+    var colIndex, row, rowIndex, value, _i, _j, _len, _len1;
+    for (rowIndex = _i = 0, _len = m.length; _i < _len; rowIndex = ++_i) {
+      row = m[rowIndex];
+      for (colIndex = _j = 0, _len1 = row.length; _j < _len1; colIndex = ++_j) {
+        value = row[colIndex];
+        if (rowIndex === colIndex && value !== 1) {
+          return false;
+        }
+        if (rowIndex !== colIndex && value !== 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
 
   nonIdentityCell = function(x, y, m) {
     var identityCell;
@@ -39051,10 +39082,10 @@ function HSLToRGB(h, s, l) {
 
   formatMatrix = function(m) {
     var size;
-    size = nonIdentitySize(m);
-    if (size === 0) {
+    if (isMatrixIdentity(m)) {
       return null;
     }
+    size = dimensionsToDisplay();
     if (size === 1) {
       return formatNumber(m[0][0]);
     }
@@ -39062,25 +39093,19 @@ function HSLToRGB(h, s, l) {
   };
 
   formatVector = function(v) {
-    var d, numbers, size, _i, _j, _ref;
-    size = 0;
-    for (d = _i = 0, _ref = config.dimensions; 0 <= _ref ? _i < _ref : _i > _ref; d = 0 <= _ref ? ++_i : --_i) {
-      if (v[d] !== 0) {
-        size = d + 1;
-      }
-    }
-    if (size === 0) {
+    var d, numbers, size, _i;
+    if (isVectorIdentity(v)) {
       return null;
     }
+    size = dimensionsToDisplay();
     if (size === 1) {
       return formatNumber(v[0]);
-    } else {
-      numbers = [];
-      for (d = _j = 0; 0 <= size ? _j < size : _j > size; d = 0 <= size ? ++_j : --_j) {
-        numbers.push(formatNumber(v[d]));
-      }
-      return "(" + (numbers.join(", ")) + ")";
     }
+    numbers = [];
+    for (d = _i = 0; 0 <= size ? _i < size : _i > size; d = 0 <= size ? ++_i : --_i) {
+      numbers.push(formatNumber(v[d]));
+    }
+    return "(" + (numbers.join(", ")) + ")";
   };
 
   formatNumber = function(n) {

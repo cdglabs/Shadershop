@@ -11,6 +11,25 @@ R.create "SymbolicView",
         R.div {className: "Symbolic"}, string
 
 
+# HACK
+dimensionsToDisplay = ->
+  if UI.selectedFn.plotLayout.display2d then 2 else 1
+
+
+
+isVectorIdentity = (v) ->
+  return _.all v, (n) -> n == 0
+
+isMatrixIdentity = (m) ->
+  for row, rowIndex in m
+    for value, colIndex in row
+      return false if rowIndex == colIndex and value != 1
+      return false if rowIndex != colIndex and value != 0
+  return true
+
+
+
+
 
 nonIdentityCell = (x, y, m) ->
   identityCell = if x == y then 1 else 0
@@ -38,30 +57,28 @@ nonIdentitySize = (m) ->
   return size
 
 formatMatrix = (m) ->
-  size = nonIdentitySize(m)
-  if size == 0
+  if isMatrixIdentity(m)
     return null
 
+  size = dimensionsToDisplay()
   if size == 1
     return formatNumber m[0][0]
 
   return "M"
 
 formatVector = (v) ->
-  size = 0
-  for d in [0 ... config.dimensions]
-    if v[d] != 0
-      size = d + 1
-
-  if size == 0
+  if isVectorIdentity(v)
     return null
+
+  size = dimensionsToDisplay()
   if size == 1
     return formatNumber v[0]
-  else
-    numbers = []
-    for d in [0...size]
-      numbers.push formatNumber v[d]
-    return "(#{numbers.join(", ")})"
+
+  numbers = []
+  for d in [0...size]
+    numbers.push formatNumber v[d]
+  return "(#{numbers.join(", ")})"
+
 
 
 formatNumber = (n) ->
