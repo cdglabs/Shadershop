@@ -35859,7 +35859,7 @@ is expensive and ought to be cached.
 
 }).call(this);
 }, "main": function(exports, require, module) {(function() {
-  var debouncedSaveState, eventName, json, refresh, refreshEventNames, refreshView, saveState, storageName, willRefreshNextFrame, _i, _len;
+  var debouncedSaveState, eventName, isReloading, json, refresh, refreshEventNames, refreshView, reloadPage, saveState, storageName, willRefreshNextFrame, _i, _len;
 
   require("./util/util");
 
@@ -35877,9 +35877,16 @@ is expensive and ought to be cached.
 
   storageName = config.storageName;
 
+  isReloading = false;
+
+  reloadPage = function() {
+    isReloading = true;
+    return location.reload();
+  };
+
   window.reset = function() {
     delete window.localStorage[storageName];
-    return location.reload();
+    return reloadPage();
   };
 
   if (json = window.localStorage[storageName]) {
@@ -35890,6 +35897,9 @@ is expensive and ought to be cached.
   }
 
   saveState = function() {
+    if (isReloading) {
+      return;
+    }
     json = C.deconstruct(appRoot);
     json = JSON.stringify(json);
     return window.localStorage[storageName] = json;
@@ -35904,7 +35914,7 @@ is expensive and ought to be cached.
       jsonString = JSON.stringify(jsonString);
     }
     window.localStorage[storageName] = jsonString;
-    return location.reload();
+    return reloadPage();
   };
 
   require("./UI");

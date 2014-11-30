@@ -16,9 +16,14 @@ require("./keyCommands")
 
 storageName = config.storageName
 
+isReloading = false
+reloadPage = ->
+  isReloading = true
+  location.reload()
+
 window.reset = ->
   delete window.localStorage[storageName]
-  location.reload()
+  reloadPage()
 
 if json = window.localStorage[storageName]
   json = JSON.parse(json)
@@ -27,6 +32,7 @@ else
   window.appRoot = new C.AppRoot()
 
 saveState = ->
+  return if isReloading # so we don't overwrite while reloading
   json = C.deconstruct(appRoot)
   json = JSON.stringify(json)
   window.localStorage[storageName] = json
@@ -39,7 +45,7 @@ window.restore = (jsonString) ->
   if !_.isString(jsonString)
     jsonString = JSON.stringify(jsonString)
   window.localStorage[storageName] = jsonString
-  location.reload()
+  reloadPage()
 
 
 
