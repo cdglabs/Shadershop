@@ -39174,6 +39174,9 @@ function HSLToRGB(h, s, l) {
         return s;
       }
       if (fn.combiner === "sum") {
+        if (visibleChildFns.length === 0) {
+          return "0";
+        }
         strings = (function() {
           var _j, _len1, _results;
           _results = [];
@@ -39183,9 +39186,12 @@ function HSLToRGB(h, s, l) {
           }
           return _results;
         })();
-        return strings.join(" + ");
+        return "(" + strings.join(" + ") + ")";
       }
       if (fn.combiner === "product") {
+        if (visibleChildFns.length === 0) {
+          return "1";
+        }
         strings = (function() {
           var _j, _len1, _results;
           _results = [];
@@ -39195,7 +39201,7 @@ function HSLToRGB(h, s, l) {
           }
           return _results;
         })();
-        return strings.join(" * ");
+        return "(" + strings.join(" * ") + ")";
       }
     }
     if (fn instanceof C.ChildFn) {
