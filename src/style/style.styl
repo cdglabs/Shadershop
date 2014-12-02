@@ -204,6 +204,20 @@ canvas, .Shader
     inline middle
     // margin-left SpacingSize
 
+.DragHint
+  position fixed
+  z-index SymbolicZIndex
+  pointer-events none
+  margin-left SpacingSize
+  margin-top SpacingSize * -2
+  white-space nowrap
+  padding SpacingSize
+  border-radius SpacingSize
+  background-color #333
+  color #eee
+  opacity 0
+  transition opacity 0.2s
+
 .PaletteHeader
   // padding-left SpacingSize*2 + PaletteThumbnailSize
   padding SpacingSize 0 SpacingSize SpacingSize*2

@@ -37949,6 +37949,8 @@ function HSLToRGB(h, s, l) {
       return R.div({
         className: "Palette"
       }, R.div({
+        className: "DragHint"
+      }, "Drag →"), R.div({
         className: "Header"
       }, "Library"), R.div({
         className: "Scroller"
@@ -38008,11 +38010,13 @@ function HSLToRGB(h, s, l) {
       }));
     },
     _onMouseDown: function(e) {
-      var addChildFn, selectFn;
+      var addChildFn, selectFn, x, y;
       if (e.target.matches(".Interactive")) {
         return;
       }
       util.preventDefault(e);
+      x = e.clientX;
+      y = e.clientY;
       addChildFn = (function(_this) {
         return function() {
           return Actions.addChildFn(_this.fn);
@@ -38020,10 +38024,24 @@ function HSLToRGB(h, s, l) {
       })(this);
       selectFn = (function(_this) {
         return function() {
-          return Actions.selectFn(_this.fn);
+          if (_this.fn instanceof C.BuiltInFn) {
+            return _this._showDragHint(x, y);
+          } else {
+            return Actions.selectFn(_this.fn);
+          }
         };
       })(this);
       return util.onceDragConsummated(e, addChildFn, selectFn);
+    },
+    _showDragHint: function(x, y) {
+      var el;
+      el = document.querySelector(".DragHint");
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      el.style.opacity = "1";
+      return setTimeout((function() {
+        return el.style.opacity = "0";
+      }), 1600);
     }
   });
 

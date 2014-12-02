@@ -140,6 +140,20 @@ canvas,
   display: inline-block;
   vertical-align: middle;
 }
+.DragHint {
+  position: fixed;
+  z-index: 30;
+  pointer-events: none;
+  margin-left: 6px;
+  margin-top: -12px;
+  white-space: nowrap;
+  padding: 6px;
+  border-radius: 6px;
+  background-color: #333;
+  color: #eee;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
 .PaletteHeader {
   padding: 6px 0 6px 12px;
   background-color: #f3f3f3;

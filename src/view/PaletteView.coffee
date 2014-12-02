@@ -5,6 +5,8 @@ R.create "PaletteView",
   render: ->
     R.div {className: "Palette"},
 
+      R.div {className: "DragHint"}, "Drag →"
+
       R.div {className: "Header"},
         "Library"
 
@@ -55,11 +57,26 @@ R.create "DefinitionView",
     return if e.target.matches(".Interactive")
     util.preventDefault(e)
 
+    x = e.clientX
+    y = e.clientY
+
     addChildFn = =>
       Actions.addChildFn(@fn)
 
     selectFn = =>
-      Actions.selectFn(@fn)
+      if @fn instanceof C.BuiltInFn
+        @_showDragHint(x, y)
+      else
+        Actions.selectFn(@fn)
 
     util.onceDragConsummated(e, addChildFn, selectFn)
+
+  _showDragHint: (x, y) ->
+    el = document.querySelector(".DragHint")
+    el.style.left = x + "px"
+    el.style.top = y + "px"
+    el.style.opacity = "1"
+    setTimeout (-> el.style.opacity = "0"), 1600
+
+
 
