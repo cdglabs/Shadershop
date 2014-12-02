@@ -334,7 +334,7 @@ createColorMapProgram = (glod, name, glsl) ->
     float value = outputVal.x;
     vec3 color;
 
-    float normvalue = clamp(0., 1., abs(value));
+    float normvalue = clamp(abs(value), 0., 1.);
     if (value > 0.) {
       color = mix(vec3(#{config.colorMapZero}), vec3(#{config.colorMapPositive}), normvalue);
     } else {
