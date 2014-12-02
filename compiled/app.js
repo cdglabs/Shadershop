@@ -36535,13 +36535,17 @@ is expensive and ought to be cached.
 
 }).call(this);
 }, "util/canvas": function(exports, require, module) {(function() {
-  var canvasBounds, clear, drawGrid, drawLine, getSpacing, lerp, ticks;
+  var canvasBounds, clear, devicePixelRatio, drawGrid, drawLine, getSpacing, lerp, ticks;
 
   lerp = util.lerp;
+
+  devicePixelRatio = window.devicePixelRatio || 1;
 
   canvasBounds = function(ctx) {
     var canvas;
     canvas = ctx.canvas;
+    canvas.width *= devicePixelRatio;
+    canvas.height *= devicePixelRatio;
     return {
       cxMin: 0,
       cxMax: canvas.width,
@@ -36666,7 +36670,7 @@ is expensive and ought to be cached.
     drawLine(ctx, fromLocal([0, yMin]), fromLocal([0, yMax]));
     drawLine(ctx, fromLocal([xMin, 0]), fromLocal([xMax, 0]));
     labelEdgeDistance = labelDistance * 6;
-    ctx.font = "" + textHeight + "px verdana";
+    ctx.font = "" + (textHeight * devicePixelRatio) + "px verdana";
     ctx.fillStyle = labelColor;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -38759,12 +38763,13 @@ function HSLToRGB(h, s, l) {
       return this.programs = {};
     },
     sizeCanvas: function() {
-      var canvas, rect;
+      var canvas, devicePixelRatio, rect;
       canvas = this.getDOMNode();
       rect = canvas.getBoundingClientRect();
+      devicePixelRatio = window.devicePixelRatio || 1;
       if (canvas.width !== rect.width || canvas.height !== rect.height) {
-        canvas.width = rect.width;
-        return canvas.height = rect.height;
+        canvas.width = rect.width * devicePixelRatio;
+        return canvas.height = rect.height * devicePixelRatio;
       }
     },
     draw: function() {
@@ -38871,14 +38876,14 @@ function HSLToRGB(h, s, l) {
     var canvas, gl, h, sh, sw, sx, sy, w, x, y;
     gl = glod.gl();
     canvas = glod.canvas();
-    x = rect.left;
-    y = canvas.height - rect.bottom;
-    w = rect.width;
-    h = rect.height;
-    sx = clippingRect.left;
-    sy = canvas.height - clippingRect.bottom;
-    sw = clippingRect.width;
-    sh = clippingRect.height;
+    x = rect.left * devicePixelRatio;
+    y = canvas.height - rect.bottom * devicePixelRatio;
+    w = rect.width * devicePixelRatio;
+    h = rect.height * devicePixelRatio;
+    sx = clippingRect.left * devicePixelRatio;
+    sy = canvas.height - clippingRect.bottom * devicePixelRatio;
+    sw = clippingRect.width * devicePixelRatio;
+    sh = clippingRect.height * devicePixelRatio;
     gl.viewport(x, y, w, h);
     gl.scissor(sx, sy, sw, sh);
     return glod.viewport_ = {

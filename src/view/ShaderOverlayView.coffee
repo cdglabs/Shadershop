@@ -20,9 +20,10 @@ R.create "ShaderOverlayView",
   sizeCanvas: ->
     canvas = @getDOMNode()
     rect = canvas.getBoundingClientRect()
+    devicePixelRatio = window.devicePixelRatio || 1 # Scale canvas for HiDPI displays
     if canvas.width != rect.width or canvas.height != rect.height
-      canvas.width = rect.width
-      canvas.height = rect.height
+      canvas.width = rect.width * devicePixelRatio
+      canvas.height = rect.height * devicePixelRatio
 
   draw: ->
     canvas = @getDOMNode()
@@ -129,15 +130,16 @@ setViewport = (glod, rect, clippingRect) ->
   gl = glod.gl()
   canvas = glod.canvas()
 
-  x = rect.left
-  y = canvas.height - rect.bottom
-  w = rect.width
-  h = rect.height
+  # Scale everything by devicePixelRatio for HiDPI displays
+  x = rect.left * devicePixelRatio
+  y = canvas.height - rect.bottom * devicePixelRatio
+  w = rect.width * devicePixelRatio
+  h = rect.height * devicePixelRatio
 
-  sx = clippingRect.left
-  sy = canvas.height - clippingRect.bottom
-  sw = clippingRect.width
-  sh = clippingRect.height
+  sx = clippingRect.left * devicePixelRatio
+  sy = canvas.height - clippingRect.bottom * devicePixelRatio
+  sw = clippingRect.width * devicePixelRatio
+  sh = clippingRect.height * devicePixelRatio
 
   gl.viewport(x, y, w, h)
   gl.scissor(sx, sy, sw, sh)
