@@ -137,7 +137,7 @@ R.create "OutlineItemView",
     # TODO: This only handles what you started dragging. Instead it should
     # move the selection. Could use code cleanup too. childFn is the childFn
     # that's being moved.
-    if key.command
+    if key.command or key.shift
       # Duplicate
       childFn = @childFn.duplicate()
       # HACK: Should maybe copy the expanded state of the original
