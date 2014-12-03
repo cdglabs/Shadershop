@@ -37754,7 +37754,7 @@ function HSLToRGB(h, s, l) {
       UI.dragging = {
         cursor: "-webkit-grabbing"
       };
-      if (key.command) {
+      if (key.command || key.shift) {
         childFn = this.childFn.duplicate();
         Actions.setChildFnExpanded(childFn, false);
         parentCompoundFn = null;
