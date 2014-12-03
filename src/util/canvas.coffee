@@ -1,9 +1,12 @@
 
 lerp = util.lerp
 
+devicePixelRatio = window.devicePixelRatio || 1 # Scale canvas for HiDPI displays
 
 canvasBounds = (ctx) ->
   canvas = ctx.canvas
+  canvas.width *= devicePixelRatio
+  canvas.height *= devicePixelRatio
   {
     cxMin: 0
     cxMax: canvas.width
@@ -121,7 +124,7 @@ drawGrid = (ctx, opts) ->
 
   # draw labels
   labelEdgeDistance = labelDistance * 6 # To keep it from overlapping the axis labels
-  ctx.font = "#{textHeight}px verdana"
+  ctx.font = "#{textHeight * devicePixelRatio}px verdana" # Scale font size for HiDPI displays
   ctx.fillStyle = labelColor
   ctx.textAlign = "center"
   ctx.textBaseline = "top"
