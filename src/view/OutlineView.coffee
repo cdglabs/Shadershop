@@ -27,6 +27,8 @@ R.create "OutlineCombinerToolbar",
       R.span {className: "OutlineCombinerButton", onClick: @_compose}, "Compose"
       R.span {className: "OutlineCombinerButton", onClick: @_add}, "Add"
       R.span {className: "OutlineCombinerButton", onClick: @_multiply}, "Multiply"
+      R.span {className: "OutlineCombinerButton", onClick: @_min}, "Min"
+      R.span {className: "OutlineCombinerButton", onClick: @_max}, "Max"
       # R.span {className: "OutlineCombinerButton", onClick: @_define}, "Define"
 
   shouldComponentUpdate: -> false
@@ -34,6 +36,8 @@ R.create "OutlineCombinerToolbar",
   _compose: -> Actions.addCompoundFn("composition")
   _add: -> Actions.addCompoundFn("sum")
   _multiply: -> Actions.addCompoundFn("product")
+  _min: -> Actions.addCompoundFn("min")
+  _max: -> Actions.addCompoundFn("max")
   _define: -> # TODO
 
 
@@ -284,6 +288,8 @@ R.create "CombinerView",
       R.option {value: "sum"}, "Add"
       R.option {value: "product"}, "Multiply"
       R.option {value: "composition"}, "Compose"
+      R.option {value: "min"}, "Min"
+      R.option {value: "max"}, "Max"
 
   _onChange: (e) ->
     value = e.target.selectedOptions[0].value

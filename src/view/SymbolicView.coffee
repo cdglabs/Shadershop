@@ -135,6 +135,14 @@ stringifyFn = (fn, freeVariable, force=false) ->
         "(#{stringifyFn(childFn, freeVariable)})"
       return "(" + strings.join(" * ") + ")"
 
+    if fn.combiner == "min" or fn.combiner == "max"
+      if visibleChildFns.length == 0
+        return "0"
+      strings = for childFn in visibleChildFns
+        stringifyFn(childFn, freeVariable)
+      return "#{fn.combiner}(" + strings.join(", ") + ")"
+
+
   if fn instanceof C.ChildFn
     domainTranslate = formatVector fn.getDomainTranslate()
     domainTransform = formatMatrix fn.getDomainTransform()

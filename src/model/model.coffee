@@ -69,6 +69,22 @@ class C.CompoundFn extends C.Fn
         numeric.mul(result, childFn.evaluate(x))
       return _.reduce(@childFns, reducer, util.constructVector(config.dimensions, 1))
 
+    if @combiner == "min"
+      reducer = (result, childFn) ->
+        numeric.min(result, childFn.evaluate(x))
+      if @childFns.length == 0
+        util.constructVector(config.dimensions, 0)
+      else
+        return _.reduce(@childFns, reducer)
+
+    if @combiner == "max"
+      reducer = (result, childFn) ->
+        numeric.max(result, childFn.evaluate(x))
+      if @childFns.length == 0
+        util.constructVector(config.dimensions, 0)
+      else
+        return _.reduce(@childFns, reducer)
+
   duplicate: ->
     compoundFn = new C.CompoundFn()
     compoundFn.combiner = @combiner

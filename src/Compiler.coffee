@@ -115,6 +115,18 @@ getExprStringAndDependencies = (fn) ->
         else
           return "(" + childExprStrings.join(" * ") + ")"
 
+      if fn.combiner == "min" or fn.combiner == "max"
+        if childExprStrings.length == 0
+          return util.glslString(util.constructVector(config.dimensions, 0))
+        else
+          reducer = (rest, expr) ->
+            if rest == ""
+              expr
+            else
+              "#{fn.combiner}(#{rest}, #{expr})"
+          return _.reduce(childExprStrings, reducer, "")
+
+
     if fn instanceof C.ChildFn
       if fn == UI.getSingleSelectedChildFn()
         exprString = parameter

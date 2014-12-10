@@ -417,7 +417,7 @@ is expensive and ought to be cached.
     }
     dependencies = [];
     recurse = function(fn, parameter, firstCall) {
-      var childExprStrings, childFn, domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate, visibleChildFns, _i, _len;
+      var childExprStrings, childFn, domainTransformInv, domainTranslate, exprString, rangeTransform, rangeTranslate, reducer, visibleChildFns, _i, _len;
       if (firstCall == null) {
         firstCall = false;
       }
@@ -467,6 +467,20 @@ is expensive and ought to be cached.
             return util.glslString(util.constructVector(config.dimensions, 1));
           } else {
             return "(" + childExprStrings.join(" * ") + ")";
+          }
+        }
+        if (fn.combiner === "min" || fn.combiner === "max") {
+          if (childExprStrings.length === 0) {
+            return util.glslString(util.constructVector(config.dimensions, 0));
+          } else {
+            reducer = function(rest, expr) {
+              if (rest === "") {
+                return expr;
+              } else {
+                return "" + fn.combiner + "(" + rest + ", " + expr + ")";
+              }
+            };
+            return _.reduce(childExprStrings, reducer, "");
           }
         }
       }
@@ -36200,6 +36214,26 @@ is expensive and ought to be cached.
         };
         return _.reduce(this.childFns, reducer, util.constructVector(config.dimensions, 1));
       }
+      if (this.combiner === "min") {
+        reducer = function(result, childFn) {
+          return numeric.min(result, childFn.evaluate(x));
+        };
+        if (this.childFns.length === 0) {
+          util.constructVector(config.dimensions, 0);
+        } else {
+          return _.reduce(this.childFns, reducer);
+        }
+      }
+      if (this.combiner === "max") {
+        reducer = function(result, childFn) {
+          return numeric.max(result, childFn.evaluate(x));
+        };
+        if (this.childFns.length === 0) {
+          return util.constructVector(config.dimensions, 0);
+        } else {
+          return _.reduce(this.childFns, reducer);
+        }
+      }
     };
 
     CompoundFn.prototype.duplicate = function() {
@@ -37625,7 +37659,13 @@ function HSLToRGB(h, s, l) {
       }, "Add"), R.span({
         className: "OutlineCombinerButton",
         onClick: this._multiply
-      }, "Multiply"));
+      }, "Multiply"), R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._min
+      }, "Min"), R.span({
+        className: "OutlineCombinerButton",
+        onClick: this._max
+      }, "Max"));
     },
     shouldComponentUpdate: function() {
       return false;
@@ -37638,6 +37678,12 @@ function HSLToRGB(h, s, l) {
     },
     _multiply: function() {
       return Actions.addCompoundFn("product");
+    },
+    _min: function() {
+      return Actions.addCompoundFn("min");
+    },
+    _max: function() {
+      return Actions.addCompoundFn("max");
     },
     _define: function() {}
   });
@@ -37934,7 +37980,11 @@ function HSLToRGB(h, s, l) {
         value: "product"
       }, "Multiply"), R.option({
         value: "composition"
-      }, "Compose"));
+      }, "Compose"), R.option({
+        value: "min"
+      }, "Min"), R.option({
+        value: "max"
+      }, "Max"));
     },
     _onChange: function(e) {
       var value;
@@ -39225,6 +39275,21 @@ function HSLToRGB(h, s, l) {
           return _results;
         })();
         return "(" + strings.join(" * ") + ")";
+      }
+      if (fn.combiner === "min" || fn.combiner === "max") {
+        if (visibleChildFns.length === 0) {
+          return "0";
+        }
+        strings = (function() {
+          var _j, _len1, _results;
+          _results = [];
+          for (_j = 0, _len1 = visibleChildFns.length; _j < _len1; _j++) {
+            childFn = visibleChildFns[_j];
+            _results.push(stringifyFn(childFn, freeVariable));
+          }
+          return _results;
+        })();
+        return ("" + fn.combiner + "(") + strings.join(", ") + ")";
       }
     }
     if (fn instanceof C.ChildFn) {
