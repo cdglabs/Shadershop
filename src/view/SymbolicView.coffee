@@ -140,7 +140,8 @@ stringifyFn = (fn, freeVariable, force=false) ->
         return "0"
       strings = for childFn in visibleChildFns
         stringifyFn(childFn, freeVariable)
-      return "#{fn.combiner}(" + strings.join(", ") + ")"
+      label = if fn.combiner == "min" then "Min" else "Max"
+      return "#{label}(" + strings.join(", ") + ")"
 
 
   if fn instanceof C.ChildFn

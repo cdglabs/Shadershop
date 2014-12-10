@@ -36186,7 +36186,7 @@ is expensive and ought to be cached.
     }
 
     CompoundFn.prototype.evaluate = function(x) {
-      var childFn, reducer, _i, _len, _ref;
+      var childFn, reducer, values, _i, _len, _ref;
       if (this.combiner === "last") {
         if (this.childFns.length > 0) {
           return _.last(this.childFns).evaluate(x);
@@ -36215,23 +36215,23 @@ is expensive and ought to be cached.
         return _.reduce(this.childFns, reducer, util.constructVector(config.dimensions, 1));
       }
       if (this.combiner === "min") {
-        reducer = function(result, childFn) {
-          return numeric.min(result, childFn.evaluate(x));
-        };
-        if (this.childFns.length === 0) {
-          util.constructVector(config.dimensions, 0);
-        } else {
-          return _.reduce(this.childFns, reducer);
-        }
-      }
-      if (this.combiner === "max") {
-        reducer = function(result, childFn) {
-          return numeric.max(result, childFn.evaluate(x));
-        };
         if (this.childFns.length === 0) {
           return util.constructVector(config.dimensions, 0);
         } else {
-          return _.reduce(this.childFns, reducer);
+          values = _.map(this.childFns, function(childFn) {
+            return childFn.evaluate(x);
+          });
+          return numeric.min.apply(numeric, values);
+        }
+      }
+      if (this.combiner === "max") {
+        if (this.childFns.length === 0) {
+          return util.constructVector(config.dimensions, 0);
+        } else {
+          values = _.map(this.childFns, function(childFn) {
+            return childFn.evaluate(x);
+          });
+          return numeric.max.apply(numeric, values);
         }
       }
     };
@@ -39217,7 +39217,7 @@ function HSLToRGB(h, s, l) {
   };
 
   stringifyFn = function(fn, freeVariable, force) {
-    var childFn, domainTransform, domainTranslate, rangeTransform, rangeTranslate, s, strings, visibleChildFns, _i, _len;
+    var childFn, domainTransform, domainTranslate, label, rangeTransform, rangeTranslate, s, strings, visibleChildFns, _i, _len;
     if (force == null) {
       force = false;
     }
@@ -39289,7 +39289,8 @@ function HSLToRGB(h, s, l) {
           }
           return _results;
         })();
-        return ("" + fn.combiner + "(") + strings.join(", ") + ")";
+        label = fn.combiner === "min" ? "Min" : "Max";
+        return ("" + label + "(") + strings.join(", ") + ")";
       }
     }
     if (fn instanceof C.ChildFn) {

@@ -70,20 +70,18 @@ class C.CompoundFn extends C.Fn
       return _.reduce(@childFns, reducer, util.constructVector(config.dimensions, 1))
 
     if @combiner == "min"
-      reducer = (result, childFn) ->
-        numeric.min(result, childFn.evaluate(x))
       if @childFns.length == 0
-        util.constructVector(config.dimensions, 0)
+        return util.constructVector(config.dimensions, 0)
       else
-        return _.reduce(@childFns, reducer)
+        values = _.map @childFns, (childFn) -> childFn.evaluate(x)
+        return numeric.min(values...)
 
     if @combiner == "max"
-      reducer = (result, childFn) ->
-        numeric.max(result, childFn.evaluate(x))
       if @childFns.length == 0
-        util.constructVector(config.dimensions, 0)
+        return util.constructVector(config.dimensions, 0)
       else
-        return _.reduce(@childFns, reducer)
+        values = _.map @childFns, (childFn) -> childFn.evaluate(x)
+        return numeric.max(values...)
 
   duplicate: ->
     compoundFn = new C.CompoundFn()
