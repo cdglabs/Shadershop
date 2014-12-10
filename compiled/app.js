@@ -49,7 +49,7 @@
   }
   return this.require.define;
 }).call(this)({"Actions": function(exports, require, module) {(function() {
-  var Actions, ensureSelectedChildFnsVisible, findParentIndexOf, getExpandedChildFns;
+  var Actions, createsCircularDependency, ensureSelectedChildFnsVisible, findParentIndexOf, getExpandedChildFns;
 
   window.Actions = Actions = {};
 
@@ -143,6 +143,10 @@
       parent = UI.selectedFn;
       index = parent.childFns.length;
     }
+    if (createsCircularDependency(fn, parent)) {
+      console.warn("Creates circular dependency");
+      return;
+    }
     childFn = new C.ChildFn(fn);
     Actions.insertChildFn(parent, childFn, index);
     Actions.selectChildFn(childFn);
@@ -151,6 +155,20 @@
       parent: parent,
       index: index
     };
+  };
+
+  createsCircularDependency = function(fnToAdd, existingFn) {
+    if (fnToAdd === existingFn) {
+      return true;
+    } else if (fnToAdd instanceof C.CompoundFn) {
+      return _.any(fnToAdd.childFns, function(childFn) {
+        return createsCircularDependency(childFn, existingFn);
+      });
+    } else if (fnToAdd instanceof C.ChildFn) {
+      return createsCircularDependency(fnToAdd.fn, existingFn);
+    } else {
+      return false;
+    }
   };
 
   Actions.addCompoundFn = function(combiner) {

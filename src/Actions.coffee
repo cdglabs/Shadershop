@@ -68,10 +68,28 @@ Actions.addChildFn = (fn) ->
     parent = UI.selectedFn
     index = parent.childFns.length
 
+  if createsCircularDependency(fn, parent)
+    # TODO: display a warning in the UI
+    console.warn "Creates circular dependency"
+    return
+
   childFn = new C.ChildFn(fn)
   Actions.insertChildFn(parent, childFn, index)
   Actions.selectChildFn(childFn)
   return {childFn, parent, index}
+
+createsCircularDependency = (fnToAdd, existingFn) ->
+  # The function being added would create a circular depedency if it containts
+  # its soon-to-be parent anywhere in its tree.
+  if fnToAdd == existingFn
+    return true
+  else if fnToAdd instanceof C.CompoundFn
+    return _.any fnToAdd.childFns, (childFn) ->
+      return createsCircularDependency(childFn, existingFn)
+  else if fnToAdd instanceof C.ChildFn
+    return createsCircularDependency(fnToAdd.fn, existingFn)
+  else # C.BuiltInFn
+    return false
 
 Actions.addCompoundFn = (combiner="sum") ->
   compoundFn = new C.CompoundFn()
