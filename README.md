@@ -10,6 +10,12 @@ http://www.cdglabs.org/Shadershop/
 
 <a href="http://tobyschachman.com/Shadershop/instructions.png"><img src="http://tobyschachman.com/Shadershop/instructions.png"></a>
 
+### Keyboard Commands
+
+* Ctrl-R to reset. Shadershop will auto-save.
+* Ctrl-1 through Ctrl-4 to load examples from the videos.
+* Shift-click will also work to select multiple functions.
+
 ## Build Instructions
 
 Install [node.js](http://nodejs.org/) and [coffeescript](http://coffeescript.org/).
